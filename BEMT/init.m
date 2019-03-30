@@ -15,31 +15,44 @@ atm.c0 = sqrt(atm.gamma_air*atm.R_air*(atm.Temp+273.15)); %m/s - speed of sound
 
 %% Coaxial rotor parameters
 
-% Top rotor
-rotor(1).cl_alpha = 2*pi;         %1/rad - Lift slope, thin airfoil theory for now
-rotor(1).Nb = 2;             %# Number of blades
+%% Top rotor
+rotor(1).Nb = 2;             %# Number of aeros
 rotor(1).diameter = 3.6;             %m - using reference values from papers for now
 rotor(1).rpm = 800;             %rev/min - using reference values from papers for now
 rotor(1).chord = 0.15;             %m - using reference values from papers for now
-rotor(1).solidity = rotor(1).Nb*rotor(1).chord/(pi*rotor(1).diameter*0.5);   % Blade solidity - not sure what to take as chord for tapered blade
+rotor(1).solidity = rotor(1).Nb*rotor(1).chord/(pi*rotor(1).diameter*0.5);   % aero solidity - not sure what to take as chord for tapered aero
+% Aerodynamics
+aero.cl_alpha = 2*pi;         %1/rad - Lift slope, thin airfoil theory for now
+aero.Cd0 =  0.011;
+aero.D1 = 0.01;
+aero.D2 = 0.01;
+rotor(1).aero = aero;
 
-% Bottom rotor
-rotor(2).cl_alpha = rotor(1).cl_alpha;  %1/rad - Lift slope, thin airfoil theory for now
-rotor(2).Nb = 2;   %# Number of blades
-rotor(2).diameter = 3.6;             %m - using reference values from papers for now
-rotor(2).rpm = 800;             %rev/min - using reference values from papers for now
-rotor(2).chord = 0.15;             %m - using reference values from papers for now
-rotor(2).solidity = rotor(2).Nb*rotor(2).chord/(pi*rotor(2).diameter*0.5);   % Blade solidity - not sure what to take as chord for tapered blade
-rotor(2).rd = 0.82*rotor(2).diameter/2;  % annulus - "assumption consistent with the results obtained by Leishman using the free wake method"
-rotor(2).A_Ad = 1/rotor(2).rd^2;
+%% Bottom rotor
+rotor(2).Nb = 2;  %# Number of aeros
+rotor(2).R = 1.8;  %m - using reference values from papers for now
+rotor(2).rpm = 800;  %rev/min - using reference values from papers for now
+rotor(2).chord = 0.15;  %m - using reference values from papers for now
+rotor(2).solidity = rotor(2).Nb*rotor(2).chord/(pi*rotor(2).R);   % aero solidity - not sure what to take as chord for tapered aero
+rotor(2).rd = 0.82;  %[non-dimensionalised by R] annulus - "assumption consistent with the results obtained by Leishman using the free wake method"
+   
+% Aerodynamics - maybe a bit of overkill at the moment
+aero.cl_alpha = 2*pi;         %1/rad - Lift slope, thin airfoil theory for now
+aero.Cd0 =  0.011;
+aero.D1 = 0.01;
+aero.D2 = 0.01;
+rotor(2).aero = aero;
 
 
-% Drag coefficients
-Cd0 = 0.011;
-D1 = 0.01;
-D2 = 0.01;
 
 
 %% Testing
 
-%Prandtl_tip_loss(0.5,0,rotor(1))
+%Fcf= Prandtl_tip_loss(r,lambda,rotor);
+%Prandtl_tip_loss(0.3,0,rotor(1))
+%Prandtl_tip_loss([0,1],[2,3],rotor(1))
+
+%lambda_bot = get_lambda_bot(F,r,pitch,rotor);
+%lambda_bot = get_lambda_bot(1,0.3,0.2,rotor)
+%lambda_bot = get_lambda_bot([0.58,0.4],[0,0.3],[0.2,0.2],rotor)
+
