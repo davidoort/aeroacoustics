@@ -1,4 +1,8 @@
-function [] = convergeflowfield()
+function [Fcf_u, lambda_u, Fcf_l, lambda_l] = convergeflowfield(r, epsilon, rotor)
+
+pitch_u = rotor(1).pitch;
+pitch_l = rotor(2).pitch;
+
 
 Fcf0_u = zeros(1,length(r)); %dummy, to start iteration
 Fcf0_l = zeros(1,length(r)); %dummy, to start iteration
