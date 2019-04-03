@@ -3,8 +3,8 @@
 %allows to trim the helicopter in hover. Whenever you change pitch and
 %therefore thrust and torque it would be good to start the convergence of
 %Fcf and lambda (in a separate function) with the values previously found.
-
 init 
+
 dr = 0.001;
 r = dr:dr:1-dr; %non-dimensionalized by tip radius. Rotors have the same radius.
 %The dr and 1-dr is to avoid singularities at the tip (since F= 0 there usually and the lambda is NaN)

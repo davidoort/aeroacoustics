@@ -26,10 +26,16 @@ new radial point ar on the lower rotor"
 %Procedure has been verified in the command window. lambda_u now has the
 %same shape but with a coarser resolution to match the dimensions of
 %r(inner).
+
+%% sensitive area - instead of defining ri from 0 to 1
 interp_length = length(r(inner)); 
-ri = linspace(0,1,interp_length);
+ri = linspace(r(1),r(end),interp_length);
 lambda_u = interp1(r,lambda_u,ri);
 
+%test - weird plots happening 
+%lambda_u = lambda_u(inner);
+
+%%
 %since lambda inf is uniform, it can just be truncated so lambda_inf(inner)
 
 lambda_bot_inner = sqrt((sigma*cl_a*1./(16*F(inner))-lambda_u/(2*rotor.rd^2)-lambda_inf(inner)/2).^2+...
