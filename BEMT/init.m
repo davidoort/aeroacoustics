@@ -17,10 +17,10 @@ atm.c0 = sqrt(atm.gamma_air*atm.R_air*(atm.Temp+273.15)); %m/s - speed of sound
 
 %% Top rotor
 rotor(1).Nb = 2;             %# Number of aeros
-rotor(1).diameter = 3.6;             %m - using reference values from papers for now
+rotor(1).R = 1.8;             %m - using reference values from papers for now
 rotor(1).rpm = 800;             %rev/min - using reference values from papers for now
 rotor(1).chord = 0.15;             %m - using reference values from papers for now
-rotor(1).solidity = rotor(1).Nb*rotor(1).chord/(pi*rotor(1).diameter*0.5);   % aero solidity - not sure what to take as chord for tapered aero
+rotor(1).solidity = rotor(1).Nb*rotor(1).chord/(pi*rotor(1).R);   % aero solidity - not sure what to take as chord for tapered aero
 % Aerodynamics
 aero.cl_alpha = 2*pi;         %1/rad - Lift slope, thin airfoil theory for now
 aero.Cd0 =  0.011;
