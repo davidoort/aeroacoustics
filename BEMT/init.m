@@ -28,6 +28,16 @@ aero.D1 = 0.01;
 aero.D2 = 0.01;
 rotor(1).aero = aero;
 
+%Validation with Harrington Rotor 1 - things assumed are pitch of rotor and
+%CL_alpha
+rotor(1).solidity = 0.027; 
+aero.cl_alpha = 5.156;         %1/rad - Lift slope, NACA 0012 from graph
+aero.Cd0 =  0.011;
+aero.D1 = 0.0;
+aero.D2 = 0.0;
+rotor(1).aero = aero;
+
+
 %% Bottom rotor
 rotor(2).Nb = 2;  %# Number of aeros
 rotor(2).R = 1.8;  %m - using reference values from papers for now
@@ -35,7 +45,7 @@ rotor(2).rpm = 800;  %rev/min - using reference values from papers for now
 rotor(2).chord = 0.15;  %m - using reference values from papers for now
 rotor(2).solidity = rotor(2).Nb*rotor(2).chord/(pi*rotor(2).R);   % aero solidity - not sure what to take as chord for tapered aero
 rotor(2).rd = 0.82;  %[non-dimensionalised by R] annulus - "assumption consistent with the results obtained by Leishman using the free wake method"
-   
+
 % Aerodynamics - maybe a bit of overkill at the moment
 aero.cl_alpha = 2*pi;         %1/rad - Lift slope, thin airfoil theory for now
 aero.Cd0 =  0.011;
@@ -43,8 +53,20 @@ aero.D1 = 0.01;
 aero.D2 = 0.01;
 rotor(2).aero = aero;
 
+%Validation with Harrington Rotor 1 - things assumed are pitch of rotor and
+%CL_alpha
+rotor(2).solidity = rotor(1).solidity; 
+aero.cl_alpha = 5.156;         %1/rad - Lift slope, assumed NACA 0012 from graph
+aero.Cd0 =  0.011;
+aero.D1 = 0.0;
+aero.D2 = 0.0;
+rotor(2).aero = aero;
 
 
+%% General params
+
+params.kappaint = 1.28;
+params.kappa = 1.15;
 
 %% Testing
 

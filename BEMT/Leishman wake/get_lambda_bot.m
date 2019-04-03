@@ -27,9 +27,10 @@ new radial point ar on the lower rotor"
 %same shape but with a coarser resolution to match the dimensions of
 %r(inner).
 
-%% sensitive area - instead of defining ri from 0 to 1
+%% sensitive area - instead of defining ri from 0 to 1 translate exactly the lambda up plot (starts at r(1) and ends at r(end))
 interp_length = length(r(inner)); 
-ri = linspace(r(1),r(end),interp_length);
+visc = 1.2; %equivalent to dissipation in my eyes
+ri = linspace(r(1),r(end)/visc,interp_length);
 lambda_u = interp1(r,lambda_u,ri);
 
 %test - weird plots happening 
