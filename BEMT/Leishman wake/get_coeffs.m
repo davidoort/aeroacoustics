@@ -1,5 +1,75 @@
-function [C_P, CT_u, CP_u, CT_l, CP_l, spanwise_coeffs] = get_coeffs(Fcf_u, lambda_u, Fcf_l, lambda_l, r, dr, rotor,params, flowfield)
+function [C_P, CT_u, CP_u, CT_l, CP_l, spanwise_coeffs] = get_coeffs(Fcf_u, lambda_u, Fcf_l, lambda_l, r, dr, rotor, params, flowfield)
+%{
+This function is a simple code implementation of the equations found in
+literature (see below) for the thrust and torque/power coefficients (and 
+their distributions along the span) of the top and bottom rotor.
 
+Inputs:
+    Fcf_u - (array) containing the converged (for a given collective pitch
+    setting) Prandtl tip loss function at every blade span for upper rotor
+
+    lambda_u - (array) with converged inflow distribution as a function of
+    blade span for the upper rotor
+
+    Fcf_l - (array) containing the converged (for a given collective pitch
+    setting) Prandtl tip loss function at every blade span for upper rotor
+
+    lambda_l - (array) with converged inflow distribution as a function of
+    blade span for the upper rotor
+
+    r - (array) of radial positions from dr to 1-dr
+
+    dr - (scalar) spanwise (radial) discretization size
+
+    rotor - (struct) containing geometrical properties for both rotors such 
+    as pitch distribution, radius, rpm, blade number, etc 
+
+    params - (struct) containing general parameters such as kappa and
+    kappa_int
+
+    flowfield - (struct) containing lambda_inf (array) for both rotors 
+    (normalization is different for each rotor since tip speed may be different)
+
+Outputs:
+    C_P - (scalar) power coefficient for coaxial rotor system, from Leishman 
+    equation (20), verification purposes
+
+    CT_u - (scalar) upper rotor thrust coefficient. From Leishman equation (15)
+    
+    CP_u - (scalar) upper rotor power coefficient. From Leishman equation (16)
+
+    CT_l - (scalar) lower rotor thrust coefficient. From Leishman equation (17)
+ 
+    CP_l - (scalar) lower rotor power coefficient. From Leishman equation (18)
+
+    spanwise_coeffs - (struct) containing the spanwise thrust and power
+    coefficients, for plotting.
+
+Other m-files required: none
+
+MAT-files required: none
+
+Literature referenced: 
+    ! An optimum Coaxial Rotor System for Axial Flight. Leishman, 2008. See
+    equation (13) & (14)
+
+    Unmanned coaxial rotor helicopter dynamics and system parameter
+    estimation. Rashid et al. Springer, 2014.
+    
+    Modelling and robust control of an unmanned coaxial rotor helicopter
+    with unstructured uncertainties. Dong et al. Advances in Mechanical
+    Engineering, 2017, Vol. 9(I) 1-14
+
+Assumptions: none
+
+Author: David Oort Alonso, B.Sc, Aerospace Engineering
+TU Delft, Faculty of Aerospace Engineering
+email address: d.oortalonso@student.tudelft.nl  
+Website: https://github.com/davidoort/aeroacoustics
+March 2019; Last revision: 21-April-2019
+%}
+
+%------------- BEGIN CODE --------------
 pitch_u = rotor(1).pitch;
 pitch_l = rotor(2).pitch;
 

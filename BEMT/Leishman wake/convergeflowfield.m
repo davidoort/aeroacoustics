@@ -1,4 +1,68 @@
 function [Fcf_u, lambda_u, Fcf_l, lambda_l] = convergeflowfield(flowfield, r, epsilon, rotor)
+%{
+convergeflowfield - This function solves for the Prandtl tip loss function
+along the span of the blade on the upper and lower rotor as well as the
+inflow ratio lambda on the upper and lower rotor. It is called
+"converge" because there is an iterative component of getting to the
+results since lambda and F mutually depend on each other.
+
+NOTE: Usually converges within 5 iterations.
+
+Inputs:
+    flowfield - (struct) containing lambda_inf (array) for both rotors 
+    (normalization is different for each rotor since tip speed may be different)
+
+    r - (array) of radial positions from dr to 1-dr
+
+    epsilon - accuracy of convergence (scalar)
+
+    rotor - (struct) containing geometrical properties for both rotors such 
+    as pitch distribution, radius, rpm, blade number, etc 
+
+Outputs:
+    Fcf_u - (array) containing the converged (for a given collective pitch
+    setting) Prandtl tip loss function at every blade span for upper rotor
+
+    lambda_u - (array) with converged inflow distribution as a function of
+    blade span for the upper rotor
+
+    Fcf_l - (array) containing the converged (for a given collective pitch
+    setting) Prandtl tip loss function at every blade span for upper rotor
+
+    lambda_l - (array) with converged inflow distribution as a function of
+    blade span for the upper rotor
+
+Other m-files required (in path): 
+    get_lambda_up
+    Prandtl_tip_loss
+    get_lambda_bot
+
+MAT-files required: none
+
+Literature referenced: 
+    ! An optimum Coaxial Rotor System for Axial Flight. Leishman, 2008.
+
+    Unmanned coaxial rotor helicopter dynamics and system parameter
+    estimation. Rashid et al. Springer, 2014.
+    
+    Modelling and robust control of an unmanned coaxial rotor helicopter
+    with unstructured uncertainties. Dong et al. Advances in Mechanical
+    Engineering, 2017, Vol. 9(I) 1-14
+
+Assumptions:
+    ! Top rotor not influenced by bottom rotor: its inflow can be converged
+    independently.
+
+    Start at F=1 provides fast convergence.
+
+Author: David Oort Alonso, B.Sc, Aerospace Engineering
+TU Delft, Faculty of Aerospace Engineering
+email address: d.oortalonso@student.tudelft.nl  
+Website: https://github.com/davidoort/aeroacoustics
+March 2019; Last revision: 21-April-2019
+%}
+
+%------------- BEGIN CODE --------------
 
 pitch_u = rotor(1).pitch;
 pitch_l = rotor(2).pitch;
@@ -42,4 +106,7 @@ while norm(Fcf_l-Fcf0_l)>epsilon || norm(lambda_tot_l-lambda0_l)>epsilon
 end
     
 lambda_l = lambda_tot_l-flowfield(2).lambda_inf; %From Leishman paper
+
+%------------- END OF CODE --------------
+
 end

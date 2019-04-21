@@ -6,7 +6,7 @@
 init 
 
 dr = 0.001;
-r = dr:dr:1-dr; %non-dimensionalized by tip radius. Rotors have the same radius.
+r = dr:dr:1-5*dr; %non-dimensionalized by tip radius. Rotors have the same radius.
 %The dr and 1-dr is to avoid singularities at the tip (since F= 0 there usually and the lambda is NaN)
 %and at the root, when calculating the induced inflow angle.
 
@@ -14,14 +14,14 @@ plot_inflow_loss = true;
 plot_coeffs = true;
 
 axial_vel = 0; %m/s
-flowfield(1).lambda_inf = axial_vel/(rotor(1).rpm*2*pi*rotor(1).R/60)*ones(1,length(r));
-flowfield(2).lambda_inf = axial_vel/(rotor(2).rpm*2*pi*rotor(2).R/60)*ones(1,length(r));
+flowfield(1).lambda_inf = axial_vel/(rotor(1).rpm*2*pi*rotor(1).R/60)*ones(1,length(r)); %normalizing free stream axial velocity by tip velocity
+flowfield(2).lambda_inf = axial_vel/(rotor(2).rpm*2*pi*rotor(2).R/60)*ones(1,length(r)); %normalizing free stream axial velocity by tip velocity
 
 epsilon = 0.001; %convergence accuracy
 
 trim = 1; %1 means that both rotors have the same geometrical pitch, so same collective setting
 pitchdeg = 8; %deg
-rotor(1).pitch = pitchdeg*pi/180*ones(1,length(r)); %rad
+rotor(1).pitch = deg2rad(pitchdeg)*ones(1,length(r)); %rad
 rotor(2).pitch = trim*rotor(1).pitch; %rad
 
 %% Converge Fcf and inflow ratio
