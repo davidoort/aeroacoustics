@@ -20,7 +20,7 @@ flowfield(2).lambda_inf = axial_vel/(rotor(2).rpm*2*pi*rotor(2).R/60)*ones(1,len
 epsilon = 0.001; %convergence accuracy
 
 trim = 1; %1 means that both rotors have the same geometrical pitch, so same collective setting
-pitchdeg = 8; %deg
+pitchdeg = 14; %deg
 rotor(1).pitch = deg2rad(pitchdeg)*ones(1,length(r)); %rad
 rotor(2).pitch = trim*rotor(1).pitch; %rad
 
@@ -31,14 +31,23 @@ rotor(2).pitch = trim*rotor(1).pitch; %rad
 
 %% Calculate thrust and torque coefficients
 
-[C_P, CT_u, CP_u, CT_l, CP_l, spanwise_coeffs] = get_coeffs(Fcf_u, lambda_u, Fcf_l, lambda_l, r, dr, rotor,params, flowfield);
+[CP, CT_u, CP_u, CT_l, CP_l, spanwise_coeffs] = get_coeffs(Fcf_u, lambda_u, Fcf_l, lambda_l, r, dr, rotor,params, flowfield);
 
 FOM_u = CT_u^(3/2)/(sqrt(2)*CP_u); %treated as a single rotor;
 FOM_l = CT_l^(3/2)/(sqrt(2)*CP_l); %treated as a single rotor;
 
+CT = CT_u + CT_l;
+
 FOM_coax = params.kappaint*(CT_u^(3/2)+CT_l^(3/2))/(sqrt(2)*(CP_u+CP_l)); %from robust control paper
 
+T = atm.rho*pi*rotor(1).R^4*rotor(1).omega^2*CT; %Using rotor 1 radius=rotor2 radius
+P = atm.rho*pi*rotor(1).R^5*rotor(1).omega^3*CP; %Using rotor 1 radius=rotor2 radius
+
 disp(['Net torque coefficient',' ',num2str((CP_u-CP_l)/CP_l)])
+disp(['Coaxial system power coefficient',' ',num2str(CP)])
+disp(['Coaxial system thrust coefficient',' ',num2str(CT)])
+disp(['Total thrust [N]',' ',num2str(T)])
+disp(['Total power [W]',' ',num2str(P)])
 
 %% Plotting
 
