@@ -92,8 +92,8 @@ spanwise_coeffs.dCt_u = dcT_u/dr;
 
 %% BOTTOM ROTOR
 
-dcT_l = 4*Fcf_l.*lambda_l.*(lambda_l+flowfield(2).lambda_inf).*r*dr;
-%Alternate approach, from Leishman
+dcT_l_1 = 4*Fcf_l.*lambda_l.*(lambda_l+flowfield(2).lambda_inf).*r*dr;
+%Alternate approach, from Leishman (there is actually no difference between the two expressions, I have checked)
 dcT_l = 0.5*rotor(2).solidity*rotor(2).aero.cl_alpha*(rotor(2).pitch.*r.^2-...
     (lambda_l+flowfield(2).lambda_inf).*r)*dr;
 
