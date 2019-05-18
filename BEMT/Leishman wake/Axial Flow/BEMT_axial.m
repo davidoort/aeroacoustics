@@ -3,7 +3,18 @@
 %allows to trim the helicopter in hover. Whenever you change pitch and
 %therefore thrust and torque it would be good to start the convergence of
 %Fcf and lambda (in a separate function) with the values previously found.
+
+
+clear
+close all
+
+addpath('BEMT')
+addpath(genpath('./'))
+
 init 
+
+
+
 
 dr = 0.001;
 r = dr:dr:1-5*dr; %non-dimensionalized by tip radius. Rotors have the same radius.
