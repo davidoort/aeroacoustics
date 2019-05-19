@@ -1,4 +1,4 @@
-function [Fcf_u, lambda_u, Fcf_l, lambda_l] = convergeflowfield(flowfield, r, epsilon, rotor)
+function [Fcf_u, lambda_u, Fcf_l, lambda_l] = convergeflowfield(flowfield, r, epsilon, coaxial)
 %{
 convergeflowfield - This function solves for the Prandtl tip loss function
 along the span of the blade on the upper and lower rotor as well as the
@@ -64,6 +64,9 @@ March 2019; Last revision: 21-April-2019
 
 %------------- BEGIN CODE --------------
 
+
+rotor = coaxial.rotor;
+
 pitch_u = rotor(1).pitch;
 pitch_l = rotor(2).pitch;
 
@@ -93,7 +96,7 @@ end
 lambda_u = lambda_tot_u-flowfield(1).lambda_inf;
 
 lambda0_l = zeros(1,length(r)); %dummy, to start iteration
-lambda_tot_l = get_lambda_bot(Fcf_l,r,pitch_l,rotor,flowfield,lambda_u);
+lambda_tot_l = get_lambda_bot(Fcf_l,r,pitch_l,coaxial,flowfield,lambda_u);
 %% converge bottom rotor 
 i = 0;
 while norm(Fcf_l-Fcf0_l)>epsilon || norm(lambda_tot_l-lambda0_l)>epsilon
@@ -101,7 +104,7 @@ while norm(Fcf_l-Fcf0_l)>epsilon || norm(lambda_tot_l-lambda0_l)>epsilon
     lambda0_l = lambda_tot_l;
     
     Fcf_l = Prandtl_tip_loss(r,lambda_tot_l,rotor(2));
-    lambda_tot_l = get_lambda_bot(Fcf_l,r,pitch_l,rotor,flowfield,lambda_u);
+    lambda_tot_l = get_lambda_bot(Fcf_l,r,pitch_l,coaxial,flowfield,lambda_u);
     i = i+1;
 end
     

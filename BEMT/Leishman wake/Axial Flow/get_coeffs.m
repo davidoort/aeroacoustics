@@ -1,4 +1,4 @@
-function [C_P, CT_u, CP_u, CT_l, CP_l, spanwise_coeffs] = get_coeffs(Fcf_u, lambda_u, Fcf_l, lambda_l, r, dr, rotor, params, flowfield)
+function [C_P, CT_u, CP_u, CT_l, CP_l, spanwise_coeffs] = get_coeffs(Fcf_u, lambda_u, Fcf_l, lambda_l, r, dr, coaxial, flowfield)
 %{
 This function is a simple code implementation of the equations found in
 literature (see below) for the thrust and torque/power coefficients (and 
@@ -70,6 +70,11 @@ March 2019; Last revision: 21-April-2019
 %}
 
 %------------- BEGIN CODE --------------
+
+rotor = coaxial.rotor;
+
+params = coaxial.params;
+
 pitch_u = rotor(1).pitch;
 pitch_l = rotor(2).pitch;
 

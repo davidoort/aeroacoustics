@@ -1,4 +1,4 @@
-function lambda_bot = get_lambda_bot(F,r,pitch,rotor,flowfield,lambda_u)
+function lambda_bot = get_lambda_bot(F,r,pitch,coaxial,flowfield,lambda_u)
 %{
 This function is a simple code implementation of the equation found in
 literature (see below) for the inflow distribution of the bottom rotor in two 
@@ -64,14 +64,18 @@ March 2019; Last revision: 21-April-2019
 
 %------------- BEGIN CODE --------------
 
+rotor = coaxial.rotor;
+
 lambda_inf = flowfield(2).lambda_inf;
+
+rd =coaxial.params.rd;
 
 rotor = rotor(2); %in case the generic rotor struct is given
 sigma = rotor.solidity;
 cl_a = rotor.aero.cl_alpha;
-inner = r<rotor.rd; %inside the downwash circle condition (to select elements in array later)
-outer = r>=rotor.rd; %outside the downwash circle condition (to select elements in array later)
-%idx_inner = find(r<rotor.rd);
+inner = r<rd; %inside the downwash circle condition (to select elements in array later)
+outer = r>=rd; %outside the downwash circle condition (to select elements in array later)
+%idx_inner = find(r<rd);
 
 
 %Procedure has been verified in the command window. lambda_u now has the
@@ -90,8 +94,8 @@ lambda_u = interp1(r,lambda_u,ri);
 %%
 %since lambda inf is uniform, it can just be truncated so lambda_inf(inner)
 
-lambda_bot_inner = sqrt((sigma*cl_a*1./(16*F(inner))-lambda_u/(2*rotor.rd^2)-lambda_inf(inner)/2).^2+...
-    sigma*cl_a*pitch(inner).*r(inner)*1./(8*F(inner)))-sigma*cl_a*1./(16*F(inner))+lambda_u/(2*rotor.rd^2)+lambda_inf(inner)/2;
+lambda_bot_inner = sqrt((sigma*cl_a*1./(16*F(inner))-lambda_u/(2*rd^2)-lambda_inf(inner)/2).^2+...
+    sigma*cl_a*pitch(inner).*r(inner)*1./(8*F(inner)))-sigma*cl_a*1./(16*F(inner))+lambda_u/(2*rd^2)+lambda_inf(inner)/2;
 
 lambda_bot_outer = sqrt((sigma*cl_a*1./(16*F(outer))-lambda_inf(outer)/2).^2+sigma*cl_a*pitch(outer).*r(outer)*1./(8*F(outer)))-sigma*cl_a*1./(16*F(outer))+lambda_inf(outer)/2;
 
