@@ -111,14 +111,55 @@ end
 % Disk-plot of velocity tangential velocity at the blade in forward flight
 
 phi = linspace(0,2*pi);
-r = linspace(0,1);
+radius = linspace(0.15,1);
 
-[PHI,R] = meshgrid(phi,r);
+[PHI,R] = meshgrid(phi,radius);
 
 vel = sin(PHI)+R;
 
 figure(3)
 surf(R*cos(PHI),R*sin(PHI),vel)
+title('Velocity along $\vec{y_b}$','interpreter','latex')
+%xlabel('r/R')
+%ylabel('Non-dimensionalized dCpl/dr')
+set(gca,'xtick',[])
+set(gca,'ytick',[])
+set(gca,'visible','off')
+colorbar
+
+% Combine previous plots to make them denser (ideally they would have been combined with the plots in Leishman's paper)
+
+figure(4); clf;
+hold on;
+plot(r, lambda_u, '-.')
+plot(r, lambda_l, '-.')
+legend('Upper rotor','Lower rotor')
+%title('Inflow ratio vs radius')
+xlabel('r/R')
+ylabel('Inflow ratio')
+
+figure(5); clf;
+hold on;
+plot(r, spanwise_coeffs.dCt_u, '-.')
+plot(r, spanwise_coeffs.dCt_l, '-.')
+legend('Upper rotor','Lower rotor')
+%title('dCTu vs radius')
+xlabel('r/R')
+ylabel('Non-dimensionalized dCT/dr')
+
+figure(6); clf;
+hold on;
+plot(r, spanwise_coeffs.dCp_u, '-.')
+plot(r, spanwise_coeffs.dCp_l, '-.')
+legend('Upper rotor','Lower rotor')
+%title('dCTu vs radius')
+xlabel('r/R')
+ylabel('Non-dimensionalized dCP/dr')
+
+
+
+
+
 
 end
 
