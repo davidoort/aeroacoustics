@@ -83,7 +83,8 @@ pitch_l = rotor(2).pitch;
 dcT_u = 4*Fcf_u.*lambda_u.*(lambda_u+flowfield(1).lambda_inf).*r*dr;
 phi_u = lambda_u./r; %rad - induced inflow angle. small angle approximation for tangent(phi) = phi
 
-dcp_i_u = lambda_u.*dcT_u; %induced power/drag
+dcp_i_u = 4*(lambda_u+flowfield(1).lambda_inf).^2.*lambda_u.*r*dr; %induced power/drag
+dcp_i_u = 4*Fcf_u.*(lambda_u+flowfield(1).lambda_inf).^2.*lambda_u.*r*dr; %induced power/drag - including F (lower value)
 Cd0 = rotor(1).aero.Cd0;
 D1 = rotor(1).aero.D1;
 D2 = rotor(1).aero.D2;

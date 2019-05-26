@@ -1,4 +1,4 @@
-function [C_P, CT_u, CP_u, CT_l, CP_l, spanwise_coeffs] = get_coeffs(Fcf_u, lambda_u, Fcf_l, lambda_l, r, dr, coaxial, flowfield)
+function [C_P, CT_u, CP_u, CT_l, CP_l, spanwise_coeffs] = get_coeffs_FF(Fcf_u, lambda_u, Fcf_l, lambda_l, r, dr, coaxial, flowfield)
 %{
 FORWARD Flight
 This function is a simple code implementation of the equations found in
@@ -28,7 +28,7 @@ Inputs:
     params - (struct) containing general parameters such as kappa and
     kappa_int
 
-    flowfield - (struct) containing lambda_inf (array) for both rotors 
+    flowfield - (struct) containing lambda_P (array) for both rotors 
     (normalization is different for each rotor since tip speed may be different)
 
 Outputs:
@@ -80,7 +80,7 @@ pitch_u = rotor(1).pitch;
 pitch_l = rotor(2).pitch;
 
 %% UPPER ROTOR
-dcT_u = 4*Fcf_u.*lambda_u.*(lambda_u+flowfield(1).lambda_inf).*r*dr;
+dcT_u = 4*Fcf_u.*lambda_u.*(lambda_u+flowfield(1).lambda_P).*r*dr;
 phi_u = lambda_u./r; %rad - induced inflow angle. small angle approximation for tangent(phi) = phi
 
 dcp_i_u = lambda_u.*dcT_u; %induced power/drag
@@ -98,10 +98,10 @@ spanwise_coeffs.dCt_u = dcT_u/dr;
 
 %% BOTTOM ROTOR
 
-dcT_l_1 = 4*Fcf_l.*lambda_l.*(lambda_l+flowfield(2).lambda_inf).*r*dr;
+dcT_l_1 = 4*Fcf_l.*lambda_l.*(lambda_l+flowfield(2).lambda_P).*r*dr;
 %Alternate approach, from Leishman (there is actually no difference between the two expressions, I have checked)
 dcT_l = 0.5*rotor(2).solidity*rotor(2).aero.cl_alpha*(rotor(2).pitch.*r.^2-...
-    (lambda_l+flowfield(2).lambda_inf).*r)*dr;
+    (lambda_l+flowfield(2).lambda_P).*r)*dr;
 
 phi_l = lambda_l./r; %rad - induced inflow angle. small angle approximation for tangent(phi) = phi
 

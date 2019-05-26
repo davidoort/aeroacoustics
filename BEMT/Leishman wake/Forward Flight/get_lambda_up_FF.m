@@ -1,4 +1,4 @@
-function lambda = get_lambda_up(F,r,pitch,rotor,flowfield)
+function lambda = get_lambda_up_FF(F,r,phi,pitch,rotor,flowfield)
 %{
 FORWARD Flight
 This function is a simple code implementation of the equation found in
@@ -17,7 +17,7 @@ Inputs:
     rotor - (struct) containing geometrical properties for both rotors such 
     as pitch distribution, radius, rpm, blade number, etc 
 
-    flowfield - (struct) containing lambda_inf (array) for both rotors 
+    flowfield - (struct) containing lambda_P (array) for both rotors 
     (normalization is different for each rotor since tip speed may be different)
 
 Outputs:
@@ -53,11 +53,11 @@ May 2019; Last revision: 26-May-2019
 
 rotor = rotor(1); %in case the generic rotor struct is given
 
-lambda_inf = flowfield(1).lambda_inf;
+lambda_P = flowfield(1).lambda_P;
 sigma = rotor.solidity;
 cl_a = rotor.aero.cl_alpha;
 
-lambda = sqrt((sigma*cl_a*1./(16*F)-lambda_inf/2).^2+sigma*cl_a*pitch.*r*1./(8*F))-sigma*cl_a*1./(16*F)+lambda_inf/2;
+lambda = sqrt((sigma*cl_a*1./(16*F)-lambda_P/2).^2+sigma*cl_a*pitch.*r*1./(8*F))-sigma*cl_a*1./(16*F)+lambda_P/2;
 
 
 

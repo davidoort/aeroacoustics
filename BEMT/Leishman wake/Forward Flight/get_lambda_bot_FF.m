@@ -1,4 +1,4 @@
-function lambda_bot = get_lambda_bot(F,r,pitch,coaxial,flowfield,lambda_u)
+function lambda_bot = get_lambda_bot_FF(F,r,pitch,coaxial,flowfield,lambda_u)
 %{
 FORWARD Flight
 This function is a simple code implementation of the equation found in
@@ -25,7 +25,7 @@ Inputs:
     rotor - (struct) containing geometrical properties for both rotors such 
     as pitch distribution, radius, rpm, blade number, etc 
 
-    flowfield - (struct) containing lambda_inf (array) for both rotors 
+    flowfield - (struct) containing lambda_P (array) for both rotors 
     (normalization is different for each rotor since tip speed may be different)
 
 Outputs:
@@ -67,7 +67,7 @@ May 2019; Last revision: 26-May-2019
 
 rotor = coaxial.rotor;
 
-lambda_inf = flowfield(2).lambda_inf;
+lambda_P = flowfield(2).lambda_P;
 
 rd =coaxial.params.rd;
 
@@ -93,12 +93,12 @@ lambda_u = interp1(r,lambda_u,ri);
 %lambda_u = lambda_u(inner);
 
 %%
-%since lambda inf is uniform, it can just be truncated so lambda_inf(inner)
+%since lambda inf is uniform, it can just be truncated so lambda_P(inner)
 
-lambda_bot_inner = sqrt((sigma*cl_a*1./(16*F(inner))-lambda_u/(2*rd^2)-lambda_inf(inner)/2).^2+...
-    sigma*cl_a*pitch(inner).*r(inner)*1./(8*F(inner)))-sigma*cl_a*1./(16*F(inner))+lambda_u/(2*rd^2)+lambda_inf(inner)/2;
+lambda_bot_inner = sqrt((sigma*cl_a*1./(16*F(inner))-lambda_u/(2*rd^2)-lambda_P(inner)/2).^2+...
+    sigma*cl_a*pitch(inner).*r(inner)*1./(8*F(inner)))-sigma*cl_a*1./(16*F(inner))+lambda_u/(2*rd^2)+lambda_P(inner)/2;
 
-lambda_bot_outer = sqrt((sigma*cl_a*1./(16*F(outer))-lambda_inf(outer)/2).^2+sigma*cl_a*pitch(outer).*r(outer)*1./(8*F(outer)))-sigma*cl_a*1./(16*F(outer))+lambda_inf(outer)/2;
+lambda_bot_outer = sqrt((sigma*cl_a*1./(16*F(outer))-lambda_P(outer)/2).^2+sigma*cl_a*pitch(outer).*r(outer)*1./(8*F(outer)))-sigma*cl_a*1./(16*F(outer))+lambda_P(outer)/2;
 
 lambda_bot = [lambda_bot_inner lambda_bot_outer];
 

@@ -17,7 +17,7 @@ Inputs:
 
     epsilon - accuracy of convergence (scalar)
 
-    rotor - (struct) containing geometrical properties for both rotors such 
+    coaxial - (struct object) containing geometrical properties for both rotors such 
     as pitch distribution, radius, rpm, blade number, etc 
 
 Outputs:

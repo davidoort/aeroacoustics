@@ -1,4 +1,4 @@
-function Fcf= Prandtl_tip_loss(r,lambda,rotor)
+function Fcf= Prandtl_tip_loss_FF(r,lambda,rotor)
 %{
 FORWARD Flight
 This function is a simple code implementation of the equation found in
