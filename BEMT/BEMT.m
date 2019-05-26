@@ -9,7 +9,7 @@ coaxial = Coaxial();
 
 epsilon = 0.001; %convergence accuracy
 
-plots = true;
+plots = false;
 
 [Thrust, Torque, Power] = BEMT_axial(coaxial,atm,epsilon,plots);
 
