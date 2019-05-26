@@ -1,5 +1,6 @@
 function lambda = get_lambda_up(F,r,pitch,rotor,flowfield)
 %{
+FORWARD Flight
 This function is a simple code implementation of the equation found in
 literature (see below) for the inflow distribution of the top rotor.
 
@@ -44,7 +45,7 @@ Author: David Oort Alonso, B.Sc, Aerospace Engineering
 TU Delft, Faculty of Aerospace Engineering
 email address: d.oortalonso@student.tudelft.nl  
 Website: https://github.com/davidoort/aeroacoustics
-March 2019; Last revision: 21-April-2019
+May 2019; Last revision: 26-May-2019
 %}
 
 %------------- BEGIN CODE --------------

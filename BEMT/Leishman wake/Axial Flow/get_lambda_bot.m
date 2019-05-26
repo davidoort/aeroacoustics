@@ -1,5 +1,6 @@
 function lambda_bot = get_lambda_bot(F,r,pitch,coaxial,flowfield,lambda_u)
 %{
+AXIAL Flight
 This function is a simple code implementation of the equation found in
 literature (see below) for the inflow distribution of the bottom rotor in two 
 distinctive regions (inner - ingests top rotor downwash and outer - sees free-stream).

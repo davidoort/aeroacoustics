@@ -1,5 +1,6 @@
 function Fcf= Prandtl_tip_loss(r,lambda,rotor)
 %{
+FORWARD Flight
 This function is a simple code implementation of the equation found in
 literature (see below) for the Prandtl Tip Loss function F as a function of
 blade number and spanwise inflow ratio. Function performs calculation in a
@@ -41,7 +42,7 @@ Author: David Oort Alonso, B.Sc, Aerospace Engineering
 TU Delft, Faculty of Aerospace Engineering
 email address: d.oortalonso@student.tudelft.nl  
 Website: https://github.com/davidoort/aeroacoustics
-March 2019; Last revision: 21-April-2019
+May 2019; Last revision: 26-May-2019
 %}
 
 

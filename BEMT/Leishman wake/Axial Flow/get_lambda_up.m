@@ -1,5 +1,6 @@
 function lambda = get_lambda_up(F,r,pitch,rotor,flowfield)
 %{
+AXIAL Flight
 This function is a simple code implementation of the equation found in
 literature (see below) for the inflow distribution of the top rotor.
 

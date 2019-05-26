@@ -1,5 +1,6 @@
 function [Fcf_u, lambda_u, Fcf_l, lambda_l] = convergeflowfield(flowfield, r, epsilon, coaxial)
 %{
+FORWARD Flight
 convergeflowfield - This function solves for the Prandtl tip loss function
 along the span of the blade on the upper and lower rotor as well as the
 inflow ratio lambda on the upper and lower rotor. It is called
@@ -59,7 +60,7 @@ Author: David Oort Alonso, B.Sc, Aerospace Engineering
 TU Delft, Faculty of Aerospace Engineering
 email address: d.oortalonso@student.tudelft.nl  
 Website: https://github.com/davidoort/aeroacoustics
-March 2019; Last revision: 21-April-2019
+May 2019; Last revision: 26-May-2019
 %}
 
 %------------- BEGIN CODE --------------

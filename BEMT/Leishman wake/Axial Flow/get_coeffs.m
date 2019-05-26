@@ -1,5 +1,6 @@
 function [C_P, CT_u, CP_u, CT_l, CP_l, spanwise_coeffs] = get_coeffs(Fcf_u, lambda_u, Fcf_l, lambda_l, r, dr, coaxial, flowfield)
 %{
+AXIAL Flight
 This function is a simple code implementation of the equations found in
 literature (see below) for the thrust and torque/power coefficients (and 
 their distributions along the span) of the top and bottom rotor.

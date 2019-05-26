@@ -1,8 +1,72 @@
 function [Thrust, Torque, Power] = BEMT_axial(coaxial,atm,epsilon,plots)
-%maybe make this a function, like fly(collective1,collective2). This
-%allows to trim the helicopter in hover. Whenever you change pitch and
-%therefore thrust and torque it would be good to start the convergence of
-%Fcf and lambda (in a separate function) with the values previously found.
+%{
+AXIAL Flight
+This function can calculate the spanwise thrust & power coefficients and
+inflow ratio which allows to estimate the performance of a coaxial rotor in
+axial or hovering flight. This function is run from BEMT.m when
+tangential_vel = 0.
+
+Inputs:
+    coaxial - (struct object) with operational (state) and geometric
+    variables of the coaxial rotor
+
+    atm - (struct object) with atmospheric parameters such as air density
+
+    epsilon - (scalar) convergence accuracy for F-lambda iteration
+
+    plots - (boolean) indicates if plots should be returned or not
+
+Outputs:
+    Thrust - (scalar) Total thrust of the coaxial rotor in AXIAL Flight
+
+    Torque - (scalar) Total torque on the coaxial rotor in AXIAL Flight
+
+    Power - (scalar) Total power consumed by the coaxial rotor in AXIAL
+    Flight
+
+    Plots (optionally)
+
+Other m-files required: 
+
+    covergeflowfield
+    get_coeffs
+
+MAT-files required: none
+
+Literature referenced: 
+    ! An optimum Coaxial Rotor System for Axial Flight. Leishman, 2008. See
+    equation (6) & (7)
+
+    Unmanned coaxial rotor helicopter dynamics and system parameter
+    estimation. Rashid et al. Springer, 2014.
+    
+    Modelling and robust control of an unmanned coaxial rotor helicopter
+    with unstructured uncertainties. Dong et al. Advances in Mechanical
+    Engineering, 2017, Vol. 9(I) 1-14
+
+Assumptions:
+    In the individual functions
+
+
+Ideas:
+    %maybe make this a function, like fly(collective1,collective2). This
+    %allows to trim the helicopter in hover. Whenever you change pitch and
+    %therefore thrust and torque it would be good to start the convergence of
+    %Fcf and lambda (in a separate function) with the values previously found.
+
+
+Author: David Oort Alonso, B.Sc, Aerospace Engineering
+TU Delft, Faculty of Aerospace Engineering
+email address: d.oortalonso@student.tudelft.nl  
+Website: https://github.com/davidoort/aeroacoustics
+May 2019; Last revision: 26-May-2019
+%}
+
+
+
+%------------- BEGIN CODE --------------
+
+
 
 dr = 0.001;
 r = dr:dr:1-5*dr; %non-dimensionalized by tip radius. Rotors have the same radius.

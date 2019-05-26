@@ -1,5 +1,6 @@
 function Fcf= Prandtl_tip_loss(r,lambda,rotor)
 %{
+AXIAL Flight
 This function is a simple code implementation of the equation found in
 literature (see below) for the Prandtl Tip Loss function F as a function of
 blade number and spanwise inflow ratio. Function performs calculation in a
