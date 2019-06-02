@@ -87,7 +87,12 @@ outer = r>=rd; %outside the downwash circle condition (to select elements in arr
 interp_length = length(r(inner)); 
 visc = 1.2; %equivalent to dissipation in my eyes
 ri = linspace(r(1),r(end)/visc,interp_length);
-lambda_u = interp1(r,lambda_u,ri);
+
+%fast version 
+F_interp = griddedInterpolant(r,lambda_u);
+lambda_u = F_interp(ri);
+%slow version
+%lambda_u = interp1(r,lambda_u,ri);
 
 %test - weird plots happening 
 %lambda_u = lambda_u(inner);

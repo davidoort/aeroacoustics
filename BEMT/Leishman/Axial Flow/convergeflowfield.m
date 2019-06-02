@@ -91,6 +91,9 @@ while norm(Fcf_u-Fcf0_u)>epsilon || norm(lambda_tot_u-lambda0_u)>epsilon
     Fcf_u = Prandtl_tip_loss(r,lambda_tot_u,rotor(1));
     lambda_tot_u = get_lambda_up(Fcf_u,r,pitch_u,rotor,flowfield);
     i = i+1;
+    if i > 1e5
+        error("Couldn't converge flowfield upper rotor")
+    end
 end
 
 %% Intermezzo
@@ -107,6 +110,9 @@ while norm(Fcf_l-Fcf0_l)>epsilon || norm(lambda_tot_l-lambda0_l)>epsilon
     Fcf_l = Prandtl_tip_loss(r,lambda_tot_l,rotor(2));
     lambda_tot_l = get_lambda_bot(Fcf_l,r,pitch_l,coaxial,flowfield,lambda_u);
     i = i+1;
+    if i > 1e5
+        error("Couldn't converge flowfield lower rotor")
+    end
 end
     
 lambda_l = lambda_tot_l-flowfield(2).lambda_inf; %From Leishman paper

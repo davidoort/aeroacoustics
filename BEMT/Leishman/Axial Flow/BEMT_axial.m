@@ -1,4 +1,4 @@
-function [Thrust, Torque, Power, CT, CP, net_torque] = BEMT_axial(rotor,atm,epsilon,plots,verbose)
+function [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT_axial(rotor,atm,epsilon,plots,verbose)
 %{
 AXIAL Flight
 This function can calculate the spanwise thrust & power coefficients and
@@ -97,7 +97,7 @@ if strcmpi(rotor.type,"single")
     Power = atm.rho*pi*rotor(1).R^5*rotor(1).omega^3*CP; %Using rotor 1 radius=rotor2 radius
     Torque = atm.rho*pi*rotor(1).R^5*rotor(1).omega^2*CP; %Using rotor 1 radius=rotor2 radius
     
-    net_torque = 0;
+    net_torque_coeff = 0;
 else
     
     coaxial = rotor;
@@ -136,12 +136,16 @@ else
     Power = atm.rho*pi*rotor(1).R^5*rotor(1).omega^3*CP; %Using rotor 1 radius=rotor2 radius
     Torque = atm.rho*pi*rotor(1).R^5*rotor(1).omega^2*CP; %Using rotor 1 radius=rotor2 radius
     
-    net_torque = CP_u-CP_l;
+    net_torque_coeff = (CP_u-CP_l)/CP;
+    
+    net_torque = net_torque_coeff*Torque;
+    
     
     if verbose
-        disp(['Net torque coefficient (u-l)',' ',num2str(net_torque)])
-        disp(['Coaxial system power coefficient',' ',num2str(CP)])
-        disp(['Coaxial system thrust coefficient',' ',num2str(CT)])
+        disp(['Net torque coefficient (u-l)/l [-]',' ',num2str(net_torque_coeff)])
+        disp(['Net torque (u-l) [Nm]',' ',num2str(net_torque)])
+        disp(['Coaxial system power coefficient [-]',' ',num2str(CP)])
+        disp(['Coaxial system thrust coefficient [-]',' ',num2str(CT)])
         disp(['Total thrust [N]',' ',num2str(Thrust)])
         disp(['Total power [W]',' ',num2str(Power)])
     end
@@ -205,57 +209,57 @@ else
         
         % Disk-plot of velocity tangential velocity at the blade in forward flight
         
-        phi = linspace(0,2*pi);
-        radius = linspace(0.15,1);
-        
-        [PHI,R] = meshgrid(phi,radius);
-        
-        vel = sin(PHI)+R;
-        
-        figure(3)
-        surf(R*cos(PHI),R*sin(PHI),vel)
-        title('Velocity along $\vec{y_b}$','interpreter','latex')
-        %xlabel('r/R')
-        %ylabel('Non-dimensionalized dCpl/dr')
-        set(gca,'xtick',[])
-        set(gca,'ytick',[])
-        set(gca,'visible','off')
-        colorbar
-        
-        % Combine previous plots to make them denser (ideally they would have been combined with the plots in Leishman's paper)
-        
-        %set(gca,'fontsize',30)
-        
-        figure(4); clf;
-        
-        hold on;
-        plot(r, lambda_u, '-.', 'LineWidth',2)
-        plot(r, lambda_l, '-.', 'LineWidth',2)
-        lgd=legend('Upper rotor','Lower rotor');
-        lgd.FontSize = 14;
-        %title('Inflow ratio vs radius')
-        xlabel('r/R','FontSize',14)
-        ylabel('Inflow ratio','FontSize',14)
-        
-        figure(5); clf;
-        hold on;
-        plot(r, spanwise_coeffs.dCt_u, '-.', 'LineWidth',2)
-        plot(r, spanwise_coeffs.dCt_l, '-.', 'LineWidth',2)
-        lgd=legend('Upper rotor','Lower rotor');
-        lgd.FontSize = 14;
-        %title('dCTu vs radius')
-        xlabel('r/R','FontSize',14)
-        ylabel('Non-dimensionalized dCT/dr','FontSize',14)
-        
-        figure(6); clf;
-        hold on;
-        plot(r, spanwise_coeffs.dCp_u, '-.', 'LineWidth',2)
-        plot(r, spanwise_coeffs.dCp_l, '-.', 'LineWidth',2)
-        lgd=legend('Upper rotor','Lower rotor');
-        lgd.FontSize = 14;
-        %title('dCTu vs radius')
-        xlabel('r/R','FontSize',14)
-        ylabel('Non-dimensionalized dCP/dr','FontSize',14)
+%         phi = linspace(0,2*pi);
+%         radius = linspace(0.15,1);
+%         
+%         [PHI,R] = meshgrid(phi,radius);
+%         
+%         vel = sin(PHI)+R;
+%         
+%         figure(3)
+%         surf(R*cos(PHI),R*sin(PHI),vel)
+%         title('Velocity along $\vec{y_b}$','interpreter','latex')
+%         %xlabel('r/R')
+%         %ylabel('Non-dimensionalized dCpl/dr')
+%         set(gca,'xtick',[])
+%         set(gca,'ytick',[])
+%         set(gca,'visible','off')
+%         colorbar
+%         
+%         % Combine previous plots to make them denser (ideally they would have been combined with the plots in Leishman's paper)
+%         
+%         %set(gca,'fontsize',30)
+%         
+%         figure(4); clf;
+%         
+%         hold on;
+%         plot(r, lambda_u, '-.', 'LineWidth',2)
+%         plot(r, lambda_l, '-.', 'LineWidth',2)
+%         lgd=legend('Upper rotor','Lower rotor');
+%         lgd.FontSize = 14;
+%         %title('Inflow ratio vs radius')
+%         xlabel('r/R','FontSize',14)
+%         ylabel('Inflow ratio','FontSize',14)
+%         
+%         figure(5); clf;
+%         hold on;
+%         plot(r, spanwise_coeffs.dCt_u, '-.', 'LineWidth',2)
+%         plot(r, spanwise_coeffs.dCt_l, '-.', 'LineWidth',2)
+%         lgd=legend('Upper rotor','Lower rotor');
+%         lgd.FontSize = 14;
+%         %title('dCTu vs radius')
+%         xlabel('r/R','FontSize',14)
+%         ylabel('Non-dimensionalized dCT/dr','FontSize',14)
+%         
+%         figure(6); clf;
+%         hold on;
+%         plot(r, spanwise_coeffs.dCp_u, '-.', 'LineWidth',2)
+%         plot(r, spanwise_coeffs.dCp_l, '-.', 'LineWidth',2)
+%         lgd=legend('Upper rotor','Lower rotor');
+%         lgd.FontSize = 14;
+%         %title('dCTu vs radius')
+%         xlabel('r/R','FontSize',14)
+%         ylabel('Non-dimensionalized dCP/dr','FontSize',14)
         
         
     end
