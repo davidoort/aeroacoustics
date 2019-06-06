@@ -46,7 +46,7 @@ else
     
 end
 
-%% Iteration to trim the coaxial rotor and produce CT-CP plots
+%% Iteration to trim the coaxial rotor and produce CT-CP validation plots
 
 iter_pitchdeg = 0:1:18;
 
@@ -96,10 +96,14 @@ clf;
 hold on
 scatter(CP_exp,CT_exp)
 plot(CP_arr,CT_arr)
+xlabel('CP')
+ylabel('CT')
+title(strcat(coaxial.name, " ",coaxial.type," rotor"))
+legend('Experiment','BEMT')
 
-%% Trim the coaxial rotor at a specified thrust coefficient
+%% Verification plots with FVM for inflow, CT and CP distributions. Trim the coaxial rotor at a specified thrust coefficient
 
-CT_desired = 0.005;
+CT_desired = 0.004;
 
 [collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_desired,"CT");
 
@@ -108,6 +112,11 @@ disp(['Converged to ',num2str(net_torque_dimensional),' net torque [Nm] and CT =
 disp(['Pitch upper rotor = ', num2str(collective_u),' deg'])
 disp(['Pitch lower rotor = ', num2str(collective_l),' deg'])
 
+
+plots = true;
+verbose = false;
+[coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
+        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque] = BEMT_axial(coaxial,atm,epsilon,plots,verbose);
 
 %% Axial flight plots - not working yet, I need an efficient way of detecting stall
 

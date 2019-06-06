@@ -138,12 +138,12 @@ else
     
     net_torque_coeff = (CP_u-CP_l)/CP;
     
-    net_torque = net_torque_coeff*Torque;
+    net_torque_dimensional = net_torque_coeff*Torque;
     
     
     if verbose
         disp(['Net torque coefficient (u-l)/l [-]',' ',num2str(net_torque_coeff)])
-        disp(['Net torque (u-l) [Nm]',' ',num2str(net_torque)])
+        disp(['Net torque (u-l) [Nm]',' ',num2str(net_torque_dimensional)])
         disp(['Coaxial system power coefficient [-]',' ',num2str(CP)])
         disp(['Coaxial system thrust coefficient [-]',' ',num2str(CT)])
         disp(['Total thrust [N]',' ',num2str(Thrust)])
@@ -151,13 +151,41 @@ else
     end
     %% Plotting
     
+    if abs(CT-0.004)<0.00001 && net_torque_dimensional<0.1 && strcmpi(coaxial.name,"Harrington1")  && strcmpi(coaxial.type,"coaxial")
+       
+       data_inflow_upper = readmatrix('H1_inflow_FVM_fig10a.csv');
+       r1 = data_inflow_upper(:,1); lambda1 = data_inflow_upper(:,2);
+       data_inflow_lower = readmatrix('H1_inflow_FVM_fig10b.csv'); 
+       r2 = data_inflow_lower(:,1); lambda2 = data_inflow_lower(:,2);
+       
+       data_dCT_upper = readmatrix('H1_dCT_FVM_fig11a.csv'); 
+       r3 = data_dCT_upper(:,1); dCT1 = data_dCT_upper(:,2);
+       data_dCT_lower = readmatrix('H1_dCT_FVM_fig11b.csv'); 
+       r4 = data_dCT_lower(:,1); dCT2 = data_dCT_lower(:,2);
+       
+       data_dCP_upper = readmatrix('H1_dCP_FVM_fig12a.csv');
+       r5 = data_dCP_upper(:,1); dCP1 = data_dCP_upper(:,2);    
+       data_dCP_lower = readmatrix('H1_dCP_FVM_fig12b.csv'); 
+       r6 = data_dCP_lower(:,1); dCP2 = data_dCP_lower(:,2); 
+       
+    else
+        
+        r1=[];r2=[];r3=[];r4=[];r5=[];r6=[];
+        lambda1=[];lambda2=[];dCT1=[];dCT2=[];dCP1=[];dCP2=[];
+        
+    end
+    
+    
     if plots
         figure(1); clf;
         subplot(2, 2, 1)
+        hold on
+        scatter(r1,lambda1)
         plot(r, lambda_u, 'b-.')
         title('Inflow ratio vs radius - Top')
         xlabel('r/R')
         ylabel('Inflow ratio')
+        legend('FVM','BEMT')
         
         subplot(2, 2, 2)
         plot(r, Fcf_u, 'b-.')
@@ -166,10 +194,13 @@ else
         ylabel('Prandtl tip loss')
         
         subplot(2, 2, 3)
+        hold on
+        scatter(r2,lambda2)
         plot(r, lambda_l, 'b-.')
         title('Inflow ratio vs radius - Bottom')
         xlabel('r/R')
         ylabel('Inflow ratio')
+        legend('FVM','BEMT')
         
         subplot(2, 2, 4)
         plot(r, Fcf_l, 'b-.')
@@ -179,29 +210,40 @@ else
         
         figure(2); clf;
         subplot(2, 2, 1)
+        hold on
+        scatter(r3,dCT1)
         plot(r, spanwise_coeffs.dCt_u, 'b-.')
         title('dCTu vs radius - Top')
         xlabel('r/R')
         ylabel('Non-dimensionalized dCTu/dr')
+        legend('FVM','BEMT')
         
         subplot(2, 2, 2)
+        hold on
+        scatter(r5,dCP1)
         plot(r, spanwise_coeffs.dCp_u, 'b-.')
         title('dCpu vs radius - Top')
         xlabel('r/R')
         ylabel('Non-dimensionalized dCpu/dr')
+        legend('FVM','BEMT')
         
         subplot(2, 2, 3)
+        hold on
+        scatter(r4,dCT2)
         plot(r, spanwise_coeffs.dCt_l, 'b-.')
         title('dCTl vs radius - Bottom')
         xlabel('r/R')
         ylabel('Non-dimensionalized dCtl/dr')
+        legend('FVM','BEMT')
         
         subplot(2, 2, 4)
+        hold on
+        scatter(r6,dCP2)
         plot(r, spanwise_coeffs.dCp_l, 'b-.')
         title('dCpl vs radius - Bottom')
         xlabel('r/R')
         ylabel('Non-dimensionalized dCpl/dr')
-        
+        legend('FVM','BEMT')
         
         
         %% Poster plots
