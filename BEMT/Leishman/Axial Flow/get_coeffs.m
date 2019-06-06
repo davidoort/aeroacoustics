@@ -120,13 +120,13 @@ spanwise_coeffs.dCp_l = dcp_i_l/dr + 0.5*rotor(2).solidity*(Cd0*r.^3+D1*(pitch_l
 spanwise_coeffs.dCt_l = dcT_l/dr;
 %% C_P Old
 %From Leishman
-C_P = 0.5*params.kappaint*params.kappa*(CT_l+CT_u)^(3/2)+(rotor(2).solidity + rotor(1).solidity)*Cd0/4; %using Cd0 of bottom rotor but could be for top rotor, this is for validation purposes
+%C_P = 0.5*params.kappaint*params.kappa*(CT_l+CT_u)^(3/2)+(rotor(2).solidity + rotor(1).solidity)*Cd0/4; %using Cd0 of bottom rotor but could be for top rotor, this is for validation purposes
 
 %% C_P New
 %In the Leishman paper it said that using the BEMT he could calculate CP
 %and CT only by estimating Cd0, so the above formula has to be replaced by:
 
-%C_P = CP_u+CP_l;
+C_P = CP_u+CP_l;
 
 
 end

@@ -12,8 +12,8 @@ classdef Rotor < dynamicprops
     
     methods
         function obj = Rotor()
-            obj.name = "Harrington1"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes
-            
+            obj.name = "Harrington2"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes
+            obj.type = "single"; % "single" or "coaxial"
             
             obj.state.trim = 1; %1 means that both rotors have the same geometrical pitch, so same collective setting >1 increases pitch of lower wrt to upper
             obj.state.pitchdeg = 8; %deg
@@ -29,7 +29,7 @@ classdef Rotor < dynamicprops
                 %% General params
             
 
-                obj.type = "coaxial"; % "single" or "coaxial"
+                %obj.type = "single"; % "single" or "coaxial"
                 obj.params.kappaint = 1.28;
                 obj.params.kappa = 1.15;
                 obj.params.rd = 0.82; %[non-dimensionalised by R] annulus - "assumption consistent with the results obtained by Leishman using the free wake method"
@@ -76,7 +76,7 @@ classdef Rotor < dynamicprops
                 %% General params
             
 
-                obj.type = "coaxial"; % "single" or "coaxial"
+                %obj.type = "coaxial"; % "single" or "coaxial"
                 obj.params.kappaint = 1.28;
                 obj.params.kappa = 1.15;
                 obj.params.rd = 0.82; %[non-dimensionalised by R] annulus - "assumption consistent with the results obtained by Leishman using the free wake method"

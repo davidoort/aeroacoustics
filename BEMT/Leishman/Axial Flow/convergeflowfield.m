@@ -110,7 +110,7 @@ while norm(Fcf_l-Fcf0_l)>epsilon || norm(lambda_tot_l-lambda0_l)>epsilon
     Fcf_l = Prandtl_tip_loss(r,lambda_tot_l,rotor(2));
     lambda_tot_l = get_lambda_bot(Fcf_l,r,pitch_l,coaxial,flowfield,lambda_u);
     i = i+1;
-    if i > 1e5
+    if i > 1e3
         error("Couldn't converge flowfield lower rotor")
     end
 end
