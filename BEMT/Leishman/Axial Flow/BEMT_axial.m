@@ -185,6 +185,7 @@ else
         title('Inflow ratio vs radius - Top')
         xlabel('r/R')
         ylabel('Inflow ratio')
+        xlim([0.2 1])
         legend('FVM','BEMT')
         
         subplot(2, 2, 2)
@@ -200,6 +201,7 @@ else
         title('Inflow ratio vs radius - Bottom')
         xlabel('r/R')
         ylabel('Inflow ratio')
+        xlim([0.2 1])
         legend('FVM','BEMT')
         
         subplot(2, 2, 4)
@@ -216,6 +218,7 @@ else
         title('dCTu vs radius - Top')
         xlabel('r/R')
         ylabel('Non-dimensionalized dCTu/dr')
+        xlim([0.2 1])
         legend('FVM','BEMT')
         
         subplot(2, 2, 2)
@@ -225,6 +228,7 @@ else
         title('dCpu vs radius - Top')
         xlabel('r/R')
         ylabel('Non-dimensionalized dCpu/dr')
+        xlim([0.2 1])
         legend('FVM','BEMT')
         
         subplot(2, 2, 3)
@@ -234,6 +238,7 @@ else
         title('dCTl vs radius - Bottom')
         xlabel('r/R')
         ylabel('Non-dimensionalized dCtl/dr')
+        xlim([0.2 1])
         legend('FVM','BEMT')
         
         subplot(2, 2, 4)
@@ -243,6 +248,7 @@ else
         title('dCpl vs radius - Bottom')
         xlabel('r/R')
         ylabel('Non-dimensionalized dCpl/dr')
+        xlim([0.2 1])
         legend('FVM','BEMT')
         
         

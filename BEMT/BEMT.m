@@ -72,12 +72,16 @@ end
 % Verification plot H1 CP vs CT
 
 if strcmpi(coaxial.name,"Harrington1")
+    ax_xlim = [0 0.0006];
+    ax_ylim = [0 0.007];
     if strcmpi(coaxial.type,"single")
         val_data =readmatrix('H1_single_fig2.csv');
     else
         val_data =readmatrix('H1_coax_fig2.csv');
     end
 elseif strcmpi(coaxial.name,"Harrington2")
+    ax_xlim = [0 0.001];
+    ax_ylim = [0 0.01];
     if strcmpi(coaxial.type,"single")
         val_data =readmatrix('H2_single_fig3.csv');
     else
@@ -96,8 +100,10 @@ clf;
 hold on
 scatter(CP_exp,CT_exp)
 plot(CP_arr,CT_arr)
-xlabel('CP')
-ylabel('CT')
+xlabel('$C_P$','Interpreter','latex')
+ylabel('$C_T$','Interpreter','latex')
+xlim(ax_xlim)
+ylim(ax_ylim)
 title(strcat(coaxial.name, " ",coaxial.type," rotor"))
 legend('Experiment','BEMT')
 

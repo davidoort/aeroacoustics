@@ -182,7 +182,7 @@ June 2019; Last revision: 2-June-2019
         net_torque_dimensional = coaxial.state.net_torque_coeff*coaxial.state.torque;
         
         if abs(old_net_torque_dimensional) - abs(net_torque_dimensional) < eps
-            warning("Bouncing around")
+            warning("Bouncing around between +- net torques. Nudging k...")
             k = 1.1*k; %it was getting stuck in infinite loops 
         end
     end
