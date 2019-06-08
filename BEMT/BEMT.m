@@ -147,10 +147,12 @@ verbose = false;
 
 %% Axial flight plots - not working yet, I need an efficient way of detecting stall
 
+%SOMETHING SUPER WEIRD IS GOING ON HERE
+
 
 iter_pitchdeg_axial = [5]; %tweak this selection
 
-axial_vel_range = 0:5:20;
+axial_vel_range = 0:1:2;
 
 CT_arr_axial = zeros(1,length(iter_pitchdeg_axial)*length(axial_vel_range));
 CP_arr_axial = zeros(1,length(iter_pitchdeg_axial)*length(axial_vel_range));
@@ -158,7 +160,7 @@ axial_vel_arr = zeros(1,length(iter_pitchdeg_axial)*length(axial_vel_range));
 
 coaxial.state.trim = 1; %possibly I can add a trim procedure later, but this at least ensures convergence fast
 plots=false;
-verbose=false;
+verbose=true;
 
 
 for idx = 1:length(iter_pitchdeg_axial)
@@ -171,10 +173,14 @@ for idx = 1:length(iter_pitchdeg_axial)
         %[coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
         %coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque] = BEMT_axial(coaxial,atm,epsilon,plots,verbose);
         
+        try
         tic
         [collective_u, collective_l, net_torque_dimensional, coaxial.state.CT] = trim(coaxial,atm,epsilon,iter_pitchdeg_axial(idx),'pitch_upper');
         toc
-        
+        catch
+            disp("Negative thrust")
+            coaxial.state.CT = -1; %random
+        end
         if coaxial.state.CT < 0
             CT_arr_axial(idx) = [];
             CP_arr_axial(idx) = [];
@@ -184,6 +190,7 @@ for idx = 1:length(iter_pitchdeg_axial)
             CP_arr_axial(idx) = coaxial.state.CP;
             axial_vel_arr(idx) = axial_vel;
         end
+        
     end
 end
 

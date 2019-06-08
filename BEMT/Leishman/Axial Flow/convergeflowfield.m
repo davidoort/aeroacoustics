@@ -91,7 +91,7 @@ while norm(Fcf_u-Fcf0_u)>epsilon || norm(lambda_tot_u-lambda0_u)>epsilon
     Fcf_u = Prandtl_tip_loss(r,lambda_tot_u,rotor(1));
     lambda_tot_u = get_lambda_up(Fcf_u,r,pitch_u,rotor,flowfield);
     i = i+1;
-    if i > 1e5
+    if i > 1e3
         error("Couldn't converge flowfield upper rotor")
     end
 end
