@@ -171,7 +171,7 @@ June 2019; Last revision: 2-June-2019
         
         coaxial.state.trim = coaxial.state.trim + k*coaxial.state.net_torque_coeff;
         if coaxial.state.trim < 0
-           warning(["Trim value = ", num2str(coaxial.state.trim), " resetting trim to 1 and lowering k"])
+           warning(strcat("Trim value = ", num2str(coaxial.state.trim), " resetting trim to 1 and lowering k"))
            k = k*0.9;
         end
         
