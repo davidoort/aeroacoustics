@@ -81,8 +81,11 @@ pitch_l = rotor(2).pitch;
 
 %% UPPER ROTOR
 dcT_u = 4*Fcf_u.*lambda_u.*(lambda_u+flowfield(1).lambda_inf).*r*dr;
-phi_u = lambda_u./r; %rad - induced inflow angle. small angle approximation for tangent(phi) = phi
+phi_u = (lambda_u+flowfield(1).lambda_inf)./r; %rad - induced inflow angle. small angle approximation for tangent(phi) = phi
 
+alpha_u = pitch_u-phi_u;
+
+alpha_0_u = rotor(1).aero.alpha_0;
 
 %Different versions presented in the paper. 1 is wrong! 2&3 are the same in
 %hover but I don't know which is correct for axial flight
@@ -93,13 +96,13 @@ dcp_i_u_3 = (lambda_u+flowfield(1).lambda_inf).*dcT_u; %induced power/drag - inc
 Cd0 = rotor(1).aero.Cd0;
 D1 = rotor(1).aero.D1;
 D2 = rotor(1).aero.D2;
-cp_p_u = 0.5*rotor(1).solidity*(sum(Cd0*dr*r.^3)+sum(D1*dr*(pitch_u-phi_u).*r.^3)+sum(D2*dr*(pitch_u-phi_u).^2.*r.^3)); %profile power/drag
+cp_p_u = 0.5*rotor(1).solidity*(sum(Cd0*dr*r.^3)+sum(D1*dr*(alpha_u-alpha_0_u).*r.^3)+sum(D2*dr*(alpha_u-alpha_0_u).^2.*r.^3)); %profile power/drag
 
 CT_u = sum(dcT_u);
 CP_u = sum(dcp_i_u_3)+cp_p_u; %the same as CQ_u
 
 
-spanwise_coeffs.dCp_u = dcp_i_u_3/dr + 0.5*rotor(1).solidity*(Cd0*r.^3+D1*(pitch_u-phi_u).*r.^3+D2*(pitch_u-phi_u).^2.*r.^3);
+spanwise_coeffs.dCp_u = dcp_i_u_3/dr + 0.5*rotor(1).solidity*(Cd0*r.^3+D1*(alpha_u-alpha_0_u).*r.^3+D2*(alpha_u-alpha_0_u).^2.*r.^3);
 spanwise_coeffs.dCt_u = dcT_u/dr;
 
 %% BOTTOM ROTOR
@@ -110,8 +113,10 @@ dcT_l_1 = 4*Fcf_l.*lambda_l.*(lambda_l+flowfield(2).lambda_inf).*r*dr;
 dcT_l = 0.5*rotor(2).solidity*rotor(2).aero.cl_alpha*(rotor(2).pitch.*r.^2-...
     (lambda_l+flowfield(2).lambda_inf).*r)*dr; %the SAME as what is written above
 
-phi_l = lambda_l./r; %rad - induced inflow angle. small angle approximation for tangent(phi) = phi
+phi_l = (lambda_l+flowfield(2).lambda_inf)./r; %rad - induced inflow angle. small angle approximation for tangent(phi) = phi
 
+alpha_l = pitch_l-phi_l;
+alpha_0_l = rotor(2).aero.alpha_0;
 %Different versions presented in the paper. 1 is wrong! 2&3 are the same in
 %hover but I don't know which is correct for axial flight
 %dcp_i_l_1 = 4*(lambda_l+flowfield(2).lambda_inf).^2.*lambda_l.*r*dr; %induced power/drag as in eq.(5b)
@@ -121,17 +126,15 @@ dcp_i_l_3 = (lambda_l+flowfield(2).lambda_inf).*dcT_l; %induced power/drag - inc
 Cd0 = rotor(2).aero.Cd0;
 D1 = rotor(2).aero.D1;
 D2 = rotor(2).aero.D2;
-cp_p_l = 0.5*rotor(2).solidity*(sum(Cd0*dr*r.^3)+sum(D1*dr*(pitch_l-phi_l).*r.^3)+sum(D2*dr*(pitch_l-phi_l).^2.*r.^3)); %profile power/drag
+cp_p_l = 0.5*rotor(2).solidity*(sum(Cd0*dr*r.^3)+sum(D1*dr*(alpha_l-alpha_0_l).*r.^3)+sum(D2*dr*(alpha_l-alpha_0_l).^2.*r.^3)); %profile power/drag
 
 CT_l = sum(dcT_l);
 CP_l = sum(dcp_i_l_3)+cp_p_l; %the same as CQ_l
 
 
-spanwise_coeffs.dCp_l = dcp_i_l_3/dr + 0.5*rotor(2).solidity*(Cd0*r.^3+D1*(pitch_l-phi_l).*r.^3+D2*(pitch_l-phi_l).^2.*r.^3);
+spanwise_coeffs.dCp_l = dcp_i_l_3/dr + 0.5*rotor(2).solidity*(Cd0*r.^3+D1*(alpha_l-alpha_0_l).*r.^3+D2*(alpha_l-alpha_0_l).^2.*r.^3);
 spanwise_coeffs.dCt_l = dcT_l/dr;
-%% C_P Old
-%From Leishman
-%C_P = 0.5*params.kappaint*params.kappa*(CT_l+CT_u)^(3/2)+(rotor(2).solidity + rotor(1).solidity)*Cd0/4; %using Cd0 of bottom rotor but could be for top rotor, this is for validation purposes
+
 
 %% C_P New
 %In the Leishman paper it said that using the BEMT he could calculate CP

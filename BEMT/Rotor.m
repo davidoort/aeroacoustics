@@ -34,7 +34,8 @@ classdef Rotor < dynamicprops
                 obj.params.kappa = 1.15;
                 obj.params.rd = 0.82; %[non-dimensionalised by R] annulus - "assumption consistent with the results obtained by Leishman using the free wake method"
                 %Rotor 1 had an interrotor spacing of 0.186 R = 1.41 m
-            
+                %IF LANDGREBE:
+                %obj.params.interrotor_spacing = !!!
                 
                 %Validation with Harrington Rotor 1 - things assumed are pitch of rotor and
                 %CL_alpha
@@ -47,7 +48,13 @@ classdef Rotor < dynamicprops
                 obj.rotor(1).solidity = 0.027;
                 
                 % Aerodynamics
+                %obj.rotor(1).airfoil.name = "NACA0012"; %airfoil instead
+                %of aero...
+                
                 obj.rotor(1).aero.cl_alpha = 5.156;         %1/rad - Lift slope, NACA 0012 from graph
+                %obj.rotor(1).aero.cl_alpha = 2*pi; doesn't make much of a
+                %difference to verification/validation plots
+                obj.rotor(1).aero.alpha_0 = 0; %rad
                 obj.rotor(1).aero.Cd0 =  0.011;
                 obj.rotor(1).aero.D1 = 0.0;
                 obj.rotor(1).aero.D2 = 0.0;
@@ -56,18 +63,7 @@ classdef Rotor < dynamicprops
                 
                 %% Bottom rotor
                 
-                obj.rotor(2).Nb = 2;             % Number of blades - arbitrary
-                obj.rotor(2).R = 7.62;             %m 
-                obj.rotor(2).omega = 15; %rad/s - arbitrary
-                obj.rotor(2).chord = 0.15;             %m - arbitrary
-                obj.rotor(2).solidity = 0.027;
-                
-                
-                % Aerodynamics
-                obj.rotor(2).aero.cl_alpha = 5.156;         %1/rad - Lift slope, NACA 0012 from graph
-                obj.rotor(2).aero.Cd0 =  0.011;
-                obj.rotor(2).aero.D1 = 0.0;
-                obj.rotor(2).aero.D2 = 0.0;
+                obj.rotor(2) = obj.rotor(1);
               
                 
             elseif obj.name == "Harrington2"
@@ -95,6 +91,7 @@ classdef Rotor < dynamicprops
                 
                 % Aerodynamics
                 obj.rotor(1).aero.cl_alpha = 5.156;         %1/rad - Lift slope, NACA 0012 from graph
+                obj.rotor(1).aero.alpha_0 = 0; %rad
                 obj.rotor(1).aero.Cd0 =  0.011;
                 obj.rotor(1).aero.D1 = 0.0;
                 obj.rotor(1).aero.D2 = 0.0;
@@ -103,18 +100,7 @@ classdef Rotor < dynamicprops
                 
                 %% Bottom rotor
                 
-                obj.rotor(2).Nb = 2;             % Number of blades - arbitrary
-                obj.rotor(2).R = 7.62;             %m - arbitrary
-                obj.rotor(2).omega = 15;        %rad/s - arbitrary
-                obj.rotor(2).chord = 0.15;             %m - arbitrary
-                obj.rotor(2).solidity = 0.076;
-                
-                
-                % Aerodynamics
-                obj.rotor(2).aero.cl_alpha = 5.156;         %1/rad - Lift slope, NACA 0012 from graph
-                obj.rotor(2).aero.Cd0 =  0.011;
-                obj.rotor(2).aero.D1 = 0.0;
-                obj.rotor(2).aero.D2 = 0.0;
+                obj.rotor(2) = obj.rotor(1);
                 
             elseif obj.name == "NACA_single"
                 
@@ -140,6 +126,7 @@ classdef Rotor < dynamicprops
                 
                 % Aerodynamics
                 obj.rotor(1).aero.cl_alpha = 5;         %1/rad - Lift slope, NACA 16-series... GUESS at the moment
+                obj.rotor(1).aero.alpha_0 = 0; %rad - guess
                 obj.rotor(1).aero.Cd0 =  0.011;
                 obj.rotor(1).aero.D1 = 0.0;
                 obj.rotor(1).aero.D2 = 0.0;
@@ -171,6 +158,7 @@ classdef Rotor < dynamicprops
                 
                 % Aerodynamics
                 obj.rotor(1).aero.cl_alpha = 5.11;         %1/rad - Lift slope, Clark-Y airfoil GUESS!
+                obj.rotor(1).aero.alpha_0 = 0; %rad -guess!
                 obj.rotor(1).aero.Cd0 =  0.011;
                 obj.rotor(1).aero.D1 = 0.0;
                 obj.rotor(1).aero.D2 = 0.0;
@@ -179,18 +167,7 @@ classdef Rotor < dynamicprops
                 
                 %% Bottom rotor
                 
-                obj.rotor(2).Nb = 3;             % Number of blades - arbitrary
-                obj.rotor(2).R = 7.62;             %m - arbitrary
-                obj.rotor(1).omega = 249.022/obj.rotor(1).R*2*pi; %the magic number is the tip speed in m/s from Leishman
-                obj.rotor(2).chord = 0.15;             %m - arbitrary
-                obj.rotor(2).solidity = 0.078;
-                
-                
-                % Aerodynamics
-                obj.rotor(2).aero.cl_alpha = 5.156;         %1/rad - Lift slope, NACA 0012 from graph
-                obj.rotor(2).aero.Cd0 =  0.011;
-                obj.rotor(2).aero.D1 = 0.0;
-                obj.rotor(2).aero.D2 = 0.0;
+                obj.rotor(2) = obj.rotor(1);
                 
             elseif obj.name == "Hermes"
                 
@@ -218,27 +195,15 @@ classdef Rotor < dynamicprops
                 
                 % Aerodynamics
                 obj.rotor(1).aero.cl_alpha = 5.212;         %1/rad - Lift slope, NACA 23015
+                obj.rotor(1).aero.alpha_0 = 0; %rad - guess!
                 obj.rotor(1).aero.Cd0 =  0.011;
                 obj.rotor(1).aero.D1 = 0.0;
                 obj.rotor(1).aero.D2 = 0.0;
                
                 
                 %% Bottom rotor
-                obj.rotor(2).Nb = 2;  %# Number of blades
-                obj.rotor(2).R = 1.28;  %m - using reference values from papers for now
-                obj.rotor(2).omega = 1200*2*pi/60;
-                obj.rotor(2).chord = 0.14;  %m - using reference values from papers for now
-                obj.rotor(2).solidity = obj.rotor(2).Nb*obj.rotor(2).chord/(pi*obj.rotor(2).R);   % aero solidity - not sure what to take as chord for tapered aero
-                
-                
-                % Aerodynamics - maybe a bit of overkill at the moment
-                obj.rotor(2).aero.cl_alpha = 5.212;         %1/rad - Lift slope, NACA 23015
-                obj.rotor(2).aero.Cd0 =  0.011;
-                obj.rotor(2).aero.D1 = 0.0;
-                obj.rotor(2).aero.D2 = 0.0;
-             
-                
-                
+                obj.rotor(2) = obj.rotor(1);
+
             end
             
             

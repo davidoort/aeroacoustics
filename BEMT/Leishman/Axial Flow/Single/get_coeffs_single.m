@@ -65,21 +65,22 @@ pitch_u = rotor(1).pitch;
 
 %% UPPER ROTOR
 dcT_u = 4*Fcf_u.*lambda_u.*(lambda_u+flowfield(1).lambda_inf).*r*dr;
-phi_u = lambda_u./r; %rad - induced inflow angle. small angle approximation for tangent(phi) = phi
+phi_u = (lambda_u+flowfield(1).lambda_inf)./r; %rad - induced inflow angle. small angle approximation for tangent(phi) = phi
+
+alpha_u = pitch_u-phi_u;
+alpha_0_u = rotor(1).aero.alpha_0;
 
 dcp_i_u = lambda_u.*dcT_u; %induced power/drag
 Cd0 = rotor(1).aero.Cd0;
 D1 = rotor(1).aero.D1;
 D2 = rotor(1).aero.D2;
-cp_p_u = 0.5*rotor(1).solidity*(sum(Cd0*dr*r.^3)+sum(D1*dr*(pitch_u-phi_u).*r.^3)+sum(D2*dr*(pitch_u-phi_u).^2.*r.^3)); %profile power/drag
+cp_p_u = 0.5*rotor(1).solidity*(sum(Cd0*dr*r.^3)+sum(D1*dr*(alpha_u-alpha_0_u).*r.^3)+sum(D2*dr*(alpha_u-alpha_0_u).^2.*r.^3)); %profile power/drag
 
 CT_u = sum(dcT_u);
 CP_u = sum(dcp_i_u)+cp_p_u; %the same as CQ_u
 
-%CP SMT:
-%CP_u = single.params.kappa*CT_u^(3/2)/sqrt(2) + rotor.solidity*Cd0/8;
 
-spanwise_coeffs.dCp_u = dcp_i_u/dr + 0.5*rotor(1).solidity*(Cd0*r.^3+D1*(pitch_u-phi_u).*r.^3+D2*(pitch_u-phi_u).^2.*r.^3);
+spanwise_coeffs.dCp_u = dcp_i_u/dr + 0.5*rotor(1).solidity*(Cd0*r.^3+D1*(alpha_u-alpha_0_u).*r.^3+D2*(alpha_u-alpha_0_u).^2.*r.^3);
 spanwise_coeffs.dCt_u = dcT_u/dr;
 
 

@@ -61,12 +61,7 @@ email address: d.oortalonso@student.tudelft.nl
 Website: https://github.com/davidoort/aeroacoustics
 May 2019; Last revision: 26-May-2019
 %}
-
-
-
 %------------- BEGIN CODE --------------
-
-
 
 dr = 0.001;
 r = dr:dr:1-5*dr; %non-dimensionalized by tip radius. Rotors have the same radius.
@@ -140,6 +135,8 @@ else
     
     net_torque_dimensional = net_torque_coeff*Torque;
     
+    alpha_u = rad2deg(coaxial.rotor(1).pitch-atan((lambda_u+flowfield(1).lambda_inf)./r)); %this is being recomputed for the sake of not passing more arguments through get coeffs
+    alpha_l = rad2deg(coaxial.rotor(2).pitch-atan(lambda_l+flowfield(2).lambda_inf)./r);
     
     if verbose
         disp(['Net torque coefficient (u-l)/l [-]',' ',num2str(net_torque_coeff)])
@@ -177,8 +174,11 @@ else
     
     
     if plots
+        
+        %%%%%
+        
         figure(1); clf;
-        subplot(2, 2, 1)
+        subplot(2, 3, 1)
         hold on
         scatter(r1,lambda1)
         plot(r, lambda_u, 'b-.')
@@ -188,13 +188,20 @@ else
         xlim([0.2 1])
         legend('FVM','BEMT')
         
-        subplot(2, 2, 2)
+        subplot(2, 3, 2)
         plot(r, Fcf_u, 'b-.')
         title('Prandtl tip loss vs radius - Top')
         xlabel('r/R')
         ylabel('Prandtl tip loss')
+         
+        subplot(2, 3, 3)
+        plot(r, alpha_u, 'b-.')
+        title('AoA vs radius - Top')
+        xlabel('r/R')
+        ylabel('$\alpha$ [deg]','interpreter','latex')
+        ylim([-20 Inf])
         
-        subplot(2, 2, 3)
+        subplot(2, 3, 4)
         hold on
         scatter(r2,lambda2)
         plot(r, lambda_l, 'b-.')
@@ -204,11 +211,20 @@ else
         xlim([0.2 1])
         legend('FVM','BEMT')
         
-        subplot(2, 2, 4)
+        subplot(2, 3, 5)
         plot(r, Fcf_l, 'b-.')
         title('Prandtl tip loss vs radius - Bottom')
         xlabel('r/R')
         ylabel('Prandtl tip loss')
+
+        subplot(2, 3, 6)
+        plot(r, alpha_l, 'b-.')
+        title('AoA vs radius - Bottom')
+        xlabel('r/R')
+        ylabel('$\alpha$ [deg]','interpreter','latex')
+        ylim([-20 Inf])
+        
+        %%%%%%%
         
         figure(2); clf;
         subplot(2, 2, 1)
