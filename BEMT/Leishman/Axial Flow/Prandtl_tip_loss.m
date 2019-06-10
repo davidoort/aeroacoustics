@@ -42,7 +42,7 @@ Author: David Oort Alonso, B.Sc, Aerospace Engineering
 TU Delft, Faculty of Aerospace Engineering
 email address: d.oortalonso@student.tudelft.nl  
 Website: https://github.com/davidoort/aeroacoustics
-March 2019; Last revision: 21-April-2019
+March 2019; Last revision: 10-June-2019
 %}
 
 
@@ -55,7 +55,12 @@ if dim(2)>1
     error("Function expects either rotor(1) or rotor(2)")
 end
 
-Fcf = (2/pi)*acos(exp(-rotor.Nb*(ones(1,length(r))-r)./(2*lambda)));
+Fcf_tip = (2/pi)*acos(exp((-rotor.Nb/2)*(ones(1,length(r))-r)./lambda));
+Fcf_root = (2/pi)*acos(exp((-rotor.Nb/2)*(r-rotor.hub_radial_fraction*ones(1,length(r)))./lambda));
+
+
+Fcf = Fcf_tip.*Fcf_root; %doesn't make much of a difference in the inflow plot, maybe I need a different F function (like the one from Carlos..)
+
 
 %------------- END OF CODE --------------
 

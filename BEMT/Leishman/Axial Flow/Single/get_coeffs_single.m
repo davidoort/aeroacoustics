@@ -1,4 +1,4 @@
-function [CT_u, CP_u, spanwise_coeffs] = get_coeffs_single(Fcf_u, lambda_u, r, dr, single, flowfield)
+function [CT_u, CP_u, spanwise_coeffs,weighted_swirl_ratio] = get_coeffs_single(Fcf_u, lambda_u, r, dr, single, flowfield)
 %{
 This function is a simple code implementation of the equations found in
 literature (see below) for the thrust and torque/power coefficients (and 
@@ -48,13 +48,15 @@ Literature referenced:
     with unstructured uncertainties. Dong et al. Advances in Mechanical
     Engineering, 2017, Vol. 9(I) 1-14
 
+    BEM theory and CFD for Wind Turbine Aerodynamics. Internship report (for swirl)
+
 Assumptions: none
 
 Author: David Oort Alonso, B.Sc, Aerospace Engineering
 TU Delft, Faculty of Aerospace Engineering
 email address: d.oortalonso@student.tudelft.nl  
 Website: https://github.com/davidoort/aeroacoustics
-May 2019; Last revision: 8-May-2019
+May 2019; Last revision: 9-June-2019
 %}
 
 %------------- BEGIN CODE --------------
@@ -83,5 +85,15 @@ CP_u = sum(dcp_i_u)+cp_p_u; %the same as CQ_u
 spanwise_coeffs.dCp_u = dcp_i_u/dr + 0.5*rotor(1).solidity*(Cd0*r.^3+D1*(alpha_u-alpha_0_u).*r.^3+D2*(alpha_u-alpha_0_u).^2.*r.^3);
 spanwise_coeffs.dCt_u = dcT_u/dr;
 
+%% Swirl calculation
+
+%mass_flow_annuli (used for weighting) = rho*A*v -> non-dimensionalized -> 2*pi*r*dr.*(lambda_u+flowfield(1).lambda_inf)
+%swirl [rad/s] = omega * cp/(2*r^3)
+
+mass_flow_annuli = 2*pi*r*dr.*(lambda_u+flowfield(1).lambda_inf);
+
+swirl_ratio = spanwise_coeffs.dCp_u*dr./(mass_flow_annuli.*r);
+
+weighted_swirl_ratio = dot(swirl_ratio,mass_flow_annuli)/sum(mass_flow_annuli);
 
 end

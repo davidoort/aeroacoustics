@@ -15,13 +15,6 @@ Inputs:
 
     airfoil - (string) name of the airfoil
 
-    CT_or_pitch - (scalar) can be either collective_u (upper rotor pitch 
-    angle in degrees) or the desired thrust coefficient of the coaxial
-    system
-
-    trimvar - (string) indicates if CT desired or pitchdeg desired is being 
-    specified
-
 Outputs:
 
     Cl - (scalar) non-dimensional 2D lift coefficient of a blade element
@@ -40,7 +33,7 @@ Literature referenced:
 
     Airfoiltools - http://airfoiltools.com/airfoil/details?airfoil=n0012-il
 
-Assumptions: none
+Assumptions: Linear interpolation
     
 Ideas: none
     
@@ -49,7 +42,7 @@ Author: David Oort Alonso, B.Sc, Aerospace Engineering
 TU Delft, Faculty of Aerospace Engineering
 email address: d.oortalonso@student.tudelft.nl  
 Website: https://github.com/davidoort/aeroacoustics
-June 2019; Last revision: 8-June-2019
+June 2019; Last revision: 10-June-2019
 %}
 
 %------------- BEGIN CODE --------------

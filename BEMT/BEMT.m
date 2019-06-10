@@ -117,8 +117,8 @@ for rotor_type = ["single","coaxial"]
     legend('-DynamicLegend');
     hold all
     scatter(CP_exp,CT_exp,'DisplayName',strcat("Experiment ", coaxial.type," rotor"))
-    plot(CP_arr,CT_arr,'DisplayName',strcat("BEMT ",coaxial.type," rotor"))
-    plot(C_P_SMT_arr,CT_arr,'DisplayName',strcat("SMT ",coaxial.type," rotor"))
+    plot(CP_arr,CT_arr,'DisplayName',strcat("BEMT ",coaxial.type," rotor"),'LineWidth',2)
+    plot(C_P_SMT_arr,CT_arr,'b-.','DisplayName',strcat("SMT ",coaxial.type," rotor"))
     xlabel('$C_P$','Interpreter','latex')
     ylabel('$C_T$','Interpreter','latex')
     xlim(ax_xlim)

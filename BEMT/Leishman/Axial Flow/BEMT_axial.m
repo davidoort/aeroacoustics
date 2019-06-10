@@ -7,8 +7,8 @@ axial or hovering flight. This function is run from BEMT.m when
 tangential_vel = 0.
 
 Inputs:
-    coaxial - (struct object) with operational (state) and geometric
-    variables of the coaxial rotor
+    rotor - (struct object) with operational (state) and geometric
+    variables of the coaxial or single rotor
 
     atm - (struct object) with atmospheric parameters such as air density
 
@@ -59,21 +59,21 @@ Author: David Oort Alonso, B.Sc, Aerospace Engineering
 TU Delft, Faculty of Aerospace Engineering
 email address: d.oortalonso@student.tudelft.nl  
 Website: https://github.com/davidoort/aeroacoustics
-May 2019; Last revision: 26-May-2019
+May 2019; Last revision: 9-June-2019
 %}
 %------------- BEGIN CODE --------------
 
-dr = 0.001;
-r = dr:dr:1-5*dr; %non-dimensionalized by tip radius. Rotors have the same radius.
+dr = 0.01;
+r = rotor.rotor(1).hub_radial_fraction+dr:dr:0.99; %non-dimensionalized by tip radius. Rotors have the same radius.
 %The dr and 1-dr is to avoid singularities at the tip (since F= 0 there usually and the lambda is NaN)
 %and at the root, when calculating the induced inflow angle.
 
 if strcmpi(rotor.type,"single")
     single = rotor;
     axial_vel = single.state.axial_vel;
-    rotor = single.rotor;
     
-    flowfield(1).lambda_inf = axial_vel/(rotor(1).omega*rotor(1).R)*ones(1,length(r)); %normalizing free stream axial velocity by tip velocity
+    
+    flowfield(1).lambda_inf = axial_vel/(single.rotor(1).omega*single.rotor(1).R)*ones(1,length(r)); %normalizing free stream axial velocity by tip velocity
     
     pitchdeg = single.state.pitchdeg;
     
@@ -85,23 +85,37 @@ if strcmpi(rotor.type,"single")
     
     %% Calculate thrust and torque coefficients
     
-    [CT, CP, spanwise_coeffs] = get_coeffs_single(Fcf_u, lambda_u, r, dr, single, flowfield);
+    [CT, CP, spanwise_coeffs, weighted_swirl_ratio] = get_coeffs_single(Fcf_u, lambda_u, r, dr, single, flowfield);
     
     
-    Thrust = atm.rho*pi*rotor(1).R^4*rotor(1).omega^2*CT; %Using rotor 1 radius=rotor2 radius
-    Power = atm.rho*pi*rotor(1).R^5*rotor(1).omega^3*CP; %Using rotor 1 radius=rotor2 radius
-    Torque = atm.rho*pi*rotor(1).R^5*rotor(1).omega^2*CP; %Using rotor 1 radius=rotor2 radius
+    Thrust = atm.rho*pi*single.rotor(1).R^4*single.rotor(1).omega^2*CT; %Using rotor 1 radius=rotor2 radius
+    Power = atm.rho*pi*single.rotor(1).R^5*single.rotor(1).omega^3*CP; %Using rotor 1 radius=rotor2 radius
+    Torque = atm.rho*pi*single.rotor(1).R^5*single.rotor(1).omega^2*CP; %Using rotor 1 radius=rotor2 radius
     
     net_torque_coeff = 0;
+    
+    alpha_u = rad2deg(single.rotor(1).pitch-atan((lambda_u+flowfield(1).lambda_inf)./r)); 
+    
+    if verbose
+        disp(['Single rotor power coefficient [-]',' ',num2str(CP)])
+        disp(['Single rotor thrust coefficient [-]',' ',num2str(CT)])
+        disp(['Total thrust [N]',' ',num2str(Thrust)])
+        disp(['Total power [W]',' ',num2str(Power)])
+        disp(['Total torque [Nm]',' ',num2str(Torque)])
+        disp(['Omega [rad/s]',' ',num2str(single.rotor(1).omega)])
+        disp(['Swirl rotor [rad/s] ',num2str(weighted_swirl_ratio*single.rotor(1).omega)])
+        disp(['Pitch rotor [deg] ',num2str(pitchdeg)])
+        disp(['Max/Min AoA upper rotor [deg] ',num2str(max(alpha_u)),' / ',num2str(min(alpha_u))])
+    end
+    
 else
     
     coaxial = rotor;
-    rotor = coaxial.rotor;
-    
+        
     axial_vel = coaxial.state.axial_vel;
     
-    flowfield(1).lambda_inf = axial_vel/(rotor(1).omega*rotor(1).R)*ones(1,length(r)); %normalizing free stream axial velocity by tip velocity
-    flowfield(2).lambda_inf = axial_vel/(rotor(2).omega*rotor(2).R)*ones(1,length(r)); %normalizing free stream axial velocity by tip velocity
+    flowfield(1).lambda_inf = axial_vel/(coaxial.rotor(1).omega*coaxial.rotor(1).R)*ones(1,length(r)); %normalizing free stream axial velocity by tip velocity
+    flowfield(2).lambda_inf = axial_vel/(coaxial.rotor(2).omega*coaxial.rotor(2).R)*ones(1,length(r)); %normalizing free stream axial velocity by tip velocity
     
     pitchdeg = coaxial.state.pitchdeg;
     
@@ -120,16 +134,17 @@ else
     
     [CP, CT_u, CP_u, CT_l, CP_l, spanwise_coeffs] = get_coeffs(Fcf_u, lambda_u, Fcf_l, lambda_l, r, dr, coaxial, flowfield);
     
-    FOM_u = CT_u^(3/2)/(sqrt(2)*CP_u); %treated as a single rotor;
-    FOM_l = CT_l^(3/2)/(sqrt(2)*CP_l); %treated as a single rotor;
-    
     CT = CT_u + CT_l;
     
+    %% Calculate FOM
+    FOM_u = CT_u^(3/2)/(sqrt(2)*CP_u); %treated as a single rotor;
+    FOM_l = CT_l^(3/2)/(sqrt(2)*CP_l); %treated as a single rotor;
     FOM_coax = coaxial.params.kappaint*(CT_u^(3/2)+CT_l^(3/2))/(sqrt(2)*(CP_u+CP_l)); %from robust control paper
     
-    Thrust = atm.rho*pi*rotor(1).R^4*rotor(1).omega^2*CT; %Using rotor 1 radius=rotor2 radius
-    Power = atm.rho*pi*rotor(1).R^5*rotor(1).omega^3*CP; %Using rotor 1 radius=rotor2 radius
-    Torque = atm.rho*pi*rotor(1).R^5*rotor(1).omega^2*CP; %Using rotor 1 radius=rotor2 radius
+    %% Calculate dimensional things
+    Thrust = atm.rho*pi*coaxial.rotor(1).R^4*coaxial.rotor(1).omega^2*CT; %Using rotor 1 radius=rotor2 radius
+    Power = atm.rho*pi*coaxial.rotor(1).R^5*coaxial.rotor(1).omega^3*CP; %Using rotor 1 radius=rotor2 radius
+    Torque = atm.rho*pi*coaxial.rotor(1).R^5*coaxial.rotor(1).omega^2*CP; %Using rotor 1 radius=rotor2 radius
     
     net_torque_coeff = (CP_u-CP_l)/CP;
     
@@ -138,6 +153,31 @@ else
     alpha_u = rad2deg(coaxial.rotor(1).pitch-atan((lambda_u+flowfield(1).lambda_inf)./r)); %this is being recomputed for the sake of not passing more arguments through get coeffs
     alpha_l = rad2deg(coaxial.rotor(2).pitch-atan(lambda_l+flowfield(2).lambda_inf)./r);
     
+    %% Reynolds number calculation
+    
+    omega_u = coaxial.rotor(1).omega;
+    omega_l = coaxial.rotor(2).omega;
+    
+    R_u = coaxial.rotor(1).R;
+    R_l = coaxial.rotor(2).R;
+    
+    
+    chord_u         = getChord(r,coaxial.rotor(1).hub_radial_fraction,coaxial.rotor(1).tip_chord,coaxial.rotor(1).root_chord);
+    chord_u_eff     = getChord(0.7,coaxial.rotor(1).hub_radial_fraction,coaxial.rotor(1).tip_chord,coaxial.rotor(1).root_chord);
+    chord_l         = getChord(r,coaxial.rotor(2).hub_radial_fraction,coaxial.rotor(2).tip_chord,coaxial.rotor(2).root_chord);
+    chord_l_eff     = getChord(0.7,coaxial.rotor(2).hub_radial_fraction,coaxial.rotor(2).tip_chord,coaxial.rotor(2).root_chord);
+    
+    vel_u     = ((omega_u*R_u*r).^2+(lambda_u+flowfield(1).lambda_inf).^2).^(1/2);
+    vel_u_eff = ((omega_u*R_u*0.7).^2+(lambda_u(abs(r - 0.7)<=dr)+flowfield(1).lambda_inf(abs(r - 0.7)<=dr)).^2).^(1/2);
+    vel_l     = ((omega_l*R_l*r).^2+(lambda_l+flowfield(2).lambda_inf).^2).^(1/2);
+    vel_l_eff = ((omega_l*R_l*0.7).^2+(lambda_l(abs(r - 0.7)<=dr)+flowfield(2).lambda_inf(abs(r - 0.7)<=dr)).^2).^(1/2);
+    
+    Re_u = getReynolds(vel_u,chord_u,atm.kin_visc);
+    Re_u_eff = mean(getReynolds(vel_u_eff,chord_u_eff,atm.kin_visc));
+    Re_l = getReynolds(vel_l,chord_l,atm.kin_visc);
+    Re_l_eff = mean(getReynolds(vel_l_eff,chord_l_eff,atm.kin_visc));
+    
+    %% Display output text
     if verbose
         disp(['Net torque coefficient (u-l)/l [-]',' ',num2str(net_torque_coeff)])
         disp(['Net torque (u-l) [Nm]',' ',num2str(net_torque_dimensional)])
@@ -145,6 +185,11 @@ else
         disp(['Coaxial system thrust coefficient [-]',' ',num2str(CT)])
         disp(['Total thrust [N]',' ',num2str(Thrust)])
         disp(['Total power [W]',' ',num2str(Power)])
+        disp(['Pitch upper/lower rotor [deg] ',num2str(pitchdeg),' / ',num2str(rad2deg(coaxial.rotor(2).pitch(1)))])
+        disp(['Max/Min AoA upper rotor [deg] ',num2str(max(alpha_u)),' / ',num2str(min(alpha_u))])
+        disp(['Max/Min AoA lower rotor [deg] ',num2str(max(alpha_l)),' / ',num2str(min(alpha_l))])
+        disp(['Max/Min/0.7R Re number upper [-] ',num2str(max(Re_u)),' / ',num2str(min(Re_u)),' / ',num2str(Re_u_eff)])
+        disp(['Max/Min/0.7R Re number lower [-] ',num2str(max(Re_l)),' / ',num2str(min(Re_l)),' / ',num2str(Re_l_eff)])
     end
     %% Plotting
     

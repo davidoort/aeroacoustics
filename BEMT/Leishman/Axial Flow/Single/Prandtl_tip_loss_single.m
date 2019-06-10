@@ -54,7 +54,11 @@ if dim(2)>1
     error("Function expects either rotor(1) or rotor(2)")
 end
 
-Fcf = (2/pi)*acos(exp(-rotor.blades.num*(ones(1,length(r))-r)./(2*lambda)));
+Fcf_tip = (2/pi)*acos(exp((-rotor.Nb/2)*(ones(1,length(r))-r)./lambda));
+Fcf_root = (2/pi)*acos(exp((-rotor.Nb/2)*(r-rotor.hub_radial_fraction*ones(1,length(r)))./lambda));
+
+
+Fcf = Fcf_tip.*Fcf_root;
 
 %------------- END OF CODE --------------
 
