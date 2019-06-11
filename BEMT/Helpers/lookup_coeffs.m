@@ -1,7 +1,7 @@
-function [Cl,Cd] = lookup_coeffs(Re,alpha,airfoil)
+function [Cl,Cd,Cl_max,alpha_stall,Cds] = lookup_coeffs(Re,alpha,airfoil)
 %{
 LOOKUP_COEFFS is a helper function that returns aerodynamic coefficients
-for a specified airfoil, Reynolds number and angle of attack. 
+for a specified airfoil, Reynolds number and angle of attack based on a lookup table from XFOIL. 
 
 Limited by the fact that the only look up tables are for NACA 0012 and do
 not include boundary layer properties.
@@ -11,15 +11,15 @@ Inputs:
     atm and other rotor properties but the coding philosophy here is to let
     this function be very light and transparent)
 
-    alpha - (struct object) with atmospheric parameters such as air density
+    alpha - (scalar [deg]) with atmospheric parameters such as air density
 
     airfoil - (string) name of the airfoil
 
 Outputs:
 
-    Cl - (scalar) non-dimensional 2D lift coefficient of a blade element
+    Cl - (matrix) non-dimensional 2D lift coefficient of a blade element
     
-    Cd - (scalar) non-dimensional 2D drag coefficient of a blade element
+    Cd - (matrix) non-dimensional 2D drag coefficient of a blade element
 
 Other m-files required: none
 
@@ -47,7 +47,39 @@ June 2019; Last revision: 10-June-2019
 
 %------------- BEGIN CODE --------------
 
-outputArg1 = inputArg1;
-outputArg2 = inputArg2;
+Re = num2str(Re);
+airfoil = string(airfoil);
+
+%% Sanity checks
+if ~strcmpi(Re,'1000000') || ~strcmpi(airfoil,'NACA0012')
+    warning('Currently there is only data for NACA0012, Re=1e6. Results are based on that')
+end
+
+if max(alpha)>18.5
+    warning(strcat('You have passed an alpha of ', num2str(max(alpha)), ' > 18.5 deg. Using high angle of attack corrections...'))
+elseif min(alpha)<-18.5
+    warning(strcat('You have passed an alpha of ', num2str(min(alpha)), ' < -18.5 deg. Using high angle of attack corrections...'))
+end
+
+data = readmatrix('xf-n0012-il-1000000'); % Alpha,Cl,Cd,Cdp,Cm,Top_Xtr,Bot_Xtr
+
+alpha_arr = data(:,1);
+Cl_arr = data(:,2);
+Cd_arr = data(:,3);
+
+%Cl_v_alpha = griddedInterpolant(alpha_arr,Cl_arr);
+%Cl = Cl_v_alpha(alpha);
+
+%griddedInterpolant might be faster
+
+Cl_max = max(Cl_arr);
+
+alpha_stall = interp1(Cl_arr,alpha_arr,Cl_max);
+
+Cl = interp1(alpha_arr,Cl_arr,alpha);
+Cd = interp1(alpha_arr,Cd_arr,alpha);
+Cds = interp1(alpha_arr,Cd_arr,alpha_stall);
+
+
 end
 

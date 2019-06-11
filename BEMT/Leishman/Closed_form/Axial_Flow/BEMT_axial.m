@@ -1,4 +1,4 @@
-function [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT_axial(rotor,atm,epsilon,plots,verbose)
+function [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT_axial(rotorsystem,atm,epsilon,plots,verbose)
 %{
 AXIAL Flight
 This function can calculate the spanwise thrust & power coefficients and
@@ -7,7 +7,7 @@ axial or hovering flight. This function is run from BEMT.m when
 tangential_vel = 0.
 
 Inputs:
-    rotor - (struct object) with operational (state) and geometric
+    rotorsytem - (struct object) with operational (state) and geometric
     variables of the coaxial or single rotor
 
     atm - (struct object) with atmospheric parameters such as air density
@@ -15,6 +15,8 @@ Inputs:
     epsilon - (scalar) convergence accuracy for F-lambda iteration
 
     plots - (boolean) indicates if plots should be returned or not
+
+    verbose - (boolean) indicates if output text should be displayed or not
 
 Outputs:
     Thrust - (scalar) Total thrust of the coaxial rotor in AXIAL Flight
@@ -24,18 +26,27 @@ Outputs:
     Power - (scalar) Total power consumed by the coaxial rotor in AXIAL
     Flight
 
+    CT - (scalar) Thrust coefficient of coaxial (or single) rotor system
+
+    CP - (scalar) Power/Torque coefficient of coaxial (or single) rotor
+    system
+
+    net_torque_coeff - (scalar) normalized difference in torque coefficient 
+    between upper and lower rotor (0 for single rotor). Needed for trimming
+    
     Plots (optionally)
 
 Other m-files required: 
 
     covergeflowfield
     get_coeffs
+    getChord
+    getReynolds
 
 MAT-files required: none
 
 Literature referenced: 
-    ! An optimum Coaxial Rotor System for Axial Flight. Leishman, 2008. See
-    equation (6) & (7)
+    ! An optimum Coaxial Rotor System for Axial Flight. Leishman, 2008. 
 
     Unmanned coaxial rotor helicopter dynamics and system parameter
     estimation. Rashid et al. Springer, 2014.
@@ -59,17 +70,17 @@ Author: David Oort Alonso, B.Sc, Aerospace Engineering
 TU Delft, Faculty of Aerospace Engineering
 email address: d.oortalonso@student.tudelft.nl  
 Website: https://github.com/davidoort/aeroacoustics
-May 2019; Last revision: 9-June-2019
+May 2019; Last revision: 10-June-2019
 %}
 %------------- BEGIN CODE --------------
 
 dr = 0.01;
-r = rotor.rotor(1).hub_radial_fraction+dr:dr:0.99; %non-dimensionalized by tip radius. Rotors have the same radius.
-%The dr and 1-dr is to avoid singularities at the tip (since F= 0 there usually and the lambda is NaN)
+r = rotorsystem.rotor(1).hub_radial_fraction+dr:dr:0.99; %non-dimensionalized by tip radius. Rotors have the same radius.
+%The dr and 0.99 is to avoid singularities at the tip (since F= 0 there usually and the lambda is NaN)
 %and at the root, when calculating the induced inflow angle.
 
-if strcmpi(rotor.type,"single")
-    single = rotor;
+if strcmpi(rotorsystem.type,"single")
+    single = rotorsystem;
     axial_vel = single.state.axial_vel;
     
     
@@ -110,7 +121,7 @@ if strcmpi(rotor.type,"single")
     
 else
     
-    coaxial = rotor;
+    coaxial = rotorsystem;
         
     axial_vel = coaxial.state.axial_vel;
     

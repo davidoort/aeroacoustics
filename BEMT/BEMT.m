@@ -16,7 +16,7 @@ coaxial = Rotor();
 coaxial.state.axial_vel = 0; %m/s 
 coaxial.state.tangent_vel = 0; %m/s 
 coaxial.state.trim = 1;
-coaxial.state.pitchdeg = 18;
+coaxial.state.pitchdeg = 3;
 
 
 epsilon = 0.0001; %convergence accuracy for Fcf and lambda
@@ -25,6 +25,10 @@ epsilon = 0.0001; %convergence accuracy for Fcf and lambda
 
 %[collective_u, collective_l, net_torque_dimensional, coaxial.state.CT] = trim(coaxial,atm,epsilon,coaxial.state.pitchdeg,'pitch_upper');
 
+plots= false;
+verbose= true;
+
+[Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT_iter(coaxial,atm,epsilon,plots,verbose);
 
 %% Run simple code
 

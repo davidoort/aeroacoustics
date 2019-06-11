@@ -13,7 +13,7 @@ classdef Rotor < dynamicprops
     methods
         function obj = Rotor()
             obj.name = "Harrington1"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes
-            obj.type = "coaxial"; % "single" or "coaxial"
+            obj.type = "single"; % "single" or "coaxial"
             
             obj.state.trim = 1; %1 means that both rotors have the same geometrical pitch, so same collective setting >1 increases pitch of lower wrt to upper
             obj.state.pitchdeg = 8; %deg
@@ -52,14 +52,14 @@ classdef Rotor < dynamicprops
                 % Aerodynamics
                 %obj.rotor(1).airfoil.name = "NACA0012"; %airfoil instead
                 %of aero...
-                
+                obj.rotor(1).airfoil.name = "NACA0012";
                 obj.rotor(1).aero.cl_alpha = 5.73;         %1/rad - Lift slope, NACA 0012 from Harrington report
                 %obj.rotor(1).aero.cl_alpha = 2*pi; doesn't make much of a
                 %difference to verification/validation plots
                 obj.rotor(1).aero.alpha_0 = 0; %rad
                 obj.rotor(1).aero.Cd0 =  0.011;
                 obj.rotor(1).aero.D1 = 0;
-                obj.rotor(1).aero.D2 = 1;
+                obj.rotor(1).aero.D2 = 0;
                 
                 
                 
