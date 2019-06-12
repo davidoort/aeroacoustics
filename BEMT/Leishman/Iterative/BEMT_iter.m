@@ -74,9 +74,9 @@ May 2019; Last revision: 10-June-2019
 
 %% Init
 rmax = 0.99;
-dr = 0.1;
-dpsi = 1;
-r_vec = rotorsystem.rotor(1).hub_radial_fraction+dr:dr:rmax; %non-dimensionalized by tip radius. Rotors have the same radius.
+dr = 0.01;
+dpsi = 0.01;
+r_vec = rotorsystem.rotor(1).hub_radial_fraction+15*dr:dr:rmax; %non-dimensionalized by tip radius. Rotors have the same radius.
 %The dr and 0.99 is to avoid singularities at the tip (since F= 0 there usually and the lambda is NaN)
 %and at the root, when calculating the induced inflow angle.
 chord_vec = rotorsystem.rotor(1).root_chord:-(rotorsystem.rotor(1).root_chord-rotorsystem.rotor(1).tip_chord)/(rmax-rotorsystem.rotor(1).hub_radial_fraction)*dr:rotorsystem.rotor(1).tip_chord;
@@ -98,7 +98,7 @@ pitchdeg = rotorsystem.state.pitchdeg;
 rotorsystem.rotor(1).pitch = deg2rad(pitchdeg)*ones(size(r)); %rad - this might get more complicated when the function gets cyclic input. Or not
 
 F_old = ones(size(r));
-lambda_old = flowfield(1).lambda_P;
+lambda_old = 0.01*ones(size(r));%flowfield(1).lambda_P;
 phi_old = getInflowAngle(lambda_old,r);
 dCTu_old = getdCT(rotorsystem.rotor(1),atm,phi_old,r,dr,psi,dpsi,chord,lambda_old,flowfield(1).lambda_T);
 
@@ -112,7 +112,7 @@ while err>epsilon
     dCTu = getdCT(rotorsystem.rotor(1),atm,phi_old,r,dr,psi,dpsi,chord,lambda_old,flowfield(1).lambda_T);
     
     lambda = getLambda(flowfield(1).lambda_P, dCTu,F_old, r, dr,dpsi);
-    
+                                   
     phi = getInflowAngle(lambda,r);
     
     err = norm([F-F_old,lambda-lambda_old,dCTu-dCTu_old,phi-phi_old]);
@@ -158,7 +158,7 @@ alpha_u = rad2deg(rotorsystem.rotor(1).pitch-phi);
 
 if strcmpi(rotorsystem.type,"coaxial")
     %% Init
-    
+    error('Switch to single rotor!')
     CP_u = CP;
     CT_u = CT;
     FOM_u = FOM;

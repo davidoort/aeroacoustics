@@ -59,7 +59,7 @@ classdef Rotor < dynamicprops
                 obj.rotor(1).aero.alpha_0 = 0; %rad
                 obj.rotor(1).aero.Cd0 =  0.011;
                 obj.rotor(1).aero.D1 = 0;
-                obj.rotor(1).aero.D2 = 0;
+                obj.rotor(1).aero.D2 = 1;
                 
                 
                 
