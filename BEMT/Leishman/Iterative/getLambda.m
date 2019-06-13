@@ -49,10 +49,17 @@ June 2019; Last revision: 11-June-2019
 negCT_bool = dCT<0;
 posCT_bool = dCT >= 0;
 
-lambda_i_pos = sqrt((lambda_ext/2).^2+pi*dCT./(2*F.*r*dr*dpsi))-(lambda_ext/2); 
-lambda_i_neg= sqrt((lambda_ext/2).^2+pi*dCT./(2*F.*r*dr*dpsi))-(lambda_ext/2); 
+lambda_i_pos = sqrt((lambda_ext/2).^2+pi*dCT./(2*F.*r*dr*dpsi))-(lambda_ext/2); %normal formula
 
-lambda_i = lambda_i_pos.*posCT_bool+lambda_i_neg.*negCT_bool;
+
+
+lambda_up = sqrt((lambda_ext/2).^2+pi*-dCT./(2*F.*r*dr*dpsi))+(lambda_ext/2); %lambda up as defined in my notes
+
+
+
+lambda_i = lambda_i_pos.*posCT_bool-lambda_up.*negCT_bool;
+
+
 
 lambda = lambda_i +lambda_ext;
 

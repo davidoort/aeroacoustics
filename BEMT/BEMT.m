@@ -14,12 +14,13 @@ coaxial = Rotor();
 % Change parameters
 
 coaxial.state.axial_vel = 0; %m/s 
-coaxial.state.tangent_vel = 20; %m/s 
+coaxial.state.tangent_vel = 0; %m/s 
 coaxial.state.trim = 1;
-coaxial.state.pitchdeg = 18;
-
+coaxial.state.pitchdeg = 15; %collective
 
 epsilon = 0.0001; %convergence accuracy for Fcf and lambda
+
+warning('off')
 
 % Testing
 

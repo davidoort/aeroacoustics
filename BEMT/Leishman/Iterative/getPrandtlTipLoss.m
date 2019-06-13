@@ -49,13 +49,13 @@ June 2019; Last revision: 11-June-2019
 %------------- BEGIN CODE --------------
 
 
-Fcf_tip = (2/pi)*acos(exp((-rotor.Nb/2)*(ones(size(r))-r)./(r.*phi)));
+Fcf_tip = sign(phi).*(2/pi).*acos(exp((-rotor.Nb/2)*(ones(size(r))-r)./(r.*abs(phi))));
 Fcf_root = (2/pi)*acos(exp((-rotor.Nb/2)*(r-rotor.hub_radial_fraction*ones(size(r)))./(r.*phi)));
 
 
 Fcf = Fcf_tip.*Fcf_root; %doesn't make much of a difference in the inflow plot, maybe I need a different F function (like the one from Carlos..)
-
-
+Fcf = Fcf_tip; %just to avoid low angles of attack near the root
+Fcf = ones(size(r));
 
 end
 

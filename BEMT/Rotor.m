@@ -49,6 +49,13 @@ classdef Rotor < dynamicprops
                 obj.rotor(1).solidity = 0.027; %from Harrington paper
                 obj.rotor(1).hub_radial_fraction = 20/150; %from Harrington paper
                 
+                
+                % geometric pitch
+                obj.state.collective = 10; % [deg] collective 
+                obj.rotor(1).pitch_root = 2; % [deg] - for an ideal twist it will change the relative angles between root and tip
+                obj.rotor(1).twist_type = 'ideal'; % 'linear', 'ideal'
+                obj.rotor(1).twistdeg = 8; %[deg] for a fixed collective, this is the same as changing the rate of twist
+                
                 % Aerodynamics
                 %obj.rotor(1).airfoil.name = "NACA0012"; %airfoil instead
                 %of aero...
@@ -92,6 +99,12 @@ classdef Rotor < dynamicprops
                 obj.rotor(1).solidity = 0.076; %from Harrington paper
                 obj.rotor(1).hub_radial_fraction = 30/150; %from Harrington paper
                  
+                
+                %geometric pitch
+                obj.state.pitchdeg = 8; %collective
+                obj.rotor(1).twist = 'ideal'; %'linear', 'ideal'
+                obj.rotor(1).twistdeg = 8; %for a fixed collective, this is the same as changing the rate of twist
+                
                 % Aerodynamics
                 obj.rotor(1).aero.cl_alpha = 5.73;         %1/rad - Lift slope, NACA 0012 from Harrington report
                 obj.rotor(1).aero.alpha_0 = 0; %rad
@@ -199,7 +212,7 @@ classdef Rotor < dynamicprops
                 obj.rotor(1).solidity = obj.rotor(1).Nb*obj.rotor(1).chord/(pi*obj.rotor(1).R);   % blade solidity - untapered
                 obj.rotor(1).hub_radial_fraction = 0.15;
                 
-                % Aerodynamics
+                % Aerodynamics 
                 obj.rotor(1).aero.cl_alpha = 5.212;         %1/rad - Lift slope, NACA 23015
                 obj.rotor(1).aero.alpha_0 = 0; %rad - guess!
                 obj.rotor(1).aero.Cd0 =  0.011;

@@ -75,8 +75,8 @@ May 2019; Last revision: 10-June-2019
 %% Init
 rmax = 0.99;
 dr = 0.01;
-dpsi = 0.01;
-r_vec = rotorsystem.rotor(1).hub_radial_fraction+15*dr:dr:rmax; %non-dimensionalized by tip radius. Rotors have the same radius.
+dpsi = 0.1;
+r_vec = rotorsystem.rotor(1).hub_radial_fraction+dr:dr:rmax; %non-dimensionalized by tip radius. Rotors have the same radius.
 %The dr and 0.99 is to avoid singularities at the tip (since F= 0 there usually and the lambda is NaN)
 %and at the root, when calculating the induced inflow angle.
 chord_vec = rotorsystem.rotor(1).root_chord:-(rotorsystem.rotor(1).root_chord-rotorsystem.rotor(1).tip_chord)/(rmax-rotorsystem.rotor(1).hub_radial_fraction)*dr:rotorsystem.rotor(1).tip_chord;
@@ -93,9 +93,9 @@ tangent_vel = rotorsystem.state.tangent_vel;
 flowfield(1).lambda_P = axial_vel/(rotorsystem.rotor(1).omega*rotorsystem.rotor(1).R)*ones(size(r)); %normalizing free stream axial velocity by tip velocity
 flowfield(1).lambda_T = tangent_vel/(rotorsystem.rotor(1).omega*rotorsystem.rotor(1).R)*ones(size(r)); %%normalizing free stream tangential velocity by tip velocity - FOR LATER
 
-pitchdeg = rotorsystem.state.pitchdeg;
+pitchdeg = getPitch(r_vec,rotorsystem.rotor(1).twist_type,rotorsystem.rotor(1).twistdeg,rotorsystem.rotor(1).pitch_root);
 
-rotorsystem.rotor(1).pitch = deg2rad(pitchdeg)*ones(size(r)); %rad - this might get more complicated when the function gets cyclic input. Or not
+rotorsystem.rotor(1).pitch = deg2rad(pitchdeg+ones(size(pitchdeg))*rotorsystem.rotor(1).collective); %rad - this might get more complicated when the function gets cyclic input. Or not
 
 F_old = ones(size(r));
 lambda_old = 0.01*ones(size(r));%flowfield(1).lambda_P;
