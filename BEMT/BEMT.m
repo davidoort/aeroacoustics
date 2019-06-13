@@ -16,17 +16,25 @@ coaxial = Rotor();
 coaxial.state.axial_vel = 0; %m/s 
 coaxial.state.tangent_vel = 0; %m/s 
 coaxial.state.trim = 1;
-coaxial.state.pitchdeg = 15; %collective
+coaxial.state.collective = 0; %collective in deg
 
-epsilon = 0.0001; %convergence accuracy for Fcf and lambda
+epsilon = 0.0001; %convergence accuracy for Fcf and lambda -> 0.0001
+
 
 warning('off')
 
-% Testing
+%% Testing Leishman method
+
+plots= true;
+verbose= true;
+
+[Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT_FF(coaxial,atm,epsilon,plots,verbose);
+
+%% Testing accurate method
 
 %[collective_u, collective_l, net_torque_dimensional, coaxial.state.CT] = trim(coaxial,atm,epsilon,coaxial.state.pitchdeg,'pitch_upper');
 
-plots= false;
+plots= true;
 verbose= true;
 
 [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT_iter(coaxial,atm,epsilon,plots,verbose);
@@ -67,6 +75,11 @@ for rotor_type = ["single","coaxial"]
     coaxial.type = rotor_type;
 
     for idx = 1:length(iter_pitchdeg)
+        %if strcmpi(coaxial.type,'single')
+            
+        %elseif strcmpi(coaxial.type,'coaxial')
+            
+        %end
         tic
         [collective_u, collective_l, net_torque_dimensional, coaxial.state.CT] = trim(coaxial,atm,epsilon,iter_pitchdeg(idx),'pitch_upper');
         toc
