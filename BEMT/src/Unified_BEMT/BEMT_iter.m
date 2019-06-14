@@ -75,9 +75,9 @@ May 2019; Last revision: 10-June-2019
 %% Init
 rmax = 0.99; %The dr and 0.99 is to avoid singularities at the tip (since F= 0 there usually and the lambda is NaN)
 %and at the root, when calculating the induced inflow angle.
-dr = 0.1;
+dr = 0.01;
 r_vec = rotorsystem.rotor(1).hub_radial_fraction+dr:dr:rmax; %non-dimensionalized by tip radius. Rotors have the same radius.
-dpsi_vec = linspace(0,2*pi,6); %length(r_vec)+1
+dpsi_vec = linspace(0,2*pi,length(r_vec)+1); %length(r_vec)+1
 dpsi = dpsi_vec(2)-dpsi_vec(1);
 
 

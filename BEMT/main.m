@@ -1,6 +1,6 @@
 %% Init
 
-clear
+clear all
 close all
 clc
 
@@ -13,8 +13,8 @@ coaxial = Rotor();
 
 % Change parameters
 
-coaxial.state.axial_vel = 30; %m/s 
-coaxial.state.tangent_vel = 50; %m/s 
+coaxial.state.axial_vel = 0; %m/s 
+coaxial.state.tangent_vel = 40; %m/s 
 coaxial.state.trim= 1;
 coaxial.state.collective = 60; %collective in deg
 
@@ -26,7 +26,7 @@ warning('off')
 
 plots= true;
 verbose= true;
-method='leishman'; %'leishman','airfoil'
+method='airfoil'; %'leishman','airfoil'
 
 if strcmpi(method,'leishman')
     [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT_FF(coaxial,atm,epsilon,plots,verbose);
