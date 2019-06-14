@@ -103,7 +103,7 @@ rotorsystem.rotor(1).pitch = deg2rad(pitchdeg); %rad - this might get more compl
 
 F_old = ones(size(r));
 lambda_old = getLambda_Leish(rotorsystem.rotor(1),flowfield(1).lambda_P,flowfield(1).lambda_T,F_old,r,psi);                       
-phi_old = getInflowAngle(lambda_old,r,psi,flowfield(1).lambda_T);
+[phi_negative,phi_old] = getInflowAngle(lambda_old,r,psi,flowfield(1).lambda_T);
 
 %% Iterate upper rotor
 
@@ -116,7 +116,7 @@ while err>epsilon
     
     lambda = getLambda_Leish(rotorsystem.rotor(1),flowfield(1).lambda_P,flowfield(1).lambda_T,F,r,psi);
     
-    phi = getInflowAngle(lambda,r,psi,flowfield(1).lambda_T);
+    [phi_negative,phi] = getInflowAngle(lambda,r,psi,flowfield(1).lambda_T);
     
     err = norm([F-F_old,lambda-lambda_old,phi-phi_old]);
 

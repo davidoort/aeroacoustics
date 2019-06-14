@@ -35,10 +35,16 @@ June 2019; Last revision: 10-June-2019
 
 %------------- BEGIN CODE --------------
 
-phi = atan(lambda./(r+lambda_T.*sin(psi)));
+tangential_vel = (r+lambda_T.*sin(psi));
+
+%tangential_vel = r;
+
+backflow_bool = tangential_vel<=0;
+
+phi = atan(lambda./tangential_vel);
 
 phi_nans = phi;
-phi_nans(phi<0)=nan; %backflow
+phi_nans(backflow_bool)=nan; %backflow
 
 end
 

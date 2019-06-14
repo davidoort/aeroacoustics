@@ -104,7 +104,7 @@ rotorsystem.rotor(1).pitch = deg2rad(pitchdeg); %rad - this might get more compl
 
 F_old = ones(size(r));
 lambda_old = 0*ones(size(r));%0.01*ones(size(r));%flowfield(1).lambda_P; 
-phi_old = getInflowAngle(lambda_old,r,psi,flowfield(1).lambda_T);
+[phi,phi_old] = getInflowAngle(lambda_old,r,psi,flowfield(1).lambda_T);
 dCTu_old = getdCT(rotorsystem.rotor(1),atm,phi_old,r,dr,psi,dpsi,chord,lambda_old,flowfield(1).lambda_T);
 
 
