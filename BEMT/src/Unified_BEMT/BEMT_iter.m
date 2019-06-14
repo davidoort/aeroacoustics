@@ -75,16 +75,14 @@ May 2019; Last revision: 10-June-2019
 %% Init
 rmax = 0.99; %The dr and 0.99 is to avoid singularities at the tip (since F= 0 there usually and the lambda is NaN)
 %and at the root, when calculating the induced inflow angle.
-dr = 0.01;
+dr = 0.1;
 r_vec = rotorsystem.rotor(1).hub_radial_fraction+dr:dr:rmax; %non-dimensionalized by tip radius. Rotors have the same radius.
-dpsi_vec = linspace(0,2*pi,length(r_vec)); %length(r_vec)
+dpsi_vec = linspace(0,2*pi,6); %length(r_vec)+1
 dpsi = dpsi_vec(2)-dpsi_vec(1);
 
 
 chord_vec = linspace(rotorsystem.rotor(1).root_chord,rotorsystem.rotor(1).tip_chord,length(r_vec));
 %chord_vec(length(r_vec)+1:end) = []; %resizing of the array to match the length of r_vec. Couldn't find a more elegant way of doing this
-
-
 
 r = repmat(r_vec,length(dpsi_vec),1);
 chord = repmat(chord_vec,length(dpsi_vec),1);
@@ -100,12 +98,15 @@ geometric_pitch = getPitch(r_vec,rotorsystem.rotor(1).twist_type,rotorsystem.rot
 
 pitchdeg = geometric_pitch+ones(size(geometric_pitch))*rotorsystem.state.collective;
 
+pitchdeg = repmat(pitchdeg,length(dpsi_vec),1);
+
 rotorsystem.rotor(1).pitch = deg2rad(pitchdeg); %rad - this might get more complicated when the function gets cyclic input. Or not
 
 F_old = ones(size(r));
-lambda_old = 0.01*ones(size(r));%flowfield(1).lambda_P;
+lambda_old = 0*ones(size(r));%0.01*ones(size(r));%flowfield(1).lambda_P; 
 phi_old = getInflowAngle(lambda_old,r,psi,flowfield(1).lambda_T);
 dCTu_old = getdCT(rotorsystem.rotor(1),atm,phi_old,r,dr,psi,dpsi,chord,lambda_old,flowfield(1).lambda_T);
+
 
 %% Iterate upper rotor
 
@@ -118,9 +119,9 @@ while err>epsilon
     
     lambda = getLambda(flowfield(1).lambda_P, dCTu,F_old, r, dr,dpsi);
                                    
-    phi = getInflowAngle(lambda,r,psi,flowfield(1).lambda_T);
+    [phi_negatives,phi] = getInflowAngle(lambda,r,psi,flowfield(1).lambda_T);
     
-    err = norm([F-F_old,lambda-lambda_old,dCTu-dCTu_old,phi-phi_old]);
+    err = norm([F(~isnan(lambda))-F_old(~isnan(lambda)),lambda(~isnan(lambda))-lambda_old(~isnan(lambda)),dCTu(~isnan(lambda))-dCTu_old(~isnan(lambda)),phi(~isnan(lambda))-phi_old(~isnan(lambda))]);
     
     dCTu_old = dCTu;
     lambda_old = lambda;
@@ -131,9 +132,13 @@ end
 %% Calculate nondimensional coefficients
 
 dCPu = getdCP(rotorsystem.rotor(1),atm,phi_old,r,dr,psi,dpsi,chord,lambda_old,flowfield(1).lambda_T);
-               
-CT = sum(sum(dCTu));
-CP = sum(sum(dCPu));
+
+% Remove NaNs procedure
+dCTu_sum = dCTu(~isnan(dCTu));
+dCPu_sum = dCPu(~isnan(dCPu));
+
+CT = sum(sum(dCTu_sum));
+CP = sum(sum(dCPu_sum));
 
 FOM = CT^(3/2)/(sqrt(2)*CP); %treated as a single rotor;
 
@@ -159,8 +164,9 @@ Torque = atm.rho*pi*rotorsystem.rotor(1).R^5*rotorsystem.rotor(1).omega^2*CP; %U
 
 net_torque_coeff = 0;
 
-alpha_u = rad2deg(rotorsystem.rotor(1).pitch-phi); %kind of works like this, when cyclic is used then pitch will be a matrix
+[alpha_u,alpha_neg] = getAoA(rotorsystem.rotor(1).pitch,phi);
 
+%% Bottom rotor
 if strcmpi(rotorsystem.type,"coaxial")
     %% Init
     error('Switch to single rotor!')
@@ -339,7 +345,7 @@ if verbose
         disp(['Max/Min AoA lower rotor [deg] ',num2str(max(alpha_l)),' / ',num2str(min(alpha_l))])
         disp(['Max/Min/0.7R Re number lower [-] ',num2str(max(Re_l)),' / ',num2str(min(Re_l)),' / ',num2str(Re_l_eff)])
     else
-        disp(['Pitch rotor [deg] ',num2str(pitchdeg)])        
+        disp(['Pitch rotor [deg] ',num2str(pitchdeg(1,:))])        
     end
     
 end
@@ -347,10 +353,20 @@ end
 %% Plots
 
 if plots
-   figure(1)
-   diskPlot(r,psi,alpha_u) %add optional arguments
-   figure(2)
-   diskPlot(r,psi,dCTu) 
+    figure(1); clf;
+    subplot(2, 3, 1)
+    hold on
+    diskPlot(r,psi,alpha_u,'alpha', rotorsystem.rotor(1).hub_radial_fraction) %add optional arguments
+    subplot(2,3,2)
+    diskPlot(r,psi,dCTu,'dCT', rotorsystem.rotor(1).hub_radial_fraction)
+    subplot(2,3,3)
+    diskPlot(r,psi,dCPu,'dCP', rotorsystem.rotor(1).hub_radial_fraction)
+    subplot(2,3,4)
+    diskPlot(r,psi,lambda-flowfield(1).lambda_P,'induced inflow', rotorsystem.rotor(1).hub_radial_fraction)
+    subplot(2,3,5)
+    diskPlot(r,psi,F,'Prandtl', rotorsystem.rotor(1).hub_radial_fraction)
+    subplot(2,3,6)
+    diskPlot(r,psi,rad2deg(phi),'Phi', rotorsystem.rotor(1).hub_radial_fraction)
 end
 
 end

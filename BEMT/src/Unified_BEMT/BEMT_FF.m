@@ -97,11 +97,14 @@ geometric_pitch = getPitch(r_vec,rotorsystem.rotor(1).twist_type,rotorsystem.rot
 
 pitchdeg = geometric_pitch+ones(size(geometric_pitch))*rotorsystem.state.collective;
 
+pitchdeg = repmat(pitchdeg,length(dpsi_vec),1);
+
 rotorsystem.rotor(1).pitch = deg2rad(pitchdeg); %rad - this might get more complicated when the function gets cyclic input. Or not
 
 F_old = ones(size(r));
 lambda_old = getLambda_Leish(rotorsystem.rotor(1),flowfield(1).lambda_P,flowfield(1).lambda_T,F_old,r,psi);                       
 phi_old = getInflowAngle(lambda_old,r,psi,flowfield(1).lambda_T);
+
 %% Iterate upper rotor
 
 err = 1;
@@ -152,7 +155,7 @@ Torque = atm.rho*pi*rotorsystem.rotor(1).R^5*rotorsystem.rotor(1).omega^2*CP; %U
 
 net_torque_coeff = 0;
 
-alpha_u = rad2deg(rotorsystem.rotor(1).pitch-phi); %kind of works like this, when cyclic is used then pitch will be a matrix
+[alpha_u,alpha_plots] = getAoA(rotorsystem.rotor(1).pitch,phi); %kind of works like this, when cyclic is used then pitch will be a matrix
 
 
 if strcmpi(rotorsystem.type,"coaxial")
@@ -333,7 +336,7 @@ if verbose
         disp(['Max/Min AoA lower rotor [deg] ',num2str(max(alpha_l)),' / ',num2str(min(alpha_l))])
         disp(['Max/Min/0.7R Re number lower [-] ',num2str(max(Re_l)),' / ',num2str(min(Re_l)),' / ',num2str(Re_l_eff)])
     else
-        disp(['Pitch rotor [deg] ',num2str(pitchdeg)])        
+        disp(['Pitch rotor [deg] ',num2str(pitchdeg(1,:))])        
     end
     
 end
@@ -344,17 +347,17 @@ if plots
     figure(1); clf;
     subplot(2, 3, 1)
     hold on
-    diskPlot(r,psi,alpha_u,'alpha') %add optional arguments
+    diskPlot(r,psi,alpha_plots,'alpha', rotorsystem.rotor(1).hub_radial_fraction) %add optional arguments
     subplot(2,3,2)
-    diskPlot(r,psi,dCT,'dCT')
+    diskPlot(r,psi,dCT,'dCT', rotorsystem.rotor(1).hub_radial_fraction)
     subplot(2,3,3)
-    diskPlot(r,psi,dCP,'dCP')
+    diskPlot(r,psi,dCP,'dCP', rotorsystem.rotor(1).hub_radial_fraction)
     subplot(2,3,4)
-    diskPlot(r,psi,lambda-flowfield(1).lambda_P,'induced inflow')
+    diskPlot(r,psi,lambda-flowfield(1).lambda_P,'induced inflow', rotorsystem.rotor(1).hub_radial_fraction)
     subplot(2,3,5)
-    diskPlot(r,psi,F,'Prandtl')
+    diskPlot(r,psi,F,'Prandtl', rotorsystem.rotor(1).hub_radial_fraction)
     subplot(2,3,6)
-    diskPlot(r,psi,rad2deg(phi),'Phi')
+    diskPlot(r,psi,rad2deg(phi),'Phi', rotorsystem.rotor(1).hub_radial_fraction)
 end
 
 end

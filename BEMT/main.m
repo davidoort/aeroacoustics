@@ -15,54 +15,30 @@ coaxial = Rotor();
 
 coaxial.state.axial_vel = 0; %m/s 
 coaxial.state.tangent_vel = 0; %m/s 
-coaxial.state.trim = 1;
-coaxial.state.collective = 0; %collective in deg
+coaxial.state.trim= 1;
+coaxial.state.collective = 60; %collective in deg
 
 epsilon = 0.0001; %convergence accuracy for Fcf and lambda -> 0.0001
 
-
 warning('off')
 
-%% Testing Leishman method
+% Testing 
 
 plots= true;
 verbose= true;
+method='airfoil'; %'leishman','airfoil'
 
-[Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT_FF(coaxial,atm,epsilon,plots,verbose);
-
-%% Testing accurate method
-
-%[collective_u, collective_l, net_torque_dimensional, coaxial.state.CT] = trim(coaxial,atm,epsilon,coaxial.state.pitchdeg,'pitch_upper');
-
-plots= true;
-verbose= true;
-
-[Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT_iter(coaxial,atm,epsilon,plots,verbose);
-
-%% Run simple code
-
-plots = true;
-verbose = true;
-
-
-if coaxial.state.tangent_vel == 0
-    %BEMT_FF can also run with a tangential velocity of 0 but it will take
-    %longer
-    [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque] = BEMT_axial(coaxial,atm,epsilon,plots,verbose);
-    
-    %[Thrust, Torque, Power] = BEMT_FF(coaxial,atm,epsilon,plots); %for testing
-    
-else
-    
-    [Thrust, Torque, Power] = BEMT_FF(coaxial,atm,epsilon,plots);
-    
+if strcmpi(method,'leishman')
+    [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT_FF(coaxial,atm,epsilon,plots,verbose);
+elseif strcmpi(method,'airfoil')
+    [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT_iter(coaxial,atm,epsilon,plots,verbose);
 end
+
 
 %% Iteration to trim the coaxial rotor and produce CT-CP validation plots
 
 iter_pitchdeg = 0:1:18;
-
+method = 'leishman';
 coaxial.state.axial_vel = 0; %m/s - comparison plots are for hover
 
 for rotor_type = ["single","coaxial"] 
@@ -81,7 +57,7 @@ for rotor_type = ["single","coaxial"]
             
         %end
         tic
-        [collective_u, collective_l, net_torque_dimensional, coaxial.state.CT] = trim(coaxial,atm,epsilon,iter_pitchdeg(idx),'pitch_upper');
+        [collective_u, collective_l, net_torque_dimensional, coaxial.state.CT] = trim(coaxial,atm,epsilon,iter_pitchdeg(idx),'pitch_upper',method);
         toc
         if coaxial.state.CT < 0
             CT_arr(idx) = [];
@@ -149,8 +125,10 @@ end
 %% Verification plots with FVM for inflow, CT and CP distributions. Trim the coaxial rotor at a specified thrust coefficient
 
 CT_desired = 0.004;
+method='leishman';
 
-[collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_desired,"CT");
+
+[collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_desired,"CT",method);
 
 
 disp(['Converged to ',num2str(net_torque_dimensional),' net torque [Nm] and CT = ',num2str(CT)])
@@ -160,6 +138,8 @@ disp(['Pitch lower rotor = ', num2str(collective_l),' deg'])
 
 plots = true;
 verbose = false;
+
+%Don't change for now!
 [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
         coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque] = BEMT_axial(coaxial,atm,epsilon,plots,verbose);
 

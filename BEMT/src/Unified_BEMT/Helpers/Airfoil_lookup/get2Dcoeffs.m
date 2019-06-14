@@ -59,9 +59,9 @@ June 2019; Last revision: 11-June-2019
 
 %------------- BEGIN CODE --------------
 
-chord_eff = interp1(r(1,:),chord(1,:),0.7);
-vel_eff = ((rotor.omega*rotor.R*0.7).^2+(interp1(r(1,:),lambda(1,:),0.7)).^2).^(1/2);
-Re_eff = getReynolds(vel_eff,chord_eff,atm.kin_visc);
+%chord_eff = interp1(r(1,:),chord(1,:),0.7);
+%vel_eff = ((rotor.omega*rotor.R*0.7).^2+(interp1(r(1,:),lambda(1,:),0.7)).^2).^(1/2);
+%Re_eff = getReynolds(vel_eff,chord_eff,atm.kin_visc);
 
 v_tip = rotor.omega*rotor.R;
 
@@ -71,15 +71,32 @@ Re =  getReynolds(velocity_dimensional,chord,atm.kin_visc); % for later, when mo
 
 airfoil = rotor.airfoil.name;
 
-AoA = rad2deg(rotor.pitch-phi);
-[Cl,Cd,Cl_max,alpha_stall,Cds] = lookup_coeffs(Re_eff,AoA,airfoil);
+[AoA,AoA_nans] = getAoA(rotor.pitch,phi);
+[Cl,Cd,Cl_max,alpha_stall,Cds] = lookup_coeffs(1e6,AoA_nans,airfoil); %the 1e6 is a quick bug fix
 
-if any(any(isnan(Cl))) || any(any(isnan(Cd)))
+negthrust_bool = isnan(AoA_nans); % here assuming that positive alpha is also positive Cl which is true for normal airfoils that don't have negative lift at alpha 0
+
+Cl_positive = Cl; 
+Cl_positive(negthrust_bool) = 0; %to be passed to Viterna 
+Cd_for_Cl_positive = Cd; 
+Cd_for_Cl_positive(negthrust_bool) = 0; %to be passed to Viterna
+
+stalled_bool = isnan(Cl_positive);
+not_stalled_bool = ~isnan(Cl_positive);
+
+if any(any(isnan(Cl_positive))) || any(any(isnan(Cd_for_Cl_positive))) %Cl_positive should have only nans remaining for high AoA
     hub_R = rotor.hub_radial_fraction*rotor.R;
     aspect_ratio = getAspectRatio(rotor.root_chord,rotor.tip_chord,hub_R,rotor.R);
-    [Cl,Cd] = ViternaCorrection(aspect_ratio, Cl, Cd, AoA, alpha_stall, Cds, Cl_max);
-    
+    [Cl_positive,Cd_for_Cl_positive] = ViternaCorrection(aspect_ratio, Cl_positive, Cd_for_Cl_positive, AoA, alpha_stall, Cds, Cl_max);    
 end
+
+%Cl(~isnan(AoA_nans)) = Cl_positive; %reshaped array, for some reason, better to use logical matrices
+%Cd(~isnan(AoA_nans)) = Cd_for_Cl_positive;
+Cl(stalled_bool) = 0;
+Cd(stalled_bool) = 0;
+
+Cl = Cl.*not_stalled_bool+Cl_positive.*stalled_bool;
+Cd = Cd.*not_stalled_bool+Cd_for_Cl_positive.*stalled_bool;
 
 
 end

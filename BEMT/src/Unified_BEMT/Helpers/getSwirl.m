@@ -45,20 +45,19 @@ June 2019; Last revision: 11-June-2019
 %------------- BEGIN CODE --------------
 
 
-%mass_flow_annuli (used for weighting) = rho*A*v -> non-dimensionalized -> 2*pi*r*dr.*(lambda_u+flowfield(1).lambda_inf)
-%swirl [rad/s] = omega * cp/(2*r^3)
+%swirl ratio: swirl wake/omega
 
-%lambda = lambda_u+flowfield(1).lambda_inf
+%mass_flow_element/(rho*V_tip) = dA*lambda = lambda*r*dr*dpsi
 
-mass_flow_annuli = r*dr.*(lambda)*dpsi/(2*pi);
+mass_flow_element = lambda.*r*dr*dpsi;
 
-if sum(sum(mass_flow_annuli)) == 0
+if sum(sum(mass_flow_element)) == 0
     disp('No mass flow through the rotor')
     weighted_swirl_ratio = 0;
 else
-    swirl_ratio = dCP./(mass_flow_annuli.*r*dr);
+    swirl_ratio = pi*dCP./(mass_flow_element.*r.^2);
 
-    weighted_swirl_ratio = sum(sum(swirl_ratio.*mass_flow_annuli))/sum(sum(mass_flow_annuli));
+    weighted_swirl_ratio = sum(sum(swirl_ratio.*mass_flow_element))/sum(sum(mass_flow_element));
 end
 
 end

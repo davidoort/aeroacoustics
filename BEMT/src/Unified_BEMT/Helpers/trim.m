@@ -1,4 +1,4 @@
-function [collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_or_pitch,trimvar)
+function [collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_or_pitch,trimvar,method)
 %{
 TRIM THE COAXIAL SYSTEM TO A DESIRED CT or UPPER COLLECTIVE SETTING
 
@@ -60,7 +60,7 @@ if strcmpi(trimvar,"pitch_upper")
     
     collective_u = CT_or_pitch; %deg
     coaxial.state.collective = collective_u; %deg
-    [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon); %deg,Nm,-
+    [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method); %deg,Nm,-
     
 elseif strcmpi(trimvar,"CT")
     
@@ -79,7 +79,7 @@ elseif strcmpi(trimvar,"CT")
 
     %% Begin iteration
     [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT_axial(coaxial,atm,epsilon,plots,verbose);
+        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method);
     
     thrust_error = CT_des - coaxial.state.CT;
     
@@ -88,9 +88,9 @@ elseif strcmpi(trimvar,"CT")
         coaxial.state.collective = coaxial.state.collective + k1*thrust_error;
         
         [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-            coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT_axial(coaxial,atm,epsilon,plots,verbose);
+            coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method);
         
-        [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon); %deg,Nm,-
+        [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method); %deg,Nm,-
         
         thrust_error = CT_des - coaxial.state.CT;
         
@@ -105,7 +105,7 @@ else
 end
 
 
-function [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon)
+function [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method)
 
 %{
 TRIM THE LOWER ROTOR TO ACHIEVE TORQUE BALANCE
@@ -162,7 +162,7 @@ June 2019; Last revision: 2-June-2019
     %% Begin iteration    
     
     [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT_axial(coaxial,atm,epsilon,plots,verbose);
+        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method);
     
     net_torque_dimensional = coaxial.state.net_torque_coeff*coaxial.state.torque;
     
@@ -177,7 +177,7 @@ June 2019; Last revision: 2-June-2019
         
         %tic
         [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT_axial(coaxial,atm,epsilon,plots,verbose);
+        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method);
         %toc
         net_torque_dimensional = coaxial.state.net_torque_coeff*coaxial.state.torque;
         

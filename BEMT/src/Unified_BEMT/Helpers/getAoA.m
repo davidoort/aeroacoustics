@@ -1,7 +1,7 @@
-function [phi,phi_nans] = getInflowAngle(lambda,r,psi,lambda_T)
+function [AoA,AoA_nans] = getAoA(pitch,phi)
 %{
-GETINFLOWANGLE is a helper function that returns the inflow angle at a radial
-station of the rotor. 
+getAoA is a helper function that calculates the angle of attack at a disk
+element 
 
 Inputs:
     lambda - (matrix [-]) non-dimensional inflow ratio
@@ -35,10 +35,11 @@ June 2019; Last revision: 10-June-2019
 
 %------------- BEGIN CODE --------------
 
-phi = atan(lambda./(r+lambda_T.*sin(psi)));
+AoA = rad2deg(pitch-phi); %kind of works like this, when cyclic is used then pitch will be a matrix
 
-phi_nans = phi;
-phi_nans(phi<0)=nan; %backflow
+
+AoA_nans = AoA;
+AoA_nans(AoA<0)=nan;
 
 end
 
