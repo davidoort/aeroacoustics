@@ -1,8 +1,7 @@
-function [CP,dCP] = getCP_Leish(rotor,dCT,phi,r,dr,psi,dpsi,lambda,lambda_T)
+function dCT = getdCT_Leish(rotor,F,lambda,lambda_P,lambda_T,phi,r,dr,psi,dpsi)
 %{
-GETdCP_Leish calculates the thrust coefficient of one
-(or multiple) rotor disk elements using my own derivation from Leishman
-method
+GETdCT_Leish calculates the thrust coefficient of one
+(or multiple) rotor disk elements as derived by me in eq (21)
 
 Inputs:
     rotor - (struct) geometric variables (such as airfoil) of A rotor
@@ -54,20 +53,12 @@ June 2019; Last revision: 13-June-2019
 %------------- BEGIN CODE --------------
 
 
-dCP_i = lambda.*dCT; %if I am correct about the assumption that it should be lambda and not lambda_i
+alpha = rotor.pitch-phi;
 
-alpha = rotor.pitch-phi; %rad
-alpha_0 = rotor(1).aero.alpha_0; %rad
-Cd = rotor.aero.Cd0+rotor.aero.D1*(alpha-alpha_0)+rotor.aero.D2*(alpha-alpha_0).^2; %quadratic equation
-mu = lambda_T.^2.*(sin(psi)).^2 + 2*lambda_T.*r.*sin(psi); %probably should make this a function at some point
+alpha_0 = rotor(1).aero.alpha_0;
 
-dCP_p = rotor.solidity*dr*dpsi*r.*Cd.*(mu+r.^2)/(4*pi);
-
-dCP =dCP_i+dCP_p;
-
-dCP_sum = dCP(~isnan(dCP));
-
-CP = sum(sum(dCP_sum)); %should not have any nans
+dCT1 = rotor.solidity*rotor.aero.cl_alpha*(alpha-alpha_0).*(lambda_T.^2.*sin(psi).^2+2*lambda_T.*r.*sin(psi)+r.^2)*dr*dpsi/(4*pi); % equation 16
+dCT = 2*F.*lambda.*(lambda-lambda_P).*r*dr*dpsi/pi; %equation 23
 
 end
 

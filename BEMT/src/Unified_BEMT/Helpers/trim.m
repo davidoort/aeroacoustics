@@ -55,6 +55,7 @@ June 2019; Last revision: 2-June-2019
 %}
 
 %------------- BEGIN CODE --------------
+debug = false;
 
 if strcmpi(trimvar,"pitch_upper")
     
@@ -79,7 +80,7 @@ elseif strcmpi(trimvar,"CT")
 
     %% Begin iteration
     [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method);
+        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
     
     thrust_error = CT_des - coaxial.state.CT;
     
@@ -162,7 +163,7 @@ June 2019; Last revision: 2-June-2019
     %% Begin iteration    
     
     [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method);
+        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
     
     net_torque_dimensional = coaxial.state.net_torque_coeff*coaxial.state.torque;
     
@@ -177,7 +178,7 @@ June 2019; Last revision: 2-June-2019
         
         %tic
         [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method);
+        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
         %toc
         net_torque_dimensional = coaxial.state.net_torque_coeff*coaxial.state.torque;
         

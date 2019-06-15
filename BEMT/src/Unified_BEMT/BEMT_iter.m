@@ -154,6 +154,9 @@ dCPu_sum = dCPu(~isnan(dCPu));
 CT = sum(sum(dCTu_sum));
 CP = sum(sum(dCPu_sum));
 
+
+
+
 FOM = CT^(3/2)/(sqrt(2)*CP); %treated as a single rotor;
 
 weighted_swirl_ratio = getSwirl(lambda,flowfield(1).lambda_P,flowfield(1).lambda_T,r,dr,dpsi,dCPu);

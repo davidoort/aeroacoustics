@@ -111,11 +111,11 @@ pitchdeg = repmat(pitchdeg,length(dpsi_vec),1);
 
 rotorsystem.rotor(1).pitch = deg2rad(pitchdeg); %rad - this might get more complicated when the function gets cyclic input. Or not
 
+%% Iterate upper rotor
+
 F_old = ones(size(r));
 lambda_old = getLambda_Leish(rotorsystem.rotor(1),flowfield(1).lambda_P,flowfield(1).lambda_T,F_old,r,psi);                       
 [phi_negative,phi_old] = getInflowAngle(lambda_old,r,psi,flowfield(1).lambda_T);
-
-%% Iterate upper rotor
 
 err = 1;
 while err>epsilon
@@ -135,11 +135,13 @@ while err>epsilon
     F_old = F;
 end
 
-%% Calculate nondimensional coefficients
-
 [CT,dCT] = getCT_Leish(rotorsystem.rotor(1),F,lambda,flowfield(1).lambda_P,flowfield(1).lambda_T,phi,r,dr,psi,dpsi);
 
 [CP,dCP] = getCP_Leish(rotorsystem.rotor(1),dCT,phi,r,dr,psi,dpsi,lambda,flowfield(1).lambda_T);
+
+%% Calculate nondimensional coefficients
+
+
 
 FOM = CT^(3/2)/(sqrt(2)*CP); %treated as a single rotor;
 

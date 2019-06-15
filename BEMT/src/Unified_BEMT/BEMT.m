@@ -1,17 +1,37 @@
-function [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT(rotorsystem,atm,epsilon,plots,verbose,method)
+function [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT(rotorsystem,atm,epsilon,plots,verbose,method,debug)
 
 
+%init is done inside the spinRotor function, but you have to specify which
+%rotor (geometry) has to be spun and in which direction it has to be spun, with what
+%collective (and cyclic later), lambda_P, lambda_T, method (leishman or airfoil)
 
-if strcmpi(method,'leishman')
-    [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT_FF(rotorsystem,atm,epsilon,plots,verbose);
-elseif strcmpi(method,'airfoil')
-    [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT_iter(rotorsystem,atm,epsilon,plots,verbose);
+if debug
+    res_r = 6;
+    res_psi = 10;
+else
+    res_r = 100;
+    res_psi = 130; %careful of putting them equal
 end
 
-%For later
-%{
+axial_vel = rotorsystem.state.axial_vel;
+tangent_vel = rotorsystem.state.tangent_vel;
 
-%% Display output text
+flowfield(1).lambda_P = axial_vel/(rotorsystem.rotor(1).omega*rotorsystem.rotor(1).R)*ones(res_psi,res_r); %normalizing free stream axial velocity by tip velocity
+flowfield(1).lambda_T = tangent_vel/(rotorsystem.rotor(1).omega*rotorsystem.rotor(1).R)*ones(res_psi,res_r); %%normalizing free stream tangential velocity by tip velocity - FOR LATER
+
+collective_u = rotorsystem.state.collective;
+
+[Thrust, Torque, Power, CT, CP, dCT, dCP, lambda, Re_u, alpha_u, phi, ...
+    F, weighted_swirl_ratio, FOM, velocity_dimensional,pitchdeg,r,psi] = spinRotor(rotorsystem.rotor(1),atm,'CCW',collective_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon,debug);
+
+net_torque_coeff = 0;
+
+
+if strcmpi(rotorsystem.type,"coaxial")
+    error('Switch to single rotor!')
+end
+    
+ %% Display output text
 
 if verbose
     disp('                                                  ')
@@ -27,7 +47,7 @@ if verbose
     disp(['Omega [rad/s]',' ',num2str(rotorsystem.rotor(1).omega)])
     disp(['Swirl upper rotor [rad/s] ',num2str(weighted_swirl_ratio*rotorsystem.rotor(1).omega)])
     disp(['Max/Min AoA upper rotor [deg] ',num2str(max(max(alpha_u))),' / ',num2str(min(min(alpha_u)))])
-    disp(['Max/Min/0.7R Re number upper [-] ',num2str(max(max(Re_u))),' / ',num2str(min(min(Re_u))),' / ',num2str(Re_u_eff)])
+    disp(['Max/Min/0.7R Re number upper [-] ',num2str(max(max(Re_u))),' / ',num2str(min(min(Re_u))),' / ',num2str(interp1(r(1,:),Re_u(1,:),0.7))])
     if strcmpi(rotorsystem.type,"coaxial")
         disp(['Net torque coefficient (u-l)/l [-]',' ',num2str(net_torque_coeff)])
         disp(['Net torque (u-l) [Nm]',' ',num2str(net_torque_dimensional)])
@@ -35,29 +55,43 @@ if verbose
         disp(['Max/Min AoA lower rotor [deg] ',num2str(max(alpha_l)),' / ',num2str(min(alpha_l))])
         disp(['Max/Min/0.7R Re number lower [-] ',num2str(max(Re_l)),' / ',num2str(min(Re_l)),' / ',num2str(Re_l_eff)])
     else
-        disp(['Pitch rotor [deg] ',num2str(pitchdeg)])        
+        disp(['Pitch rotor [deg] ',num2str(pitchdeg(1,:))])        
     end
     
-end
+end   
+
 
 %% Plots
+
+%DISK PLOTS
 
 if plots
     figure(1); clf;
     subplot(2, 3, 1)
     hold on
-    diskPlot(r,psi,alpha_u,'alpha', rotorsystem.rotor(1).hub_radial_fraction) %add optional arguments
+    diskPlot(r,psi,alpha_u,'alpha') %add optional arguments
     subplot(2,3,2)
-    diskPlot(r,psi,dCT,'dCT', rotorsystem.rotor(1).hub_radial_fraction)
+    diskPlot(r,psi,dCT,'dCT')
     subplot(2,3,3)
-    diskPlot(r,psi,dCP,'dCP', rotorsystem.rotor(1).hub_radial_fraction)
+    diskPlot(r,psi,dCP,'dCP')
     subplot(2,3,4)
-    diskPlot(r,psi,lambda-flowfield(1).lambda_P,'induced inflow', rotorsystem.rotor(1).hub_radial_fraction)
+    diskPlot(r,psi,lambda-flowfield(1).lambda_P,'induced inflow')
     subplot(2,3,5)
-    diskPlot(r,psi,F,'Prandtl', rotorsystem.rotor(1).hub_radial_fraction)
+    diskPlot(r,psi,F,'Prandtl')
     subplot(2,3,6)
-    diskPlot(r,psi,rad2deg(phi),'Phi', rotorsystem.rotor(1).hub_radial_fraction)
+    diskPlot(r,psi,rad2deg(phi),'Phi')
 end
+
+
+
+end
+
+%For later
+%{
+
+
+
+
 
 
 if abs(CT-0.004)<0.00001 && net_torque_dimensional<0.1 && strcmpi(coaxial.name,"Harrington1")  && strcmpi(coaxial.type,"coaxial")
@@ -107,7 +141,7 @@ if plots
     ylabel('Prandtl tip loss')
     
     subplot(2, 3, 3)
-    plot(r, alpha_u, 'b-.')
+    plot(r, AoA, 'b-.')
     title('AoA vs radius - Top')
     xlabel('r/R')
     ylabel('$\alpha$ [deg]','interpreter','latex')
@@ -184,5 +218,5 @@ end
 
 
 
-end
+
 
