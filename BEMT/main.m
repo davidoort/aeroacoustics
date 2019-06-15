@@ -1,6 +1,6 @@
 %% Init
 
-clear all
+clear
 close all
 clc
 
@@ -13,34 +13,36 @@ coaxial = Rotor();
 
 % Change parameters
 
-coaxial.state.axial_vel = 20; %m/s 
-coaxial.state.tangent_vel = 40; %m/s 
+coaxial.state.axial_vel = 0; %m/s 
+coaxial.state.tangent_vel = 0; %m/s 
 coaxial.state.trim= 1;
-coaxial.state.collective = 60; %collective in deg
+coaxial.state.collective = 1; %collective in deg
 
 epsilon = 0.0001; %convergence accuracy for Fcf and lambda -> 0.0001
 
 warning('off')
 
-% Testing 
+%% Testing 
 
 plots= true;
 verbose= true;
 method='leishman'; %'leishman','airfoil'
-
+tic
 if strcmpi(method,'leishman')
     [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT_FF(coaxial,atm,epsilon,plots,verbose);
 elseif strcmpi(method,'airfoil')
     [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT_iter(coaxial,atm,epsilon,plots,verbose);
 end
-
+toc
 
 %% Iteration to trim the coaxial rotor and produce CT-CP validation plots
 
 iter_pitchdeg = 0:1:18;
 method = 'leishman';
 coaxial.state.axial_vel = 0; %m/s - comparison plots are for hover
+coaxial.state.tangent_vel = 0; %m/s  - comparison plots are for hover
 
+%for method = ["leishman","single"]
 for rotor_type = ["single","coaxial"] 
     
     CT_arr = zeros(1,length(iter_pitchdeg));

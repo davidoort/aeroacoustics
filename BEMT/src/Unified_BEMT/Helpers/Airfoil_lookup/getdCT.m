@@ -58,5 +58,7 @@ June 2019; Last revision: 11-June-2019
 
 dCT = (rotor.Nb*chord*dr)/(2*pi*rotor.R).*((lambda_T.*sin(psi)+r).^2+lambda.^2).*(Cl.*cos(phi)-Cd.*sin(phi))*dpsi/(2*pi);
 
+dCT(dCT<0)= nan; %this is rarely the case but can happen if Cl=0 (theta and phi approx equal) but Cd is not and a component of drag (significant at high inflow angles) is pushing the section down
+
 end
 

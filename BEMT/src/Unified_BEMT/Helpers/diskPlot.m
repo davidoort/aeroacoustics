@@ -53,7 +53,15 @@ end
 xlabel('r'); ylabel('r')
 colorbar
 
-%Add hub contour
+%% Add hub contour
+
+th = 0:pi/50:2*pi;
+xunit = r(1,1) * cos(th);
+yunit = r(1,1) * sin(th);
+plot(xunit,yunit)
+
+%{
+STUPID METHOD IF YOU ARE GIVEN r
 try
     r=varargin{2};
     th = 0:pi/50:2*pi;
@@ -63,6 +71,6 @@ try
 catch
     warning('Hub size not provided. diskPlot(r,psi,matrix,title,hub_radial_fraction)')
 end
-
+%}
 end
 

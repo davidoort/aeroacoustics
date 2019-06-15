@@ -69,12 +69,22 @@ June 2019; Last revision: 13-June-2019
 %}
 %------------- BEGIN CODE --------------
 
+debug = false;
 %% Init
+
 rmax = 0.99; %The dr and 0.99 is to avoid singularities at the tip (since F= 0 there usually and the lambda is NaN)
 %and at the root, when calculating the induced inflow angle.
-dr = 0.01;
-r_vec = rotorsystem.rotor(1).hub_radial_fraction+dr:dr:rmax; %non-dimensionalized by tip radius. Rotors have the same radius.
-dpsi_vec = linspace(0,2*pi,length(r_vec)+1); %length(r_vec)+1
+
+if debug
+    dr = 0.1;
+    r_vec = rotorsystem.rotor(1).hub_radial_fraction+dr:dr:rmax; %non-dimensionalized by tip radius. Rotors have the same radius.
+    dpsi_vec = linspace(0,2*pi,10); %length(r_vec)+1
+else
+    dr = 0.01;
+    r_vec = rotorsystem.rotor(1).hub_radial_fraction+dr:dr:rmax; %non-dimensionalized by tip radius. Rotors have the same radius.
+    dpsi_vec = linspace(0,2*pi,length(r_vec)+1); %length(r_vec)+1
+end
+
 dpsi = dpsi_vec(2)-dpsi_vec(1);
 
 
@@ -133,7 +143,7 @@ end
 
 FOM = CT^(3/2)/(sqrt(2)*CP); %treated as a single rotor;
 
-weighted_swirl_ratio = getSwirl(lambda,r,dr,dpsi,dCP);
+weighted_swirl_ratio = getSwirl(lambda,flowfield(1).lambda_P,flowfield(1).lambda_T,r,dr,dpsi,dCP);
 
 %% Reynolds - to be moved out of here
 

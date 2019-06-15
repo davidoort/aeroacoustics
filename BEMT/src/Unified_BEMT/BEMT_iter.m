@@ -72,12 +72,19 @@ May 2019; Last revision: 10-June-2019
 %}
 %------------- BEGIN CODE --------------
 
+debug = false;
 %% Init
 rmax = 0.99; %The dr and 0.99 is to avoid singularities at the tip (since F= 0 there usually and the lambda is NaN)
 %and at the root, when calculating the induced inflow angle.
-dr = 0.01;
-r_vec = rotorsystem.rotor(1).hub_radial_fraction+dr:dr:rmax; %non-dimensionalized by tip radius. Rotors have the same radius.
-dpsi_vec = linspace(0,2*pi,length(r_vec)+1); %length(r_vec)+1
+if debug
+    dr = 0.1;
+    r_vec = rotorsystem.rotor(1).hub_radial_fraction+dr:dr:rmax; %non-dimensionalized by tip radius. Rotors have the same radius.
+    dpsi_vec = linspace(0,2*pi,10); %length(r_vec)+1
+else
+    dr = 0.01;
+    r_vec = rotorsystem.rotor(1).hub_radial_fraction+dr:dr:rmax; %non-dimensionalized by tip radius. Rotors have the same radius.
+    dpsi_vec = linspace(0,2*pi,length(r_vec)+1); %length(r_vec)+1
+end
 dpsi = dpsi_vec(2)-dpsi_vec(1);
 
 
@@ -110,18 +117,25 @@ dCTu_old = getdCT(rotorsystem.rotor(1),atm,phi_old,r,dr,psi,dpsi,chord,lambda_ol
 
 %% Iterate upper rotor
 
-err = 1;
-while err>epsilon
+err_old = 1;
+while err_old>epsilon
     
     F = getPrandtlTipLoss(rotorsystem.rotor(1),phi_old,r);
     
     dCTu = getdCT(rotorsystem.rotor(1),atm,phi_old,r,dr,psi,dpsi,chord,lambda_old,flowfield(1).lambda_T);
     
-    lambda = getLambda(flowfield(1).lambda_P, dCTu,F_old, r, dr,dpsi);
+    lambda = getLambda(flowfield(1).lambda_P, dCTu, F_old, r, dr,dpsi);
                                    
     [phi_negatives,phi] = getInflowAngle(lambda,r,psi,flowfield(1).lambda_T);
     
     err = norm([F(~isnan(lambda))-F_old(~isnan(lambda)),lambda(~isnan(lambda))-lambda_old(~isnan(lambda)),dCTu(~isnan(lambda))-dCTu_old(~isnan(lambda)),phi(~isnan(lambda))-phi_old(~isnan(lambda))]);
+    
+    if abs(err-err_old)<1e-5
+        warning('Error constant, stopping iteration')
+        break
+    end
+    
+    err_old = err;
     
     dCTu_old = dCTu;
     lambda_old = lambda;
@@ -131,7 +145,7 @@ end
 
 %% Calculate nondimensional coefficients
 
-dCPu = getdCP(rotorsystem.rotor(1),atm,phi_old,r,dr,psi,dpsi,chord,lambda_old,flowfield(1).lambda_T);
+dCPu = getdCP(rotorsystem.rotor(1),atm,phi_old,r,dr,psi,dpsi,chord,lambda_old,flowfield(1).lambda_P,flowfield(1).lambda_T);
 
 % Remove NaNs procedure
 dCTu_sum = dCTu(~isnan(dCTu));
@@ -142,7 +156,7 @@ CP = sum(sum(dCPu_sum));
 
 FOM = CT^(3/2)/(sqrt(2)*CP); %treated as a single rotor;
 
-weighted_swirl_ratio = getSwirl(lambda,r,dr,dpsi,dCPu);
+weighted_swirl_ratio = getSwirl(lambda,flowfield(1).lambda_P,flowfield(1).lambda_T,r,dr,dpsi,dCPu);
 
 %% Reynolds - to be moved out of here
 

@@ -1,4 +1,4 @@
-function dCP = getdCP(rotor,atm,phi,r,dr,psi,dpsi,chord,lambda,lambda_T)
+function dCP = getdCP(rotor,atm,phi,r,dr,psi,dpsi,chord,lambda,lambda_ext,lambda_T)
 %{
 GETdCP calculates the thrust coefficient of one
 (or multiple) rotor disk elements
@@ -50,7 +50,12 @@ June 2019; Last revision: 11-June-2019
 
 %------------- BEGIN CODE --------------
 
-[Cl,Cd] = get2Dcoeffs(rotor,atm,phi,chord,lambda,lambda_T,r,psi);
+if norm(lambda_T)==0 %otherwise it might not be a reasonable assumption
+    lambda(isnan(lambda))=lambda_ext(1,1); 
+    [phi_negatives,phi] = getInflowAngle(lambda,r,psi,lambda_T);
+end
+
+[Cl,Cd] = get2Dcoeffs(rotor,atm,phi,chord,lambda,lambda_T,r,psi); 
                        
 dCP = (rotor.Nb*chord.*r*dr)/(2*pi*rotor.R).*((lambda_T.*sin(psi)+r).^2+lambda.^2).*(Cl.*sin(phi)+Cd.*cos(phi))*dpsi/(2*pi);
 

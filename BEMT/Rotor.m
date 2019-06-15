@@ -12,7 +12,7 @@ classdef Rotor < dynamicprops
     
     methods
         function obj = Rotor()
-            obj.name = "Harrington1"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing
+            obj.name = "Harrington2"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing
             obj.type = "single"; % "single" or "coaxial"
             
             obj.state.trim = 1; %1 means that both rotors have the same geometrical pitch, so same collective setting >1 increases pitch of lower wrt to upper
@@ -109,6 +109,7 @@ classdef Rotor < dynamicprops
                 obj.rotor(1).twistdeg = 0; %[deg] for a fixed collective, this is the same as changing the rate of twist
                 
                 % Aerodynamics
+                obj.rotor(1).airfoil.name = "NACA0012";
                 obj.rotor(1).aero.cl_alpha = 5.73;         %1/rad - Lift slope, NACA 0012 from Harrington report
                 obj.rotor(1).aero.alpha_0 = 0; %rad
                 obj.rotor(1).aero.Cd0 =  0.011;

@@ -1,4 +1,4 @@
-function [weighted_swirl_ratio] = getSwirl(lambda,r,dr,dpsi,dCP)
+function [weighted_swirl_ratio] = getSwirl(lambda,lambda_ext,lambda_T,r,dr,dpsi,dCP)
 %{
 getSwirl is a helper function that calculates the rotational speed of the
 wake of a rotor normalized by its angular velocity.
@@ -48,6 +48,10 @@ June 2019; Last revision: 11-June-2019
 %swirl ratio: swirl wake/omega
 
 %mass_flow_element/(rho*V_tip) = dA*lambda = lambda*r*dr*dpsi
+
+if norm(lambda_T)==0 %otherwise it might not be a reasonable assumption
+    lambda(isnan(lambda))=lambda_ext(1,1); 
+end
 
 mass_flow_element = lambda.*r*dr*dpsi;
 
