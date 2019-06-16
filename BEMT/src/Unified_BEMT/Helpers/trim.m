@@ -71,7 +71,7 @@ elseif strcmpi(trimvar,"CT")
 
     %% Tweak for fast & stable convergence 
 
-    k1 = 50;
+    k1 = 70;
     eps1 = 0.00001;
     plots = false;
     verbose = false;

@@ -128,6 +128,7 @@ method='airfoil';
 
 coaxial.state.axial_vel = 0; %m/s - hover
 coaxial.state.tangent_vel = 0; %m/s - hover
+epsilon = 0.001; %convergence accuracy for Fcf and lambda -> 0.0001
 
 [collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_desired,"CT",method);
 

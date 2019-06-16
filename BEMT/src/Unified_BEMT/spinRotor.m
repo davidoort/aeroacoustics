@@ -120,7 +120,7 @@ if strcmpi(method,'airfoil')
         
         err = norm([F(~isnan(lambda))-F_old(~isnan(lambda)),lambda(~isnan(lambda))-lambda_old(~isnan(lambda)),dCT(~isnan(lambda))-dCTu_old(~isnan(lambda)),phi(~isnan(lambda))-phi_old(~isnan(lambda))]);
         
-        if abs(err-err_old)<1e-5
+        if abs(err-err_old)<=1e-4
             warning('Error constant, stopping iteration')
             break
         end
