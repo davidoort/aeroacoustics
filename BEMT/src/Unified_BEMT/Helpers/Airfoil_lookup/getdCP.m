@@ -52,7 +52,7 @@ June 2019; Last revision: 11-June-2019
 
 if norm(lambda_T)==0 %otherwise it might not be a reasonable assumption
     lambda(isnan(lambda))=lambda_ext(isnan(lambda)); 
-    [phi_negatives,phi] = getInflowAngle(lambda,r,psi,lambda_T);
+    [phi_negatives,phi] = getInflowAngle(lambda,lambda_ext,r,psi,lambda_T);
 end
 
 [Cl,Cd] = get2Dcoeffs(rotor,atm,phi,chord,lambda,lambda_T,r,psi); 

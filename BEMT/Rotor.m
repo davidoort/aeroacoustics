@@ -34,7 +34,7 @@ classdef Rotor < dynamicprops
                 obj.params.kappa = 1.15;
                 obj.params.rd = 0.82; %[non-dimensionalised by R] annulus - "assumption consistent with the results obtained by Leishman using the free wake method"
                 %Rotor 1 had an interrotor spacing of 0.186 R = 1.41 m
-                %IF LANDGREBE (actually I ):
+                %IF LANDGREBE (actually I need it anyway):
                 obj.params.interrotor_spacing = 0.186; % [-] fraction of upper rotor radius
                 
                 %Validation with Harrington Rotor 1 - things assumed are pitch of rotor and
@@ -87,7 +87,7 @@ classdef Rotor < dynamicprops
                 obj.params.kappa = 1.15;
                 obj.params.rd = 0.82; %[non-dimensionalised by R] annulus - "assumption consistent with the results obtained by Leishman using the free wake method"
                 %Rotor 2 had an interrotor spacing of 0.16 R = 1.21 m 
-            
+                obj.params.interrotor_spacing = 0.16; % [-] fraction of upper rotor radius
                 
                 
                 %% Top rotor

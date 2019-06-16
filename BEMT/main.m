@@ -13,16 +13,16 @@ coaxial = Rotor();
 
 % Change parameters
 
-coaxial.state.axial_vel = 0; %m/s 
+coaxial.state.axial_vel = 10; %m/s 
 coaxial.state.tangent_vel = 10; %m/s 
 coaxial.state.trim= 1;
 coaxial.state.collective = 20; %collective in deg
 
 epsilon = 0.0001; %convergence accuracy for Fcf and lambda -> 0.0001
 
-warning('off')
+%warning('off')
 
-% Testing 
+%% Testing 
 
 plots= true;
 verbose= true;
@@ -36,7 +36,7 @@ toc
 %% Iteration to trim the coaxial rotor and produce CT-CP validation plots
 
 iter_pitchdeg = 0:1:18;
-method = 'leishman';
+method = 'airfoil'; %airfoil took about 6 mins to run
 coaxial.state.axial_vel = 0; %m/s - comparison plots are for hover
 coaxial.state.tangent_vel = 0; %m/s  - comparison plots are for hover
 
@@ -124,7 +124,7 @@ end
 %% Verification plots with FVM for inflow, CT and CP distributions. Trim the coaxial rotor at a specified thrust coefficient
 
 CT_desired = 0.004;
-method='leishman';
+method='airfoil';
 
 coaxial.state.axial_vel = 0; %m/s - hover
 coaxial.state.tangent_vel = 0; %m/s - hover
@@ -139,7 +139,7 @@ disp(['Pitch lower rotor = ', num2str(collective_l),' deg'])
 
 plots = true;
 verbose = false;
-
+debug = false;
 %Don't change for now!
 [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
         coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);

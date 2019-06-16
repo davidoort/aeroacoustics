@@ -1,4 +1,4 @@
-function [Thrust, Torque, Power, CT, CP, dCT, dCP, lambda, Re, AoA,alpha_negatives, phi, F, weighted_swirl_ratio,FOM_single,velocity_dimensional,pitchdeg,r,psi] = spinRotor(rotor,atm,spin_dir,collective,lambda_P,lambda_T,method,epsilon)
+function [Thrust, Torque, Power, CT, CP, dCT, dCP, lambda, Re, AoA,alpha_negatives, phi, F, weighted_swirl_ratio,FOM_single,velocity_dimensional,pitchdeg,r,dr,psi] = spinRotor(rotor,atm,spin_dir,collective,lambda_P,lambda_T,method,epsilon)
 %{
 spinRotor
 Modular function that can spin any rotor wit

@@ -93,9 +93,7 @@ elseif strcmpi(trimvar,"CT")
             coaxial.state.collective = 0;
             
         end
-        if isimag(coaxial.state.collective)
-           disp('Imaginary thrust error') 
-        end
+        
         
         [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
             coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
@@ -193,7 +191,7 @@ June 2019; Last revision: 2-June-2019
         
         if abs(old_net_torque_dimensional) - abs(net_torque_dimensional) < eps
             warning("Bouncing around between +- net torques. Nudging k...")
-            k = 1.1*k; %it was getting stuck in infinite loops 
+            k = 1.01*k; %it was getting stuck in infinite loops 
         end
     end
     

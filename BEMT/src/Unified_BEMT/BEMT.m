@@ -25,7 +25,7 @@ flowfield(1).lambda_T = tangent_vel/(rotorsystem.rotor(1).omega*rotorsystem.roto
 collective_u = rotorsystem.state.collective;
 
 [Thrust, Torque, Power, CT, CP, dCT_u, dCP_u, lambda_u, Re_u, alpha_u,alpha_negatives_u, phi_u, ...
-    F_u, weighted_swirl_ratio_u, FOM_u, velocity_dimensional_u,pitchdeg_u,r,psi_u] = spinRotor(rotorsystem.rotor(1),atm,'CCW',collective_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon);
+    F_u, weighted_swirl_ratio_u, FOM_u, velocity_dimensional_u,pitchdeg_u,r,dr,psi_u] = spinRotor(rotorsystem.rotor(1),atm,'CCW',collective_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon);
 
 net_torque_coeff = 0;
 
@@ -58,11 +58,14 @@ if strcmpi(rotorsystem.type,"coaxial")
     radial_contraction = rotorsystem.params.rd;
     
     mean_downwash = mean(mean(lambda_i_u))*rotorsystem.rotor(1).omega*rotorsystem.rotor(1).R; 
-    
-    skew_angle = atan(tangent_vel/(axial_vel+mean_downwash));
-    
-    skew_angle = atan(flowfield(1).lambda_T./(flowfield(1).lambda_P+lambda_i_u));
-    
+    %check if in hover to avoid singularities when lambda_i =0
+    if axial_vel==0 && tangent_vel ==0
+        skew_angle = 0; %for any lambda_i in hover
+    else
+        skew_angle = atan(tangent_vel/(axial_vel+mean_downwash));
+
+        skew_angle = atan(flowfield(1).lambda_T./(flowfield(1).lambda_P+lambda_i_u)); %more accurate (disk element by disk element) - gives non circular marks
+    end
     r_contracted = radial_contraction*r;
     psi_contracted= psi_u;
     lambda_contracted = lambda_i_u/(radial_contraction)^2;
@@ -159,7 +162,7 @@ if strcmpi(rotorsystem.type,"coaxial")
     
     
     [Thrust_l, Torque_l, Power_l, CT_l, CP_l, dCT_l, dCP_l, lambda_l, Re_l, alpha_l,alpha_negatives_l, phi_l, ...
-    F_l, weighted_swirl_ratio_l, FOM_l, velocity_dimensional_l,pitchdeg_l,r,psi_l] = spinRotor(rotorsystem.rotor(2),atm,'CW',collective_l,lambda_P_bottom,flowfield(2).lambda_T,method,epsilon);
+    F_l, weighted_swirl_ratio_l, FOM_l, velocity_dimensional_l,pitchdeg_l,r,dr,psi_l] = spinRotor(rotorsystem.rotor(2),atm,'CW',collective_l,lambda_P_bottom,flowfield(2).lambda_T,method,epsilon);
 
     %% Output Vars
 
@@ -252,7 +255,7 @@ if plots
     end    
     %% Validation plots
     if axial_vel==0 && tangent_vel==0
-        if abs(CT-0.004)<0.00001 && net_torque_dimensional<0.1 && strcmpi(coaxial.name,"Harrington1")  && strcmpi(coaxial.type,"coaxial")
+        if abs(CT-0.004)<0.00001 && net_torque_dimensional<0.1 && strcmpi(rotorsystem.name,"Harrington1")  && strcmpi(rotorsystem.type,"coaxial")
             
             data_inflow_upper = readmatrix('H1_inflow_FVM_fig10a.csv');
             r1 = data_inflow_upper(:,1); lambda1 = data_inflow_upper(:,2);
@@ -331,7 +334,7 @@ if plots
         subplot(2, 2, 1)
         hold on
         scatter(r3,dCT1)
-        plot(r, dCT_u(1,:), 'b-.')
+        plot(r, sum(dCT_u)/dr, 'b-.')
         title('dCTu vs radius - Top')
         xlabel('r/R')
         ylabel('Non-dimensionalized dCTu/dr')
@@ -341,7 +344,7 @@ if plots
         subplot(2, 2, 2)
         hold on
         scatter(r5,dCP1)
-        plot(r, dCP_u(1,:), 'b-.')
+        plot(r, sum(dCP_u)/dr, 'b-.')
         title('dCpu vs radius - Top')
         xlabel('r/R')
         ylabel('Non-dimensionalized dCpu/dr')
@@ -351,7 +354,7 @@ if plots
         subplot(2, 2, 3)
         hold on
         scatter(r4,dCT2)
-        plot(r, dCT_l(1,:), 'b-.')
+        plot(r, sum(dCT_l)/dr, 'b-.')
         title('dCTl vs radius - Bottom')
         xlabel('r/R')
         ylabel('Non-dimensionalized dCtl/dr')
@@ -361,7 +364,7 @@ if plots
         subplot(2, 2, 4)
         hold on
         scatter(r6,dCP2)
-        plot(r, dCP_l(1,:), 'b-.')
+        plot(r, sum(dCP_l)/dr, 'b-.')
         title('dCpl vs radius - Bottom')
         xlabel('r/R')
         ylabel('Non-dimensionalized dCpl/dr')
