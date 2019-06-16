@@ -1,4 +1,4 @@
-function [phi,phi_nans] = getInflowAngle(lambda,r,psi,lambda_T)
+function [phi,phi_nans] = getInflowAngle(lambda,lambda_P,r,psi,lambda_T)
 %{
 GETINFLOWANGLE is a helper function that returns the inflow angle at a radial
 station of the rotor. 
@@ -41,9 +41,12 @@ tangential_vel = (r+lambda_T.*sin(psi));
 
 backflow_bool = tangential_vel<=0;
 
-phi = atan(lambda./tangential_vel);
+lambda_0s = lambda;
+lambda_0s(isnan(lambda))=lambda_P(isnan(lambda));
 
-phi_nans = phi;
+phi = atan(lambda_0s./tangential_vel);
+
+phi_nans = atan(lambda./tangential_vel);
 phi_nans(backflow_bool)=nan; %backflow
 
 end

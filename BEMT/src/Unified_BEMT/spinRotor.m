@@ -1,4 +1,4 @@
-function [Thrust, Torque, Power, CT, CP, dCT, dCP, lambda, Re, AoA, phi, F, weighted_swirl_ratio,FOM_single,velocity_dimensional,pitchdeg,r,psi] = spinRotor(rotor,atm,spin_dir,collective,lambda_P,lambda_T,method,epsilon,debug)
+function [Thrust, Torque, Power, CT, CP, dCT, dCP, lambda, Re, AoA,alpha_negatives, phi, F, weighted_swirl_ratio,FOM_single,velocity_dimensional,pitchdeg,r,psi] = spinRotor(rotor,atm,spin_dir,collective,lambda_P,lambda_T,method,epsilon)
 %{
 spinRotor
 Modular function that can spin any rotor wit
@@ -104,7 +104,7 @@ rotor.pitch = deg2rad(pitchdeg); %rad - this might get more complicated when the
 if strcmpi(method,'airfoil')
     F_old = ones(size(r));
     lambda_old = 0.0001*ones(size(r));%0.01*ones(size(r));%lambda_P;
-    [phi,phi_old] = getInflowAngle(lambda_old,r,psi,lambda_T);
+    [phi,phi_old] = getInflowAngle(lambda_old,lambda_P,r,psi,lambda_T);
     dCTu_old = getdCT(rotor,atm,phi_old,r,dr,psi,dpsi,chord,lambda_old,lambda_T);
     
     err_old = 1;
@@ -116,7 +116,7 @@ if strcmpi(method,'airfoil')
         
         lambda = getLambda(lambda_P, dCT, F_old, r, dr,dpsi);
         
-        [phi_negatives,phi] = getInflowAngle(lambda,r,psi,lambda_T);
+        [phi_negative,phi] = getInflowAngle(lambda,lambda_P,r,psi,lambda_T);
         
         err = norm([F(~isnan(lambda))-F_old(~isnan(lambda)),lambda(~isnan(lambda))-lambda_old(~isnan(lambda)),dCT(~isnan(lambda))-dCTu_old(~isnan(lambda)),phi(~isnan(lambda))-phi_old(~isnan(lambda))]);
         
@@ -142,7 +142,7 @@ elseif strcmpi(method,'leishman')
     
     F_old = ones(size(r));
     lambda_old = getLambda_Leish(rotor,lambda_P,lambda_T,F_old,r,psi);
-    [phi_negative,phi_old] = getInflowAngle(lambda_old,r,psi,lambda_T);
+    [phi_negative,phi_old] = getInflowAngle(lambda_old,lambda_P,r,psi,lambda_T);
     
     err = 1;
     while err>epsilon
@@ -153,7 +153,7 @@ elseif strcmpi(method,'leishman')
         
         lambda = getLambda_Leish(rotor,lambda_P,lambda_T,F,r,psi);
         
-        [phi_negative,phi] = getInflowAngle(lambda,r,psi,lambda_T);
+        [phi_negative,phi] = getInflowAngle(lambda,lambda_P,r,psi,lambda_T);
         
         err = norm([F-F_old,lambda-lambda_old,phi-phi_old]);
         
@@ -200,7 +200,7 @@ Thrust = atm.rho*pi*rotor.R^4*rotor.omega^2*CT; %Using rotor 1 radius=rotor2 rad
 Power = atm.rho*pi*rotor.R^5*rotor.omega^3*CP; %Using rotor 1 radius=rotor2 radius
 Torque = atm.rho*pi*rotor.R^5*rotor.omega^2*CP; %Using rotor 1 radius=rotor2 radius
 
-[AoA,alpha_neg] = getAoA(rotor.pitch,phi);
+[alpha_negatives,AoA] = getAoA(rotor.pitch,phi_negative);
 
 
 end

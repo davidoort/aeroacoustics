@@ -13,10 +13,10 @@ coaxial = Rotor();
 
 % Change parameters
 
-coaxial.state.axial_vel = 10; %m/s 
-coaxial.state.tangent_vel = 20; %m/s 
+coaxial.state.axial_vel = 0; %m/s 
+coaxial.state.tangent_vel = 10; %m/s 
 coaxial.state.trim= 1;
-coaxial.state.collective = 10; %collective in deg
+coaxial.state.collective = 20; %collective in deg
 
 epsilon = 0.0001; %convergence accuracy for Fcf and lambda -> 0.0001
 
@@ -27,7 +27,7 @@ warning('off')
 plots= true;
 verbose= true;
 debug = false;
-method='airfoil'; %'leishman','airfoil'
+method='leishman'; %'leishman','airfoil'
 
 tic
 [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
@@ -36,7 +36,7 @@ toc
 %% Iteration to trim the coaxial rotor and produce CT-CP validation plots
 
 iter_pitchdeg = 0:1:18;
-method = 'airfoil';
+method = 'leishman';
 coaxial.state.axial_vel = 0; %m/s - comparison plots are for hover
 coaxial.state.tangent_vel = 0; %m/s  - comparison plots are for hover
 
@@ -126,6 +126,8 @@ end
 CT_desired = 0.004;
 method='leishman';
 
+coaxial.state.axial_vel = 0; %m/s - hover
+coaxial.state.tangent_vel = 0; %m/s - hover
 
 [collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_desired,"CT",method);
 
@@ -140,7 +142,7 @@ verbose = false;
 
 %Don't change for now!
 [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque] = BEMT_axial(coaxial,atm,epsilon,plots,verbose);
+        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
 
 %% Axial flight plots - not working yet, I need an efficient way of detecting stall
 

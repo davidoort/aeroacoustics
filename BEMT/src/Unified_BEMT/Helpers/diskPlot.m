@@ -36,7 +36,7 @@ June 2019; Last revision: 12-June-2019
 
 %------------- BEGIN CODE --------------
 
-res = 100; %higher than 1000 will take quite long
+res = length(r(1,:)); %higher than 1000 will take quite long
 
 if all(all(isnan(matrix)))
     levels = 0;

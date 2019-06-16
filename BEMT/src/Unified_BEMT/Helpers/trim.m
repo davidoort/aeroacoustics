@@ -88,8 +88,17 @@ elseif strcmpi(trimvar,"CT")
         
         coaxial.state.collective = coaxial.state.collective + k1*thrust_error;
         
+        if coaxial.state.collective<0
+            disp('Collective set to 0 instead of negative')
+            coaxial.state.collective = 0;
+            
+        end
+        if isimag(coaxial.state.collective)
+           disp('Imaginary thrust error') 
+        end
+        
         [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-            coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method);
+            coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
         
         [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method); %deg,Nm,-
         
