@@ -50,7 +50,7 @@ June 2019; Last revision: 11-June-2019
 %mass_flow_element/(rho*V_tip) = dA*lambda = lambda*r*dr*dpsi
 
 if norm(lambda_T)==0 %otherwise it might not be a reasonable assumption
-    lambda(isnan(lambda))=lambda_ext(1,1); 
+    lambda(isnan(lambda))=lambda_ext(isnan(lambda)); 
 end
 
 mass_flow_element = lambda.*r*dr*dpsi;

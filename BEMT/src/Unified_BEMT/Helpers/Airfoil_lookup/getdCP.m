@@ -51,7 +51,7 @@ June 2019; Last revision: 11-June-2019
 %------------- BEGIN CODE --------------
 
 if norm(lambda_T)==0 %otherwise it might not be a reasonable assumption
-    lambda(isnan(lambda))=lambda_ext(1,1); 
+    lambda(isnan(lambda))=lambda_ext(isnan(lambda)); 
     [phi_negatives,phi] = getInflowAngle(lambda,r,psi,lambda_T);
 end
 
