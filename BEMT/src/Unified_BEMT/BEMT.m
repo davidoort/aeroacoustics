@@ -10,8 +10,8 @@ if debug
     res_r = 6;
     res_psi = 10;
 else
-    res_r = 20;
-    res_psi = 25; %careful of putting them equal
+    res_r = 100;
+    res_psi = 130; %careful of putting them equal
 end
 
 axial_vel = rotorsystem.state.axial_vel;
@@ -73,11 +73,49 @@ if strcmpi(rotorsystem.type,"coaxial")
     x_skewed = tan(skew_angle)*separation+x_contracted;
     y_skewed = y_contracted;
     
+    %lambda_contracted(r_contracted<radial_contraction*rotorsystem.rotor(1).hub_radial_fraction) = 0;
+    
+    lambda_skewed = lambda_contracted; %the basis changes
+    
+    
+    
     r_skewed = sqrt(x_skewed.^2+y_skewed.^2);
     a = atan2(y_skewed,x_skewed); 
     psi_skewed = a .* (a >= 0) + (a + 2 * pi) .* (a < 0); %now psi still goes from 0 to 2pi (will be handy for interpolation)
     
-    lambda_skewed = lambda_contracted; %the basis changes
+   
+    %% Trying to solve the problem in cartesian
+    [X,Y] = meshgrid(-1:0.01:1);
+    
+    lambda_i_nan = griddata(x_skewed,y_skewed,lambda_skewed,X,Y);
+    
+    lambda_i = lambda_i_nan;
+    lambda_i(isnan(lambda_i_nan))=0;
+    
+    plot3(x_skewed,y_skewed,lambda_skewed,'o')
+    hold on
+    %mesh(X,Y,lambda_i)
+    
+    R = sqrt(X.^2+Y.^2);
+    A = atan2(Y,X); 
+    PSI = A .* (A >= 0) + (A + 2 * pi) .* (A < 0); %now psi still goes from 0 to 2pi (will be handy for interpolation)
+
+    %mesh(R.*cos(PSI),R.*sin(PSI),lambda_i)
+    
+    X(R>1) = nan;
+    X(R<rotorsystem.rotor(1).hub_radial_fraction) = nan;
+    Y(R>1) = nan;
+    Y(R<rotorsystem.rotor(1).hub_radial_fraction) = nan;
+    lambda_i(R>1) = nan;
+    lambda_i(R<rotorsystem.rotor(1).hub_radial_fraction) = nan;
+    
+    R = sqrt(X.^2+Y.^2);
+    A = atan2(Y,X); 
+    PSI = A .* (A >= 0) + (A + 2 * pi) .* (A < 0); %now psi still goes from 0 to 2pi (will be handy for interpolation)
+
+    mesh(R.*cos(PSI),R.*sin(PSI),lambda_i)
+    
+    
     
     not_outside_of_disk = r_skewed<1;
     not_inside_of_hub = r_skewed>rotorsystem.rotor(1).hub_radial_fraction;
@@ -96,23 +134,25 @@ if strcmpi(rotorsystem.type,"coaxial")
 %     lambda_P_bottom = lambda_P_bottom_nans;
 %     lambda_P_bottom(isnan(lambda_P_bottom_nans)) = 0; 
         
-    lambda_P_bottom_ind_nans = griddata(r_skewed,psi_skewed,lambda_skewed,r,psi_u,'linear'); 
+    lambda_P_bottom_ind_nans = griddata(r_skewed.*cos(psi_skewed),r_skewed.*sin(psi_skewed),lambda_skewed,r.*cos(psi_u),r.*sin(psi_u),'cubic'); 
     lambda_P_bottom_ind = lambda_P_bottom_ind_nans;
     lambda_P_bottom_ind(isnan(lambda_P_bottom_ind_nans)) = 0; 
+    
+    
     %Debugging
-    figure(1)
-    plot3(r_skewed.*cos(psi_skewed),r_skewed.*sin(psi_skewed),lambda_skewed,'o')
-    hold on
-    mesh(r.*cos(psi_u),r.*sin(psi_u),lambda_P_bottom_ind)
-    
-    figure(2) %let's check if it is actually extrapolating
-    plot3(r_skewed,psi_skewed,lambda_skewed,'o')
-    hold on
-    mesh(r,psi_u,lambda_P_bottom_ind)
-    
+%     figure(1)
+%     plot3(r_skewed.*cos(psi_skewed),r_skewed.*sin(psi_skewed),lambda_skewed,'o')
+%     hold on
+%     mesh(r.*cos(psi_u),r.*sin(psi_u),lambda_P_bottom_ind)
+%     
+%     figure(2) %let's check if it is actually extrapolating
+%     plot3(r_skewed,psi_skewed,lambda_skewed,'o')
+%     hold on
+%     mesh(r,psi_u,lambda_P_bottom_ind)
+%     
     
     lambda_P_bottom = lambda_P_bottom_ind + flowfield(2).lambda_P(1,1)*ones(size(lambda_P_bottom_ind)); %lambda_P (freestream) as extrapval
-    
+    %lambda_P_bottom = lambda_i + flowfield(2).lambda_P(1,1)*ones(size(lambda_i));
     
     
     %% Bottom Rotor

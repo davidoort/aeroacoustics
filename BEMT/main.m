@@ -13,8 +13,8 @@ coaxial = Rotor();
 
 % Change parameters
 
-coaxial.state.axial_vel = 0; %m/s 
-coaxial.state.tangent_vel = 0; %m/s 
+coaxial.state.axial_vel = 10; %m/s 
+coaxial.state.tangent_vel = 20; %m/s 
 coaxial.state.trim= 1;
 coaxial.state.collective = 10; %collective in deg
 
@@ -27,7 +27,7 @@ warning('off')
 plots= true;
 verbose= true;
 debug = false;
-method='leishman'; %'leishman','airfoil'
+method='airfoil'; %'leishman','airfoil'
 
 tic
 [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
@@ -120,7 +120,6 @@ for rotor_type = ["single","coaxial"]
     title(string(coaxial.name))
     
 end
-
 
 %% Verification plots with FVM for inflow, CT and CP distributions. Trim the coaxial rotor at a specified thrust coefficient
 
