@@ -16,7 +16,7 @@ coaxial = Rotor();
 coaxial.state.axial_vel = 0; %m/s 
 coaxial.state.tangent_vel = 0; %m/s 
 coaxial.state.trim= 1;
-coaxial.state.collective = 2; %collective in deg
+coaxial.state.collective = 10; %collective in deg
 
 epsilon = 0.0001; %convergence accuracy for Fcf and lambda -> 0.0001
 
@@ -26,8 +26,8 @@ warning('off')
 
 plots= true;
 verbose= true;
-debug = true;
-method='airfoil'; %'leishman','airfoil'
+debug = false;
+method='leishman'; %'leishman','airfoil'
 
 tic
 [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);

@@ -72,6 +72,8 @@ May 2019; Last revision: 10-June-2019
 %}
 %------------- BEGIN CODE --------------
 
+error('This function should not be used')
+
 debug = false;
 %% Init
 rmax = 0.99; %The dr and 0.99 is to avoid singularities at the tip (since F= 0 there usually and the lambda is NaN)

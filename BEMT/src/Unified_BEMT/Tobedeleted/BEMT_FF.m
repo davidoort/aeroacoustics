@@ -69,6 +69,9 @@ June 2019; Last revision: 13-June-2019
 %}
 %------------- BEGIN CODE --------------
 
+
+error('This function should not be used')
+
 debug = false;
 %% Init
 

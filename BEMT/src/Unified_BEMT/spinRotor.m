@@ -137,6 +137,9 @@ if strcmpi(method,'airfoil')
     dCP = getdCP(rotor,atm,phi_old,r,dr,psi,dpsi,chord,lambda_old,lambda_P,lambda_T);
 
 elseif strcmpi(method,'leishman')
+    
+    
+    
     F_old = ones(size(r));
     lambda_old = getLambda_Leish(rotor,lambda_P,lambda_T,F_old,r,psi);
     [phi_negative,phi_old] = getInflowAngle(lambda_old,r,psi,lambda_T);

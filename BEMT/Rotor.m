@@ -13,7 +13,7 @@ classdef Rotor < dynamicprops
     methods
         function obj = Rotor()
             obj.name = "Harrington1"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing
-            obj.type = "single"; % "single" or "coaxial"
+            obj.type = "coaxial"; % "single" or "coaxial"
             
             obj.state.trim = 1; %1 means that both rotors have the same geometrical pitch, so same collective setting >1 increases pitch of lower wrt to upper
             obj.state.collective = 8; %deg
@@ -34,8 +34,8 @@ classdef Rotor < dynamicprops
                 obj.params.kappa = 1.15;
                 obj.params.rd = 0.82; %[non-dimensionalised by R] annulus - "assumption consistent with the results obtained by Leishman using the free wake method"
                 %Rotor 1 had an interrotor spacing of 0.186 R = 1.41 m
-                %IF LANDGREBE:
-                %obj.params.interrotor_spacing = !!!
+                %IF LANDGREBE (actually I ):
+                obj.params.interrotor_spacing = 0.186; % [-] fraction of upper rotor radius
                 
                 %Validation with Harrington Rotor 1 - things assumed are pitch of rotor and
                 %CL_alpha

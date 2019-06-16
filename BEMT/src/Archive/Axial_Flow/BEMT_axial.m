@@ -74,6 +74,8 @@ May 2019; Last revision: 10-June-2019
 %}
 %------------- BEGIN CODE --------------
 
+error('This function should not be used')
+
 dr = 0.01;
 r = rotorsystem.rotor(1).hub_radial_fraction+dr:dr:0.99; %non-dimensionalized by tip radius. Rotors have the same radius.
 %The dr and 0.99 is to avoid singularities at the tip (since F= 0 there usually and the lambda is NaN)

@@ -5,31 +5,144 @@ function [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT(rotorsystem,at
 %rotor (geometry) has to be spun and in which direction it has to be spun, with what
 %collective (and cyclic later), lambda_P, lambda_T, method (leishman or airfoil)
 
+%% Init 
 if debug
     res_r = 6;
     res_psi = 10;
 else
-    res_r = 100;
-    res_psi = 130; %careful of putting them equal
+    res_r = 20;
+    res_psi = 25; %careful of putting them equal
 end
 
 axial_vel = rotorsystem.state.axial_vel;
 tangent_vel = rotorsystem.state.tangent_vel;
+
+%% Top Rotor
 
 flowfield(1).lambda_P = axial_vel/(rotorsystem.rotor(1).omega*rotorsystem.rotor(1).R)*ones(res_psi,res_r); %normalizing free stream axial velocity by tip velocity
 flowfield(1).lambda_T = tangent_vel/(rotorsystem.rotor(1).omega*rotorsystem.rotor(1).R)*ones(res_psi,res_r); %%normalizing free stream tangential velocity by tip velocity - FOR LATER
 
 collective_u = rotorsystem.state.collective;
 
-[Thrust, Torque, Power, CT, CP, dCT, dCP, lambda, Re_u, alpha_u, phi, ...
-    F, weighted_swirl_ratio, FOM, velocity_dimensional,pitchdeg,r,psi] = spinRotor(rotorsystem.rotor(1),atm,'CCW',collective_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon,debug);
+[Thrust, Torque, Power, CT, CP, dCT_u, dCP_u, lambda_u, Re_u, alpha_u, phi_u, ...
+    F_u, weighted_swirl_ratio_u, FOM_u, velocity_dimensional_u,pitchdeg_u,r,psi_u] = spinRotor(rotorsystem.rotor(1),atm,'CCW',collective_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon,debug);
 
 net_torque_coeff = 0;
 
+lambda_i_u_nans = lambda_u-flowfield(1).lambda_P;
+
+lambda_i_u = lambda_i_u_nans;
+lambda_i_u(isnan(lambda_i_u))=0;
 
 if strcmpi(rotorsystem.type,"coaxial")
-    error('Switch to single rotor!')
+    %error('Switch to single rotor!')
+    
+    %% Init
+    
+    Thrust_u = Thrust;
+    Torque_u = Torque;
+    Power_u = Power;
+    CT_u = CT;
+    CP_u = CP;
+
+    collective_l = collective_u*rotorsystem.state.trim;
+    
+    flowfield(2).lambda_P = axial_vel/(rotorsystem.rotor(2).omega*rotorsystem.rotor(2).R)*ones(res_psi,res_r); %normalizing free stream axial velocity by tip velocity
+    flowfield(2).lambda_T = tangent_vel/(rotorsystem.rotor(2).omega*rotorsystem.rotor(2).R)*ones(res_psi,res_r); %%normalizing free stream tangential velocity by tip velocity - FOR LATER
+
+    
+    %% Calculate lambda_P for bottom rotor
+    
+    separation = rotorsystem.params.interrotor_spacing*rotorsystem.rotor(1).R;
+    
+    %radial_contraction = getContraction(separation,CT) %Landgrebe
+    
+    radial_contraction = rotorsystem.params.rd;
+    
+    mean_downwash = mean(mean(lambda_i_u))*rotorsystem.rotor(1).omega*rotorsystem.rotor(1).R; 
+    
+    skew_angle = atan(tangent_vel/(axial_vel+mean_downwash));
+    
+    r_contracted = radial_contraction*r;
+    psi_contracted= psi_u;
+    lambda_contracted = lambda_i_u/(radial_contraction)^2;
+    
+    x_contracted = r_contracted.*cos(psi_contracted);
+    y_contracted = r_contracted.*sin(psi_contracted);
+    
+    x_skewed = tan(skew_angle)*separation+x_contracted;
+    y_skewed = y_contracted;
+    
+    r_skewed = sqrt(x_skewed.^2+y_skewed.^2);
+    a = atan2(y_skewed,x_skewed); 
+    psi_skewed = a .* (a >= 0) + (a + 2 * pi) .* (a < 0); %now psi still goes from 0 to 2pi (will be handy for interpolation)
+    
+    lambda_skewed = lambda_contracted; %the basis changes
+    
+    not_outside_of_disk = r_skewed<1;
+    not_inside_of_hub = r_skewed>rotorsystem.rotor(1).hub_radial_fraction;
+    inside_disk = not_outside_of_disk.*not_inside_of_hub;
+    %r_skewed(not(inside_disk)) = [];
+    %psi_skewed(not(inside_disk)) = [];
+    lambda_skewed= lambda_skewed.*(inside_disk);
+    
+    %r_skewed = r_skewed.*(r_skewed<1);
+    %psi_skewed = psi_skewed.*(r_skewed<1); 
+    %lambda_skewed= lambda_skewed.*(r_skewed<1); 
+    
+    %lambda_P_bottom = interp2(r_skewed,psi_skewed,lambda_skewed,r,psi,'linear',flowfield(2).lambda_P(1,1)); 
+%     interpolant = scatteredInterpolant(r_skewed', psi_skewed', lambda_skewed');
+%     lambda_P_bottom_nans = interpolant(r, psi);
+%     lambda_P_bottom = lambda_P_bottom_nans;
+%     lambda_P_bottom(isnan(lambda_P_bottom_nans)) = 0; 
+        
+    lambda_P_bottom_ind_nans = griddata(r_skewed,psi_skewed,lambda_skewed,r,psi_u,'linear'); 
+    lambda_P_bottom_ind = lambda_P_bottom_ind_nans;
+    lambda_P_bottom_ind(isnan(lambda_P_bottom_ind_nans)) = 0; 
+    %Debugging
+    figure(1)
+    plot3(r_skewed.*cos(psi_skewed),r_skewed.*sin(psi_skewed),lambda_skewed,'o')
+    hold on
+    mesh(r.*cos(psi_u),r.*sin(psi_u),lambda_P_bottom_ind)
+    
+    figure(2) %let's check if it is actually extrapolating
+    plot3(r_skewed,psi_skewed,lambda_skewed,'o')
+    hold on
+    mesh(r,psi_u,lambda_P_bottom_ind)
+    
+    
+    lambda_P_bottom = lambda_P_bottom_ind + flowfield(2).lambda_P(1,1)*ones(size(lambda_P_bottom_ind)); %lambda_P (freestream) as extrapval
+    
+    
+    
+    %% Bottom Rotor
+    
+
+    figure(6)
+    diskPlot(r,psi_u,lambda_P_bottom,'wake') 
+    
+    [Thrust_l, Torque_l, Power_l, CT_l, CP_l, dCT_l, dCP_l, lambda_l, Re_l, alpha_l, phi_l, ...
+    F_l, weighted_swirl_ratio_l, FOM_l, velocity_dimensional_l,pitchdeg_l,r,psi_l] = spinRotor(rotorsystem.rotor(2),atm,'CW',collective_l,lambda_P_bottom,flowfield(2).lambda_T,method,epsilon,debug);
+
+    %% Output Vars
+
+        
+    Thrust = Thrust_u+Thrust_l;
+    Torque = Torque_u+Torque_l;
+    Power = Power_u+Power_l;
+    CT = CT_u+CT_l;
+    CP = CP_u+CP_l;
+    
+    FOM_coax = rotorsystem.params.kappaint*(CT_u^(3/2)+CT_l^(3/2))/(sqrt(2)*(CP_u+CP_l)); %from robust control paper
+    
+    net_torque_coeff = (CP_u-CP_l)/CP;
+    net_torque_dimensional = Torque_u-Torque_l;
+    
+    
+    
 end
+
+
     
  %% Display output text
 
@@ -40,22 +153,23 @@ if verbose
     disp('--------------------------------------------------')
     disp(strcat(rotorsystem.type,' power coefficient [-] ',num2str(CP)))
     disp(strcat(rotorsystem.type,' thrust coefficient [-] ',num2str(CT)))
-    disp(strcat(rotorsystem.type,' FOM [-] ',num2str(FOM)))
     disp(['Total thrust [N]',' ',num2str(Thrust)])
     disp(['Total power [W]',' ',num2str(Power)])
     disp(['Total torque [Nm]',' ',num2str(Torque)])
     disp(['Omega [rad/s]',' ',num2str(rotorsystem.rotor(1).omega)])
-    disp(['Swirl upper rotor [rad/s] ',num2str(weighted_swirl_ratio*rotorsystem.rotor(1).omega)])
+    disp(['Swirl upper rotor [rad/s] ',num2str(weighted_swirl_ratio_u*rotorsystem.rotor(1).omega)])
     disp(['Max/Min AoA upper rotor [deg] ',num2str(max(max(alpha_u))),' / ',num2str(min(min(alpha_u)))])
     disp(['Max/Min/0.7R Re number upper [-] ',num2str(max(max(Re_u))),' / ',num2str(min(min(Re_u))),' / ',num2str(interp1(r(1,:),Re_u(1,:),0.7))])
+    disp(['Pitch upper rotor [deg] ',num2str(pitchdeg_u(1,:))])        
     if strcmpi(rotorsystem.type,"coaxial")
         disp(['Net torque coefficient (u-l)/l [-]',' ',num2str(net_torque_coeff)])
         disp(['Net torque (u-l) [Nm]',' ',num2str(net_torque_dimensional)])
-        disp(['Pitch upper/lower rotor [deg] ',num2str(pitchdeg),' / ',num2str(rad2deg(coaxial.rotor(2).pitch(1)))])
+        disp(['Collective upper/lower rotor [deg] ',num2str(collective_u),' / ',num2str(collective_l)])
         disp(['Max/Min AoA lower rotor [deg] ',num2str(max(alpha_l)),' / ',num2str(min(alpha_l))])
-        disp(['Max/Min/0.7R Re number lower [-] ',num2str(max(Re_l)),' / ',num2str(min(Re_l)),' / ',num2str(Re_l_eff)])
+        disp(['Max/Min/0.7R Re number lower [-] ',num2str(max(Re_l)),' / ',num2str(min(Re_l)),' / ',num2str(interp1(r(1,:),Re_l(1,:),0.7))])
+        disp(strcat(rotorsystem.type,' FOM [-] ',num2str(FOM_coax)))
     else
-        disp(['Pitch rotor [deg] ',num2str(pitchdeg(1,:))])        
+        disp(strcat(rotorsystem.type,' FOM [-] ',num2str(FOM_u)))
     end
     
 end   
@@ -66,22 +180,39 @@ end
 %DISK PLOTS
 
 if plots
-    figure(1); clf;
+    figure(99); clf;
+    title('Upper Rotor')
     subplot(2, 3, 1)
     hold on
-    diskPlot(r,psi,alpha_u,'alpha') %add optional arguments
+    diskPlot(r,psi_u,alpha_u,'alpha') %add optional arguments
     subplot(2,3,2)
-    diskPlot(r,psi,dCT,'dCT')
+    diskPlot(r,psi_u,dCT_u,'dCT')
     subplot(2,3,3)
-    diskPlot(r,psi,dCP,'dCP')
+    diskPlot(r,psi_u,dCP_u,'dCP')
     subplot(2,3,4)
-    diskPlot(r,psi,lambda-flowfield(1).lambda_P,'induced inflow')
+    diskPlot(r,psi_u,lambda_u, 'non-dimensional inflow')
     subplot(2,3,5)
-    diskPlot(r,psi,F,'Prandtl')
+    diskPlot(r,psi_u,F_u,'Prandtl')
     subplot(2,3,6)
-    diskPlot(r,psi,rad2deg(phi),'Phi')
+    diskPlot(r,psi_u,rad2deg(phi_u),'Phi')
+    if strcmpi(rotorsystem.type,"coaxial")
+        figure(100); clf;
+        title('Lower Rotor')
+        subplot(2, 3, 1)
+        hold on
+        diskPlot(r,psi_u,alpha_l,'alpha') %add optional arguments
+        subplot(2,3,2)
+        diskPlot(r,psi_u,dCT_l,'dCT')
+        subplot(2,3,3)
+        diskPlot(r,psi_u,dCP_l,'dCP')
+        subplot(2,3,4)
+        diskPlot(r,psi_u,lambda_l,'non-dimensional inflow')
+        subplot(2,3,5)
+        diskPlot(r,psi_u,F_l,'Prandtl')
+        subplot(2,3,6)
+        diskPlot(r,psi_u,rad2deg(phi_l),'Phi')
+    end
 end
-
 
 
 end
