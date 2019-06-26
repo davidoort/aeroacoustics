@@ -57,7 +57,7 @@ if strcmpi(rotorsystem.type,"coaxial")
     flowfield(2).lambda_T = tangent_vel/(rotorsystem.rotor(2).omega*rotorsystem.rotor(2).R)*ones(res_psi,res_r); %%normalizing free stream tangential velocity by tip velocity - FOR LATER
     %% Sanity check - will have to do try/catch when choosing a value of trim
 
-    if strcmpi(method,'leishman') && rotorsystem.rotor(2).pitch_root>collective_l
+    if strcmpi(method,'leishman') && rotorsystem.rotor(2).pitch_root>collective_l && (rotorsystem.rotor(2).pitch_root>collective_l && strcmpi(rotorsystem.rotor(2).twist_type,'ideal')) || (rotorsystem.rotor(2).twistdeg>collective_l && strcmpi(rotorsystem.rotor(2).twist_type,'linear'))
         error('Rotor lower: Your twist is larger than your collective! Negative pitch angles near the tip will break Leishman')
     end
     
