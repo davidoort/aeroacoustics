@@ -17,6 +17,12 @@ end
 axial_vel = rotorsystem.state.axial_vel;
 tangent_vel = rotorsystem.state.tangent_vel;
 
+%% Sanity check - should allow ot do try/catch instead of going into infinite loops
+
+if strcmpi(method,'leishman') && (rotorsystem.rotor(1).pitch_root>rotorsystem.state.collective && strcmpi(rotorsystem.rotor(1).twist_type,'ideal')) || (rotorsystem.rotor(1).twistdeg>rotorsystem.state.collective && strcmpi(rotorsystem.rotor(1).twist_type,'linear'))
+    error('Rotor upper: Your twist is larger than your collective! Negative pitch angles near the tip will break Leishman')
+end
+
 %% Top Rotor
 
 flowfield(1).lambda_P = axial_vel/(rotorsystem.rotor(1).omega*rotorsystem.rotor(1).R)*ones(res_psi,res_r); %normalizing free stream axial velocity by tip velocity
@@ -28,6 +34,8 @@ collective_u = rotorsystem.state.collective;
     F_u, weighted_swirl_ratio_u, FOM_u, velocity_dimensional_u,pitchdeg_u,r,dr,psi_u] = spinRotor(rotorsystem.rotor(1),atm,'CCW',collective_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon);
 
 net_torque_coeff = 0;
+
+net_torque_dimensional = 0;
 
 lambda_i_u_nans = lambda_u-flowfield(1).lambda_P;
 
@@ -47,7 +55,11 @@ if strcmpi(rotorsystem.type,"coaxial")
     
     flowfield(2).lambda_P = axial_vel/(rotorsystem.rotor(2).omega*rotorsystem.rotor(2).R)*ones(res_psi,res_r); %normalizing free stream axial velocity by tip velocity
     flowfield(2).lambda_T = tangent_vel/(rotorsystem.rotor(2).omega*rotorsystem.rotor(2).R)*ones(res_psi,res_r); %%normalizing free stream tangential velocity by tip velocity - FOR LATER
+    %% Sanity check - will have to do try/catch when choosing a value of trim
 
+    if strcmpi(method,'leishman') && rotorsystem.rotor(2).pitch_root>collective_l
+        error('Rotor lower: Your twist is larger than your collective! Negative pitch angles near the tip will break Leishman')
+    end
     
     %% Calculate inflow for bottom rotor
     
@@ -138,6 +150,7 @@ if strcmpi(rotorsystem.type,"coaxial")
     
     % Interpolation in cartesian coordinates (to avoid extrapolation)
     lambda_P_bottom_ind_nans = griddata(r_skewed.*cos(psi_skewed),r_skewed.*sin(psi_skewed),lambda_skewed,r.*cos(psi_u),r.*sin(psi_u),'cubic'); 
+    %lambda_P_bottom_ind_nans = griddata(r_skewed,psi_skewed,lambda_skewed,r,psi_u,'cubic'); 
     lambda_P_bottom_ind = lambda_P_bottom_ind_nans;
     lambda_P_bottom_ind(isnan(lambda_P_bottom_ind_nans)) = 0; 
     
@@ -223,55 +236,57 @@ if plots
     title('Upper Rotor')
     subplot(2, 3, 1)
     hold on
-    diskPlot(r,psi_u,alpha_u,'alpha') %add optional arguments
+    diskPlot(r,psi_u,alpha_u,rotorsystem.state, '$\alpha$ [deg]') %add optional arguments
     subplot(2,3,2)
-    diskPlot(r,psi_u,dCT_u,'dCT')
+    diskPlot(r,psi_u,dCT_u,rotorsystem.state,'$dC_T$ [-]')
     subplot(2,3,3)
-    diskPlot(r,psi_u,dCP_u,'dCP')
+    diskPlot(r,psi_u,dCP_u,rotorsystem.state,'$dC_P$ [-]')
     subplot(2,3,4)
-    diskPlot(r,psi_u,lambda_u, 'non-dimensional inflow')
+    diskPlot(r,psi_u,lambda_u,rotorsystem.state, '$\lambda_u$ [-]')
     subplot(2,3,5)
-    diskPlot(r,psi_u,F_u,'Prandtl')
+    diskPlot(r,psi_u,F_u,rotorsystem.state,'Prandtl [-]')
     subplot(2,3,6)
-    diskPlot(r,psi_u,rad2deg(phi_u),'Phi')
+    diskPlot(r,psi_u,rad2deg(phi_u),rotorsystem.state,'$\phi$ [deg]')
     if strcmpi(rotorsystem.type,"coaxial")
         figure(100); clf;
         title('Lower Rotor')
         subplot(2, 3, 1)
         hold on
-        diskPlot(r,psi_u,alpha_l,'alpha') %add optional arguments
+        diskPlot(r,psi_u,alpha_l,rotorsystem.state, '$\alpha$ [deg]') %add optional arguments
         subplot(2,3,2)
-        diskPlot(r,psi_u,dCT_l,'dCT')
+        diskPlot(r,psi_u,dCT_l,rotorsystem.state,'$dC_T$ [-]')
         subplot(2,3,3)
-        diskPlot(r,psi_u,dCP_l,'dCP')
+        diskPlot(r,psi_u,dCP_l,rotorsystem.state,'$dC_P$ [-]')
         subplot(2,3,4)
-        diskPlot(r,psi_u,lambda_l,'non-dimensional inflow')
+        diskPlot(r,psi_u,lambda_l,rotorsystem.state,'$\lambda_l$ [-]')
         subplot(2,3,5)
-        diskPlot(r,psi_u,F_l,'Prandtl')
+        diskPlot(r,psi_u,F_l,rotorsystem.state,'Prandtl [-]')
         subplot(2,3,6)
-        diskPlot(r,psi_u,rad2deg(phi_l),'Phi')
+        diskPlot(r,psi_u,rad2deg(phi_l),rotorsystem.state,'$\phi$ [-]')
         figure(101)
-        diskPlot(r,psi_u,lambda_P_bottom,'Non-dimensional Inflow bottom rotor') 
+        diskPlot(r,psi_u,lambda_P_bottom,rotorsystem.state,'Non-dimensional Inflow bottom rotor') 
     end    
     %% Validation plots
     if axial_vel==0 && tangent_vel==0
-        if abs(CT-0.004)<0.00001 && net_torque_dimensional<0.1 && strcmpi(rotorsystem.name,"Harrington1")  && strcmpi(rotorsystem.type,"coaxial")
-            
+        if abs(CT-0.004)<0.00001 && net_torque_dimensional<0.1 && strcmpi(rotorsystem.name,"Harrington1")  
             data_inflow_upper = readmatrix('H1_inflow_FVM_fig10a.csv');
             r1 = data_inflow_upper(:,1); lambda1 = data_inflow_upper(:,2);
-            data_inflow_lower = readmatrix('H1_inflow_FVM_fig10b.csv');
-            r2 = data_inflow_lower(:,1); lambda2 = data_inflow_lower(:,2);
             
             data_dCT_upper = readmatrix('H1_dCT_FVM_fig11a.csv');
             r3 = data_dCT_upper(:,1); dCT1 = data_dCT_upper(:,2);
-            data_dCT_lower = readmatrix('H1_dCT_FVM_fig11b.csv');
-            r4 = data_dCT_lower(:,1); dCT2 = data_dCT_lower(:,2);
             
             data_dCP_upper = readmatrix('H1_dCP_FVM_fig12a.csv');
             r5 = data_dCP_upper(:,1); dCP1 = data_dCP_upper(:,2);
+            
+            data_inflow_lower = readmatrix('H1_inflow_FVM_fig10b.csv');
+            r2 = data_inflow_lower(:,1); lambda2 = data_inflow_lower(:,2);
+            
+            data_dCT_lower = readmatrix('H1_dCT_FVM_fig11b.csv');
+            r4 = data_dCT_lower(:,1); dCT2 = data_dCT_lower(:,2);
+            
             data_dCP_lower = readmatrix('H1_dCP_FVM_fig12b.csv');
             r6 = data_dCP_lower(:,1); dCP2 = data_dCP_lower(:,2);
-            
+
         else
             
             r1=[];r2=[];r3=[];r4=[];r5=[];r6=[];
@@ -280,96 +295,130 @@ if plots
         end
         
         %%%%%
+        if strcmpi(rotorsystem.type,"coaxial")
+            figure(1); clf;
+            subplot(2, 3, 1)
+            hold on
+            scatter(r1,lambda1)
+            plot(r, lambda_u(1,:), 'b-.')
+            title('Inflow ratio vs radius - Top')
+            xlabel('r/R')
+            ylabel('Inflow ratio')
+            xlim([0.2 1])
+            legend('FVM','BEMT')
+
+            subplot(2, 3, 2)
+            plot(r, F_u(1,:), 'b-.')
+            title('Prandtl tip loss vs radius - Top')
+            xlabel('r/R')
+            ylabel('Prandtl tip loss')
+
+            subplot(2, 3, 3)
+            plot(r, alpha_u(1,:), 'b-.')
+            title('AoA vs radius - Top')
+            xlabel('r/R')
+            ylabel('$\alpha$ [deg]','interpreter','latex')
+            ylim([-20 Inf])
+
+            subplot(2, 3, 4)
+            hold on
+            scatter(r2,lambda2)
+            plot(r, lambda_l(1,:), 'b-.')
+            title('Inflow ratio vs radius - Bottom')
+            xlabel('r/R')
+            ylabel('Inflow ratio')
+            xlim([0.2 1])
+            legend('FVM','BEMT')
+
+            subplot(2, 3, 5)
+            plot(r, F_l(1,:), 'b-.')
+            title('Prandtl tip loss vs radius - Bottom')
+            xlabel('r/R')
+            ylabel('Prandtl tip loss')
+
+            subplot(2, 3, 6)
+            plot(r, alpha_l(1,:), 'b-.')
+            title('AoA vs radius - Bottom')
+            xlabel('r/R')
+            ylabel('$\alpha$ [deg]','interpreter','latex')
+            ylim([-20 Inf])
+
+            %%%%%%%
+
+            figure(2); clf;
+            subplot(2, 2, 1)
+            hold on
+            scatter(r3,dCT1)
+            plot(r, sum(dCT_u)/dr, 'b-.')
+            title('dCTu vs radius - Top')
+            xlabel('r/R')
+            ylabel('Non-dimensionalized dCTu/dr')
+            xlim([0.2 1])
+            legend('FVM','BEMT')
+
+            subplot(2, 2, 2)
+            hold on
+            scatter(r5,dCP1)
+            plot(r, sum(dCP_u)/dr, 'b-.')
+            title('dCpu vs radius - Top')
+            xlabel('r/R')
+            ylabel('Non-dimensionalized dCpu/dr')
+            xlim([0.2 1])
+            legend('FVM','BEMT')
+
+            subplot(2, 2, 3)
+            hold on
+            scatter(r4,dCT2)
+            plot(r, sum(dCT_l)/dr, 'b-.')
+            title('dCTl vs radius - Bottom')
+            xlabel('r/R')
+            ylabel('Non-dimensionalized dCtl/dr')
+            xlim([0.2 1])
+            legend('FVM','BEMT')
+
+            subplot(2, 2, 4)
+            hold on
+            scatter(r6,dCP2)
+            plot(r, sum(dCP_l)/dr, 'b-.')
+            title('dCpl vs radius - Bottom')
+            xlabel('r/R')
+            ylabel('Non-dimensionalized dCpl/dr')
+            xlim([0.2 1])
+            legend('FVM','BEMT')
         
-        figure(1); clf;
-        subplot(2, 3, 1)
-        hold on
-        scatter(r1,lambda1)
-        plot(r, lambda_u(1,:), 'b-.')
-        title('Inflow ratio vs radius - Top')
-        xlabel('r/R')
-        ylabel('Inflow ratio')
-        xlim([0.2 1])
-        legend('FVM','BEMT')
-        
-        subplot(2, 3, 2)
-        plot(r, F_u(1,:), 'b-.')
-        title('Prandtl tip loss vs radius - Top')
-        xlabel('r/R')
-        ylabel('Prandtl tip loss')
-        
-        subplot(2, 3, 3)
-        plot(r, alpha_u(1,:), 'b-.')
-        title('AoA vs radius - Top')
-        xlabel('r/R')
-        ylabel('$\alpha$ [deg]','interpreter','latex')
-        ylim([-20 Inf])
-        
-        subplot(2, 3, 4)
-        hold on
-        scatter(r2,lambda2)
-        plot(r, lambda_l(1,:), 'b-.')
-        title('Inflow ratio vs radius - Bottom')
-        xlabel('r/R')
-        ylabel('Inflow ratio')
-        xlim([0.2 1])
-        legend('FVM','BEMT')
-        
-        subplot(2, 3, 5)
-        plot(r, F_l(1,:), 'b-.')
-        title('Prandtl tip loss vs radius - Bottom')
-        xlabel('r/R')
-        ylabel('Prandtl tip loss')
-        
-        subplot(2, 3, 6)
-        plot(r, alpha_l(1,:), 'b-.')
-        title('AoA vs radius - Bottom')
-        xlabel('r/R')
-        ylabel('$\alpha$ [deg]','interpreter','latex')
-        ylim([-20 Inf])
-        
-        %%%%%%%
-        
-        figure(2); clf;
-        subplot(2, 2, 1)
-        hold on
-        scatter(r3,dCT1)
-        plot(r, sum(dCT_u)/dr, 'b-.')
-        title('dCTu vs radius - Top')
-        xlabel('r/R')
-        ylabel('Non-dimensionalized dCTu/dr')
-        xlim([0.2 1])
-        legend('FVM','BEMT')
-        
-        subplot(2, 2, 2)
-        hold on
-        scatter(r5,dCP1)
-        plot(r, sum(dCP_u)/dr, 'b-.')
-        title('dCpu vs radius - Top')
-        xlabel('r/R')
-        ylabel('Non-dimensionalized dCpu/dr')
-        xlim([0.2 1])
-        legend('FVM','BEMT')
-        
-        subplot(2, 2, 3)
-        hold on
-        scatter(r4,dCT2)
-        plot(r, sum(dCT_l)/dr, 'b-.')
-        title('dCTl vs radius - Bottom')
-        xlabel('r/R')
-        ylabel('Non-dimensionalized dCtl/dr')
-        xlim([0.2 1])
-        legend('FVM','BEMT')
-        
-        subplot(2, 2, 4)
-        hold on
-        scatter(r6,dCP2)
-        plot(r, sum(dCP_l)/dr, 'b-.')
-        title('dCpl vs radius - Bottom')
-        xlabel('r/R')
-        ylabel('Non-dimensionalized dCpl/dr')
-        xlim([0.2 1])
-        legend('FVM','BEMT')
+        elseif strcmpi(rotorsystem.type,"single")
+            figure(1); clf;
+            subplot(1, 3, 1)
+            hold on
+            scatter(r1,lambda1)
+            plot(r, lambda_u(1,:), 'b-.')
+            title('Inflow ratio vs radius - Top')
+            xlabel('r/R')
+            ylabel('Inflow ratio')
+            xlim([0.2 1])
+            legend('FVM','BEMT')
+
+           
+            subplot(1, 3, 2)
+            hold on
+            scatter(r3,dCT1)
+            plot(r, sum(dCT_u)/dr, 'b-.')
+            title('dCTu vs radius - Top')
+            xlabel('r/R')
+            ylabel('Non-dimensionalized dCTu/dr')
+            xlim([0.2 1])
+            legend('FVM','BEMT')
+
+            subplot(1, 3, 3)
+            hold on
+            scatter(r5,dCP1)
+            plot(r, sum(dCP_u)/dr, 'b-.')
+            title('dCpu vs radius - Top')
+            xlabel('r/R')
+            ylabel('Non-dimensionalized dCpu/dr')
+            xlim([0.2 1])
+            legend('FVM','BEMT')
+        end
     end
 end
 

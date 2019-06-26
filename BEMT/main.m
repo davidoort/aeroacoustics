@@ -14,7 +14,7 @@ coaxial = Rotor();
 % Change parameters
 
 coaxial.state.axial_vel = 10; %m/s 
-coaxial.state.tangent_vel = 10; %m/s 
+coaxial.state.tangent_vel = 30; %m/s 
 coaxial.state.trim= 1;
 coaxial.state.collective = 20; %collective in deg
 
@@ -33,98 +33,160 @@ tic
 [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
 toc
 
+
+%%%%% GENERATE DIFFERENCE (between methods) DISK PLOTS SOMEWHERE!!!!!
+%% CT-CP plots single rotor at different axial speeds
+%idea: instead of making this plot, just find the maximu CT/CP point and
+%what collective it corresponds to. Then plot optimum collective vs axial
+%flight speed and hopefully it is a horizontal line
+axial_vel_range = 0:1:60;
+iter_pitchdeg = 1:1:60;
+
+coaxial.state.tangent_vel = 0;
+
+plots= false;
+verbose= false;
+debug = false;
+method='leishman';
+
+opt_collectives = zeros(1,length(axial_vel_range));
+
+for vel_idx = 1:length(axial_vel_range)
+
+    CT_arr = zeros(1,length(iter_pitchdeg));
+    CP_arr = zeros(1,length(iter_pitchdeg));
+    coaxial.state.axial_vel = axial_vel_range(vel_idx);
+    for idx = 1:length(iter_pitchdeg)
+            coaxial.state.collective = iter_pitchdeg(idx);
+            try
+                tic
+                [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+                toc
+                if CT < 0
+                    CT_arr(idx) = nan;
+                    CP_arr(idx) = nan;
+                    omitted = omitted +1;
+                else
+                    CT_arr(idx) = CT;
+                    CP_arr(idx) = CP;
+                end
+            catch
+                CT_arr(idx) = nan;
+                CP_arr(idx) = nan;
+                
+            end
+ 
+    end
+    eff = CT_arr./CP_arr;
+    [max_eff, collective_idx] = max(eff);
+    opt_collectives(vel_idx) = iter_pitchdeg(collective_idx);
+    %plot(CP_arr,CT_arr)
+    %hold on
+end
+
+plot(axial_vel_range,opt_collectives)
+xlabel('Axial velocity [m/s]')
+ylabel('Optimum collective angle [deg]')
 %% Iteration to trim the coaxial rotor and produce CT-CP validation plots
 
 iter_pitchdeg = 0:1:18;
-method = 'airfoil'; %airfoil took about 6 mins to run
-coaxial.state.axial_vel = 0; %m/s - comparison plots are for hover
+method = 'leishman'; %airfoil took about 6 mins to run
+
 coaxial.state.tangent_vel = 0; %m/s  - comparison plots are for hover
-
+SMT = true;
 %for method = ["leishman","single"]
-for rotor_type = ["single","coaxial"] 
-    
-    CT_arr = zeros(1,length(iter_pitchdeg));
-    CP_arr = zeros(1,length(iter_pitchdeg));
-    %C_T_SMT_arr = zeros(1,length(iter_pitchdeg));
-    C_P_SMT_arr = zeros(1,length(iter_pitchdeg));
-    
-    coaxial.type = rotor_type;
 
-    for idx = 1:length(iter_pitchdeg)
-        %if strcmpi(coaxial.type,'single')
+for axial_vel = 0
+    coaxial.state.axial_vel = axial_vel; %m/s - comparison plots are for hover
+    rotors = ["single","coaxial"];
+    for rotor_type = rotors
+        %%
+        
+        CT_arr = zeros(1,length(iter_pitchdeg));
+        CP_arr = zeros(1,length(iter_pitchdeg));
+        %C_T_SMT_arr = zeros(1,length(iter_pitchdeg));
+        C_P_SMT_arr = zeros(1,length(iter_pitchdeg));
+        
+        coaxial.type = rotor_type;
+        
+        for idx = 1:length(iter_pitchdeg)
+            %if strcmpi(coaxial.type,'single')
             
-        %elseif strcmpi(coaxial.type,'coaxial')
+            %elseif strcmpi(coaxial.type,'coaxial')
             
-        %end
-        tic
-        [collective_u, collective_l, net_torque_dimensional, coaxial.state.CT] = trim(coaxial,atm,epsilon,iter_pitchdeg(idx),'pitch_upper',method);
-        toc
-        if coaxial.state.CT < 0
-            CT_arr(idx) = [];
-            CP_arr(idx) = [];
-
-        else
-            CT_arr(idx) = coaxial.state.CT;
-            CP_arr(idx) = coaxial.state.CP;
-            
-            if strcmpi(coaxial.type,"coaxial")
-                % SMT Coaxial
-                C_P_SMT_arr(idx) = 0.5*coaxial.params.kappaint*coaxial.params.kappa*(coaxial.state.CT)^(3/2)+(coaxial.rotor(2).solidity + coaxial.rotor(1).solidity)*coaxial.rotor(1).aero.Cd0/8; %using Cd0 of bottom rotor but could be for top rotor, this is for validation purposes
+            %end
+            tic
+            [collective_u, collective_l, net_torque_dimensional, coaxial.state.CT] = trim(coaxial,atm,epsilon,iter_pitchdeg(idx),'pitch_upper',method);
+            toc
+            if coaxial.state.CT < 0
+                CT_arr(idx) = [];
+                CP_arr(idx) = [];
+                
             else
-                %SMT Single
-                C_P_SMT_arr(idx) = coaxial.params.kappa*coaxial.state.CT^(3/2)/sqrt(2) + coaxial.rotor(1).solidity*coaxial.rotor(1).aero.Cd0/8;
-
+                CT_arr(idx) = coaxial.state.CT;
+                CP_arr(idx) = coaxial.state.CP;
+                
+                if strcmpi(coaxial.type,"coaxial")
+                    % SMT Coaxial
+                    C_P_SMT_arr(idx) = 0.5*coaxial.params.kappaint*coaxial.params.kappa*(coaxial.state.CT)^(3/2)+(coaxial.rotor(2).solidity + coaxial.rotor(1).solidity)*coaxial.rotor(1).aero.Cd0/8; %using Cd0 of bottom rotor but could be for top rotor, this is for validation purposes
+                else
+                    %SMT Single
+                    C_P_SMT_arr(idx) = coaxial.params.kappa*coaxial.state.CT^(3/2)/sqrt(2) + coaxial.rotor(1).solidity*coaxial.rotor(1).aero.Cd0/8;
+                    
+                end
             end
-        end
-
-    end
-
-    % Verification plot H1 or H2 CP vs CT
-
-    if strcmpi(coaxial.name,"Harrington1")
-        ax_xlim = [0 0.0006];
-        ax_ylim = [0 0.007];
-        if strcmpi(coaxial.type,"single")
-            val_data =readmatrix('H1_single_fig2.csv');
-            
-        else
-            val_data =readmatrix('H1_coax_fig2.csv');
             
         end
-    elseif strcmpi(coaxial.name,"Harrington2")
-        ax_xlim = [0 0.001];
-        ax_ylim = [0 0.01];
-        if strcmpi(coaxial.type,"single")
-            val_data =readmatrix('H2_single_fig3.csv');
+        
+        % Verification plot H1 or H2 CP vs CT
+        
+        if strcmpi(coaxial.name,"Harrington1")
+            ax_xlim = [0 0.0006];
+            ax_ylim = [0 0.007];
+            if strcmpi(coaxial.type,"single")
+                val_data =readmatrix('H1_single_fig2.csv');
+                
+            else
+                val_data =readmatrix('H1_coax_fig2.csv');
+                
+            end
+        elseif strcmpi(coaxial.name,"Harrington2")
+            ax_xlim = [0 0.001];
+            ax_ylim = [0 0.01];
+            if strcmpi(coaxial.type,"single")
+                val_data =readmatrix('H2_single_fig3.csv');
+            else
+                val_data =readmatrix('H2_coax_fig3.csv');
+            end
         else
-            val_data =readmatrix('H2_coax_fig3.csv');
+            val_data = [];
         end
-    else
-        val_data = [];
+        
+        
+        CP_exp = val_data(:,1);
+        CT_exp = val_data(:,2);
+        
+        figure(1)
+        legend('-DynamicLegend');
+        hold all
+        set(gca,'FontSize',16)
+        scatter(CP_exp,CT_exp,'DisplayName',strcat("Experiment ", coaxial.type," rotor"))
+        plot(CP_arr,CT_arr,'DisplayName',strcat("BEMT ",coaxial.type," rotor"),'LineWidth',2)
+        if SMT
+            plot(C_P_SMT_arr,CT_arr,'b-.','DisplayName',strcat("SMT ",coaxial.type," rotor"))
+        end
+        xlabel('$C_P$','Interpreter','latex')
+        ylabel('$C_T$','Interpreter','latex')
+        xlim(ax_xlim)
+        ylim(ax_ylim)
+        title(string(coaxial.name))
+        
     end
-
-
-    CP_exp = val_data(:,1);
-    CT_exp = val_data(:,2);
-
-    figure(1)
-    legend('-DynamicLegend');
-    hold all
-    scatter(CP_exp,CT_exp,'DisplayName',strcat("Experiment ", coaxial.type," rotor"))
-    plot(CP_arr,CT_arr,'DisplayName',strcat("BEMT ",coaxial.type," rotor"),'LineWidth',2)
-    plot(C_P_SMT_arr,CT_arr,'b-.','DisplayName',strcat("SMT ",coaxial.type," rotor"))
-    xlabel('$C_P$','Interpreter','latex')
-    ylabel('$C_T$','Interpreter','latex')
-    xlim(ax_xlim)
-    ylim(ax_ylim)
-    title(string(coaxial.name))
-    
 end
-
 %% Verification plots with FVM for inflow, CT and CP distributions. Trim the coaxial rotor at a specified thrust coefficient
 
 CT_desired = 0.004;
-method='airfoil';
+method='leishman';
 
 coaxial.state.axial_vel = 0; %m/s - hover
 coaxial.state.tangent_vel = 0; %m/s - hover
@@ -144,7 +206,6 @@ debug = false;
 %Don't change for now!
 [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
         coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
-
 %% Axial flight plots - not working yet, I need an efficient way of detecting stall
 
 %SOMETHING SUPER WEIRD IS GOING ON HERE
