@@ -12,7 +12,7 @@ classdef Rotor < dynamicprops
     
     methods
         function obj = Rotor()
-            obj.name = "Harrington1"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing, Bumblebee_canard
+            obj.name = "Bumblebee_wing"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing, Bumblebee_canard
             obj.type = "single"; % "single" or "coaxial"
             
             obj.state.trim = 1; %1 means that both rotors have the same geometrical pitch, so same collective setting >1 increases pitch of lower wrt to upper
@@ -276,7 +276,7 @@ classdef Rotor < dynamicprops
                  % geometric pitch - IF untwisted blade simply write
                 % 'linear' with 0 wtist
                 obj.state.collective = 20; % [deg] collective 
-                obj.rotor(1).pitch_root = 10; % [deg] - for an ideal twist it will change the relative angles between root and tip
+                obj.rotor(1).pitch_root = 14; % [deg] - for an ideal twist it will change the relative angles between root and tip
                 obj.rotor(1).twist_type = 'ideal'; % 'linear', 'ideal'
                 obj.rotor(1).twistdeg = 0; %[deg] for a fixed collective, this is the same as changing the rate of twist
                 

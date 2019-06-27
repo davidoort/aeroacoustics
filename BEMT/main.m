@@ -35,7 +35,7 @@ toc
 
 
 %%%%% GENERATE DIFFERENCE (between methods) DISK PLOTS SOMEWHERE!!!!!
-%% CT-CP plots single rotor at different axial speeds
+%% Optimal collective plot single rotor at different axial speeds
 %idea: instead of making this plot, just find the maximu CT/CP point and
 %what collective it corresponds to. Then plot optimum collective vs axial
 %flight speed and hopefully it is a horizontal line
@@ -87,6 +87,49 @@ end
 plot(axial_vel_range,opt_collectives)
 xlabel('Axial velocity [m/s]')
 ylabel('Optimum collective angle [deg]')
+%% CT CP for different axial velocities
+
+axial_vel_range = 0:1:60;
+coaxial.state.tangent_vel = 0;
+coaxial.state.collective = 25; %collective in deg
+method = 'leishman'; %airfoil took about 6 mins to run
+
+for axial_vel_idx = 1:length(axial_vel_range)
+    coaxial.state.axial_vel = axial_vel_range(axial_vel_idx); %m/s - comparison plots are for hover
+    
+    %%
+    
+    CT_arr = zeros(1,length(axial_vel_range));
+    CP_arr = zeros(1,length(axial_vel_range));
+    
+    
+    tic
+    [collective_u, collective_l, net_torque_dimensional, coaxial.state.CT] = trim(coaxial,atm,epsilon,coaxial.state.collective,'pitch_upper',method);
+    toc
+    if coaxial.state.CT < 0
+        CT_arr(axial_vel_idx) = [];
+        CP_arr(axial_vel_idx) = [];
+        
+    else
+        CT_arr(axial_vel_idx) = coaxial.state.CT;
+        CP_arr(axial_vel_idx) = coaxial.state.CP;
+
+    end
+
+    
+    
+end
+
+figure(1)
+%legend('-DynamicLegend');
+hold all
+set(gca,'FontSize',16)
+plot(CP_arr,CT_arr,'LineWidth',2)
+
+xlabel('$C_P$','Interpreter','latex')
+ylabel('$C_T$','Interpreter','latex')
+
+title(string(coaxial.name))
 %% Iteration to trim the coaxial rotor and produce CT-CP validation plots
 
 iter_pitchdeg = 0:1:18;
