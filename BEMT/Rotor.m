@@ -12,8 +12,8 @@ classdef Rotor < dynamicprops
     
     methods
         function obj = Rotor()
-            obj.name = "Bumblebee_wing"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing, Bumblebee_canard
-            obj.type = "single"; % "single" or "coaxial"
+            obj.name = "Harrington1"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing, Bumblebee_canard
+            obj.type = "coaxial"; % "single" or "coaxial"
             
             obj.state.trim = 1; %1 means that both rotors have the same geometrical pitch, so same collective setting >1 increases pitch of lower wrt to upper
             obj.state.collective = 8; %deg
