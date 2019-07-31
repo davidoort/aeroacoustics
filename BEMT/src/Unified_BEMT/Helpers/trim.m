@@ -79,10 +79,15 @@ elseif strcmpi(trimvar,"CT")
     CT_des = CT_or_pitch;
 
     %% Begin iteration
+    
+    [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method); %deg,Nm,-
+    
+    
     [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
         coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
     
     thrust_error = CT_des - coaxial.state.CT;
+    
     
     while abs(thrust_error) > eps1
         
@@ -103,6 +108,8 @@ elseif strcmpi(trimvar,"CT")
         thrust_error = CT_des - coaxial.state.CT;
         
     end
+    
+    
     
     collective_u = coaxial.state.collective;
     

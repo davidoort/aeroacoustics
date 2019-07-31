@@ -205,27 +205,48 @@ end
 
 
 scatter(axial_vel_arr,CT_arr_axial)
-
 %% Forward flight performance validation
+
+%Load data if current rotor is Harrington1
+
+if ~strcmpi(coaxial.name,'Harrington1')
+    data_mu = [];
+    data_CP = [];
+else
+    % Brown data coaxial
+    data_CP_mu = readmatrix('H1_CP_mu_coax.csv'); %CP_mu
+    data_mu = data_CP_mu(:,1);
+    data_CP = data_CP_mu(:,2);
+    
+    %Dingledein data coaxial
+    data_HP_mu_coax_dingle = readmatrix('H1_CP_mu_coax_dingeldein.csv');
+    
+    %Dingledein data single
+    data_HP_mu_single_dingle = readmatrix('H1_CP_mu_single_dingeldein.csv');
+    
+    
+    
+    
+end
 
 coaxial.state.axial_vel = 0;
 CT_desired = 0.0048;
+v_tip = 142.951; %m/s
+coaxial.rotor(1).omega = v_tip/coaxial.rotor(1).R;
 
 plots = false;
 verbose = false;
 debug = false;
 method = 'leishman';
 
-data_CP_mu = readmatrix('H1_CP_mu_coax.csv'); %
-
-advance_ratio_arr = linspace(0,max(data_CP_mu(:,1)),15);
+advance_ratio_arr = linspace(0,0.35,15);
 CP_arr = zeros(1,length(advance_ratio_arr));
 
 i = 0;
 for advance_ratio = advance_ratio_arr
     i=i+1;
     
-    coaxial.state.tangent_vel = advance_ratio*coaxial.rotor(1).omega*coaxial.rotor(1).R;
+    coaxial.state.tangent_vel = advance_ratio*v_tip;
     
     [collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_desired,"CT",method);
    
@@ -241,13 +262,13 @@ for advance_ratio = advance_ratio_arr
     
 end
 
-%%
+% plots
 hold on
-scatter(data_CP_mu(:,1),data_CP_mu(:,2),'o')
+scatter(data_mu,data_CP,'o')
 plot(advance_ratio_arr,CP_arr)
 xlabel('Advance ratio $\mu = \frac{V_T}{\Omega R}$','Interpreter','latex')
 ylabel('$C_P$','interpreter','latex')
-
+legend('Experiment','BEMT')
 
 %% Optimal collective plot single rotor at different axial speeds
 %idea: instead of making this plot, just find the maximu CT/CP point and

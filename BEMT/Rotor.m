@@ -66,8 +66,8 @@ classdef Rotor < dynamicprops
                 %difference to verification/validation plots
                 obj.rotor(1).aero.alpha_0 = 0; %rad
                 obj.rotor(1).aero.Cd0 =  0.007;
-                obj.rotor(1).aero.D1 = 0;
-                obj.rotor(1).aero.D2 = 1;
+                obj.rotor(1).aero.D1 = 0; %1/rad
+                obj.rotor(1).aero.D2 = 1; %1/rad^2
                 
                 
                 
