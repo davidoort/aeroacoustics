@@ -112,7 +112,7 @@ else
 
 end
 
-
+end
 function [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method)
 
 %{
@@ -165,6 +165,7 @@ June 2019; Last revision: 2-June-2019
     k = 1; %proportionality constant k that seems ideal - what also worked was doing k*coaxial.state.net_torque_coeff even if I don't change epsilon
     eps = 0.1;
     plots = false;
+    debug = false;
     verbose = false;
     
     %% Begin iteration    
@@ -200,4 +201,4 @@ June 2019; Last revision: 2-June-2019
     
 end   
 
-end
+

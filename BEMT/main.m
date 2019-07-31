@@ -13,8 +13,8 @@ coaxial = Rotor();
 
 % Change parameters
 
-coaxial.state.axial_vel = 10; %m/s 
-coaxial.state.tangent_vel = 30; %m/s 
+coaxial.state.axial_vel = 2; %m/s 
+coaxial.state.tangent_vel = 0; %m/s 
 coaxial.state.trim= 1;
 coaxial.state.collective = 20; %collective in deg
 
@@ -35,101 +35,6 @@ toc
 
 
 %%%%% GENERATE DIFFERENCE (between methods) DISK PLOTS SOMEWHERE!!!!!
-%% Optimal collective plot single rotor at different axial speeds
-%idea: instead of making this plot, just find the maximu CT/CP point and
-%what collective it corresponds to. Then plot optimum collective vs axial
-%flight speed and hopefully it is a horizontal line
-axial_vel_range = 0:1:60;
-iter_pitchdeg = 1:1:60;
-
-coaxial.state.tangent_vel = 0;
-
-plots= false;
-verbose= false;
-debug = false;
-method='leishman';
-
-opt_collectives = zeros(1,length(axial_vel_range));
-
-for vel_idx = 1:length(axial_vel_range)
-
-    CT_arr = zeros(1,length(iter_pitchdeg));
-    CP_arr = zeros(1,length(iter_pitchdeg));
-    coaxial.state.axial_vel = axial_vel_range(vel_idx);
-    for idx = 1:length(iter_pitchdeg)
-            coaxial.state.collective = iter_pitchdeg(idx);
-            try
-                tic
-                [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
-                toc
-                if CT < 0
-                    CT_arr(idx) = nan;
-                    CP_arr(idx) = nan;
-                    omitted = omitted +1;
-                else
-                    CT_arr(idx) = CT;
-                    CP_arr(idx) = CP;
-                end
-            catch
-                CT_arr(idx) = nan;
-                CP_arr(idx) = nan;
-                
-            end
- 
-    end
-    eff = CT_arr./CP_arr;
-    [max_eff, collective_idx] = max(eff);
-    opt_collectives(vel_idx) = iter_pitchdeg(collective_idx);
-    %plot(CP_arr,CT_arr)
-    %hold on
-end
-
-plot(axial_vel_range,opt_collectives)
-xlabel('Axial velocity [m/s]')
-ylabel('Optimum collective angle [deg]')
-%% CT CP for different axial velocities
-
-axial_vel_range = 0:1:60;
-coaxial.state.tangent_vel = 0;
-coaxial.state.collective = 25; %collective in deg
-method = 'leishman'; %airfoil took about 6 mins to run
-
-for axial_vel_idx = 1:length(axial_vel_range)
-    coaxial.state.axial_vel = axial_vel_range(axial_vel_idx); %m/s - comparison plots are for hover
-    
-    %%
-    
-    CT_arr = zeros(1,length(axial_vel_range));
-    CP_arr = zeros(1,length(axial_vel_range));
-    
-    
-    tic
-    [collective_u, collective_l, net_torque_dimensional, coaxial.state.CT] = trim(coaxial,atm,epsilon,coaxial.state.collective,'pitch_upper',method);
-    toc
-    if coaxial.state.CT < 0
-        CT_arr(axial_vel_idx) = [];
-        CP_arr(axial_vel_idx) = [];
-        
-    else
-        CT_arr(axial_vel_idx) = coaxial.state.CT;
-        CP_arr(axial_vel_idx) = coaxial.state.CP;
-
-    end
-
-    
-    
-end
-
-figure(1)
-%legend('-DynamicLegend');
-hold all
-set(gca,'FontSize',16)
-plot(CP_arr,CT_arr,'LineWidth',2)
-
-xlabel('$C_P$','Interpreter','latex')
-ylabel('$C_T$','Interpreter','latex')
-
-title(string(coaxial.name))
 %% Iteration to trim the coaxial rotor and produce CT-CP validation plots
 
 iter_pitchdeg = 0:1:18;
@@ -254,7 +159,7 @@ debug = false;
 %SOMETHING SUPER WEIRD IS GOING ON HERE
 
 
-iter_pitchdeg_axial = [5]; %tweak this selection
+iter_pitchdeg_axial = [20]; %tweak this selection
 
 axial_vel_range = 0:1:2;
 
@@ -301,3 +206,140 @@ end
 
 scatter(axial_vel_arr,CT_arr_axial)
 
+%% Forward flight performance validation
+
+coaxial.state.axial_vel = 0;
+CT_desired = 0.0048;
+
+plots = false;
+verbose = false;
+debug = false;
+method = 'leishman';
+
+data_CP_mu = readmatrix('H1_CP_mu_coax.csv'); %
+
+advance_ratio_arr = linspace(0,max(data_CP_mu(:,1)),15);
+CP_arr = zeros(1,length(advance_ratio_arr));
+
+i = 0;
+for advance_ratio = advance_ratio_arr
+    i=i+1;
+    
+    coaxial.state.tangent_vel = advance_ratio*coaxial.rotor(1).omega*coaxial.rotor(1).R;
+    
+    [collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_desired,"CT",method);
+   
+    
+    disp(['Converged to ',num2str(net_torque_dimensional),' net torque [Nm] and CT = ',num2str(CT)])
+    %disp(['Pitch upper rotor = ', num2str(collective_u),' deg'])
+    %disp(['Pitch lower rotor = ', num2str(collective_l),' deg'])
+    
+    [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
+        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+
+    CP_arr(i) = coaxial.state.CP;   
+    
+end
+
+%%
+hold on
+scatter(data_CP_mu(:,1),data_CP_mu(:,2),'o')
+plot(advance_ratio_arr,CP_arr)
+xlabel('Advance ratio $\mu = \frac{V_T}{\Omega R}$','Interpreter','latex')
+ylabel('$C_P$','interpreter','latex')
+
+
+%% Optimal collective plot single rotor at different axial speeds
+%idea: instead of making this plot, just find the maximu CT/CP point and
+%what collective it corresponds to. Then plot optimum collective vs axial
+%flight speed and hopefully it is a horizontal line
+axial_vel_range = 0:1:60;
+iter_pitchdeg = 1:1:60;
+
+coaxial.state.tangent_vel = 0;
+
+plots= false;
+verbose= false;
+debug = false;
+method='leishman';
+
+opt_collectives = zeros(1,length(axial_vel_range));
+
+for vel_idx = 1:length(axial_vel_range)
+
+    CT_arr = zeros(1,length(iter_pitchdeg));
+    CP_arr = zeros(1,length(iter_pitchdeg));
+    coaxial.state.axial_vel = axial_vel_range(vel_idx);
+    for idx = 1:length(iter_pitchdeg)
+            coaxial.state.collective = iter_pitchdeg(idx);
+            try
+                tic
+                [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+                toc
+                if CT < 0
+                    CT_arr(idx) = nan;
+                    CP_arr(idx) = nan;
+                else
+                    CT_arr(idx) = CT;
+                    CP_arr(idx) = CP;
+                end
+            catch
+                CT_arr(idx) = nan;
+                CP_arr(idx) = nan;
+                
+            end
+ 
+    end
+    eff = CT_arr./CP_arr;
+    [max_eff, collective_idx] = max(eff);
+    opt_collectives(vel_idx) = iter_pitchdeg(collective_idx);
+    %plot(CP_arr,CT_arr)
+    %hold on
+end
+
+plot(axial_vel_range,opt_collectives)
+xlabel('Axial velocity [m/s]')
+ylabel('Optimum collective angle [deg]')
+%% CT CP for different axial velocities
+
+axial_vel_range = 0:1:60;
+coaxial.state.tangent_vel = 0;
+coaxial.state.collective = 25; %collective in deg
+method = 'leishman'; %airfoil took about 6 mins to run
+
+for axial_vel_idx = 1:length(axial_vel_range)
+    coaxial.state.axial_vel = axial_vel_range(axial_vel_idx); %m/s - comparison plots are for hover
+    
+    %%
+    
+    CT_arr = zeros(1,length(axial_vel_range));
+    CP_arr = zeros(1,length(axial_vel_range));
+    
+    
+    tic
+    [collective_u, collective_l, net_torque_dimensional, coaxial.state.CT] = trim(coaxial,atm,epsilon,coaxial.state.collective,'pitch_upper',method);
+    toc
+    if coaxial.state.CT < 0
+        CT_arr(axial_vel_idx) = [];
+        CP_arr(axial_vel_idx) = [];
+        
+    else
+        CT_arr(axial_vel_idx) = coaxial.state.CT;
+        CP_arr(axial_vel_idx) = coaxial.state.CP;
+
+    end
+
+    
+    
+end
+
+figure(1)
+%legend('-DynamicLegend');
+hold all
+set(gca,'FontSize',16)
+plot(CP_arr,CT_arr,'LineWidth',2)
+
+xlabel('$C_P$','Interpreter','latex')
+ylabel('$C_T$','Interpreter','latex')
+
+title(string(coaxial.name))
