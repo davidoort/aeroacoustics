@@ -19,6 +19,7 @@ classdef Rotor < dynamicprops
             obj.state.collective = 8; %deg
             obj.state.axial_vel = 0;
             obj.state.tangent_vel = 0;
+            obj.state.side_vel = 0;
             obj.state.airspeed = @() norm([obj.state.axial_vel,obj.state.tangent_vel]); %m/s 
             obj.state.incidence_deg = @() rad2deg(atan(obj.state.tangent_vel/obj.state.axial_vel)); %deg - positive downward
             
