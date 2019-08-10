@@ -82,7 +82,6 @@ elseif strcmpi(trimvar,"CT")
     
     [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method); %deg,Nm,-
     
-    
     [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
         coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
     
@@ -197,9 +196,18 @@ June 2019; Last revision: 2-June-2019
         %toc
         net_torque_dimensional = coaxial.state.net_torque_coeff*coaxial.state.torque;
         
-        if abs(old_net_torque_dimensional) - abs(net_torque_dimensional) < eps
+        if old_net_torque_dimensional + net_torque_dimensional < eps
             warning("Bouncing around between +- net torques. Nudging k...")
-            k = 1.01*k; %it was getting stuck in infinite loops 
+            if k>1
+                k = 0.99*k;
+            else
+                k = 1.01*k; %it was getting stuck in infinite loops 
+            end
+            
+        end
+        if old_net_torque_dimensional - net_torque_dimensional < eps
+            eps = 1.1*eps;
+            warning(["Increasing eps to ", num2str(eps), " Nm"]);
         end
     end
     

@@ -12,13 +12,14 @@ classdef Rotor < dynamicprops
     
     methods
         function obj = Rotor()
-            obj.name = "Harrington1"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing, Bumblebee_canard
+            obj.name = "Harrington2"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing, Bumblebee_canard
             obj.type = "coaxial"; % "single" or "coaxial"
             
             obj.state.trim = 1; %1 means that both rotors have the same geometrical pitch, so same collective setting >1 increases pitch of lower wrt to upper
             obj.state.collective = 8; %deg
             obj.state.axial_vel = 0;
             obj.state.tangent_vel = 0;
+            obj.state.side_vel = 0;
             obj.state.airspeed = @() norm([obj.state.axial_vel,obj.state.tangent_vel]); %m/s 
             obj.state.incidence_deg = @() rad2deg(atan(obj.state.tangent_vel/obj.state.axial_vel)); %deg - positive downward
             
@@ -65,7 +66,7 @@ classdef Rotor < dynamicprops
                 %obj.rotor(1).aero.cl_alpha = 2*pi; doesn't make much of a
                 %difference to verification/validation plots
                 obj.rotor(1).aero.alpha_0 = 0; %rad
-                obj.rotor(1).aero.Cd0 =  0.007;
+                obj.rotor(1).aero.Cd0 =  0.011;
                 obj.rotor(1).aero.D1 = 0; %1/rad
                 obj.rotor(1).aero.D2 = 1; %1/rad^2
                 

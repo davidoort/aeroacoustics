@@ -144,8 +144,8 @@ elseif strcmpi(method,'leishman')
     lambda_old = getLambda_Leish(rotor,lambda_P,lambda_T,F_old,r,psi);
     [phi_negative,phi_old] = getInflowAngle(lambda_old,lambda_P,r,psi,lambda_T);
     
-    err = 1;
-    while err>epsilon
+    err_old = 1;
+    while err_old>epsilon
         
         F = getPrandtlTipLoss(rotor,phi_old,r);
         
@@ -156,6 +156,13 @@ elseif strcmpi(method,'leishman')
         [phi_negative,phi] = getInflowAngle(lambda,lambda_P,r,psi,lambda_T);
         
         err = norm([F-F_old,lambda-lambda_old,phi-phi_old]);
+        
+        if abs(err-err_old)<=1e-4 %added this on 3rd of August
+            warning('Error constant, stopping iteration')
+            break
+        end
+        
+        err_old = err;
         
         lambda_old = lambda;
         phi_old = phi;

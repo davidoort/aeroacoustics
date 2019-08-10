@@ -23,6 +23,7 @@ if strcmpi(method,'leishman') && (rotorsystem.rotor(1).pitch_root>rotorsystem.st
     error('Rotor upper: Your twist is larger than your collective! Negative pitch angles near the tip will break Leishman')
 end
 
+
 %% Top Rotor
 
 flowfield(1).lambda_P = axial_vel/(rotorsystem.rotor(1).omega*rotorsystem.rotor(1).R)*ones(res_psi,res_r); %normalizing free stream axial velocity by tip velocity
@@ -30,8 +31,9 @@ flowfield(1).lambda_T = tangent_vel/(rotorsystem.rotor(1).omega*rotorsystem.roto
 
 collective_u = rotorsystem.state.collective;
 
+spin_dir_u = 'CCW'; %should probably become a parameter in the rotor object
 [Thrust, Torque, Power, CT, CP, dCT_u, dCP_u, lambda_u, Re_u, alpha_u,alpha_negatives_u, phi_u, ...
-    F_u, weighted_swirl_ratio_u, FOM_u, velocity_dimensional_u,pitchdeg_u,r,dr,psi_u] = spinRotor(rotorsystem.rotor(1),atm,'CCW',collective_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon);
+    F_u, weighted_swirl_ratio_u, FOM_u, velocity_dimensional_u,pitchdeg_u,r,dr,psi_u] = spinRotor(rotorsystem.rotor(1),atm,spin_dir_u,collective_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon);
 
 net_torque_coeff = 0;
 
@@ -45,6 +47,7 @@ lambda_i_u(isnan(lambda_i_u))=0;
 rotorsystem.state.CT = CT;
 rotorsystem.state.CP = CP;
 
+%% Bottom Rotor
 if strcmpi(rotorsystem.type,"coaxial")
     %% Init
     
@@ -178,9 +181,9 @@ if strcmpi(rotorsystem.type,"coaxial")
     
     %% Bottom Rotor
     
-    
+    spin_dir_l = 'CW';
     [Thrust_l, Torque_l, Power_l, CT_l, CP_l, dCT_l, dCP_l, lambda_l, Re_l, alpha_l,alpha_negatives_l, phi_l, ...
-    F_l, weighted_swirl_ratio_l, FOM_l, velocity_dimensional_l,pitchdeg_l,r,dr,psi_l] = spinRotor(rotorsystem.rotor(2),atm,'CW',collective_l,lambda_P_bottom,flowfield(2).lambda_T,method,epsilon);
+    F_l, weighted_swirl_ratio_l, FOM_l, velocity_dimensional_l,pitchdeg_l,r,dr,psi_l] = spinRotor(rotorsystem.rotor(2),atm,spin_dir_l,collective_l,lambda_P_bottom,flowfield(2).lambda_T,method,epsilon);
 
     %% Output Vars
 
@@ -200,9 +203,8 @@ if strcmpi(rotorsystem.type,"coaxial")
     
 end
 
-
-    
- %% Display output text
+     
+%% Display output text
 
 if verbose
     disp('                                                  ')
@@ -236,40 +238,70 @@ end
 %% Plots
 
 if plots
+    %create a general psi (which is positive in the CCW direction) - this
+    %fixes the problem of a non-sensical plot when upper rotor is CW
+    psi = abs(psi_u);
     %% DISK PLOTS
     figure(99); clf;
     title('Upper Rotor')
     subplot(2, 3, 1)
     hold on
-    diskPlot(r,psi_u,alpha_u,rotorsystem.state, '$\alpha$ [deg]') %add optional arguments
+    diskPlot(r,psi,alpha_u,rotorsystem.state, '$\alpha$ [deg]') %add optional arguments
     subplot(2,3,2)
-    diskPlot(r,psi_u,dCT_u,rotorsystem.state,'$dC_T$ [-]')
+    diskPlot(r,psi,dCT_u,rotorsystem.state,'$dC_T$ [-]')
     subplot(2,3,3)
-    diskPlot(r,psi_u,dCP_u,rotorsystem.state,'$dC_P$ [-]')
+    diskPlot(r,psi,dCP_u,rotorsystem.state,'$dC_P$ [-]')
     subplot(2,3,4)
-    diskPlot(r,psi_u,lambda_u,rotorsystem.state, '$\lambda_u$ [-]')
+    diskPlot(r,psi,lambda_u,rotorsystem.state, '$\lambda_u = \frac{v_u+V_P}{v_{tip}}$ [-]')
     subplot(2,3,5)
-    diskPlot(r,psi_u,F_u,rotorsystem.state,'Prandtl [-]')
+    diskPlot(r,psi,F_u,rotorsystem.state,'Prandtl [-]')
     subplot(2,3,6)
-    diskPlot(r,psi_u,rad2deg(phi_u),rotorsystem.state,'$\phi$ [deg]')
+    diskPlot(r,psi,rad2deg(phi_u),rotorsystem.state,'$\phi$ [deg]')
+    
+    %For leonardo times
+%     figure(101); clf;
+%     title('Upper Rotor')
+%     subplot(2, 2, 1)
+%     hold on
+%     diskPlot(r,psi,alpha_u,rotorsystem.state, '$\alpha$ [deg]') %add optional arguments
+%     subplot(2,2,2)
+%     diskPlot(r,psi,dCT_u,rotorsystem.state,'Thrust Coefficient [-]')
+%     subplot(2,2,3)
+%     diskPlot(r,psi,dCP_u,rotorsystem.state,'Power Coefficient [-]')
+%     subplot(2,2,4)
+%     diskPlot(r,psi,lambda_u,rotorsystem.state, 'Inflow ratio $\frac{v_u+V_P}{v_{tip}}$ [-]')
+
     if strcmpi(rotorsystem.type,"coaxial")
         figure(100); clf;
         title('Lower Rotor')
         subplot(2, 3, 1)
         hold on
-        diskPlot(r,psi_u,alpha_l,rotorsystem.state, '$\alpha$ [deg]') %add optional arguments
+        diskPlot(r,psi,alpha_l,rotorsystem.state, '$\alpha$ [deg]') %add optional arguments
         subplot(2,3,2)
-        diskPlot(r,psi_u,dCT_l,rotorsystem.state,'$dC_T$ [-]')
+        diskPlot(r,psi,dCT_l,rotorsystem.state,'$dC_T$ [-]')
         subplot(2,3,3)
-        diskPlot(r,psi_u,dCP_l,rotorsystem.state,'$dC_P$ [-]')
+        diskPlot(r,psi,dCP_l,rotorsystem.state,'$dC_P$ [-]')
         subplot(2,3,4)
-        diskPlot(r,psi_u,lambda_l,rotorsystem.state,'$\lambda_l$ [-]')
+        diskPlot(r,psi,lambda_l,rotorsystem.state,'$\lambda_l = \frac{v_l+V_P+v_u/a^2}{v_{tip}}$ [-]')
         subplot(2,3,5)
-        diskPlot(r,psi_u,F_l,rotorsystem.state,'Prandtl [-]')
+        diskPlot(r,psi,F_l,rotorsystem.state,'Prandtl [-]')
         subplot(2,3,6)
-        diskPlot(r,psi_u,rad2deg(phi_l),rotorsystem.state,'$\phi$ [-]')
-        figure(101)
-        diskPlot(r,psi_u,lambda_P_bottom,rotorsystem.state,'Non-dimensional Inflow bottom rotor') 
+        diskPlot(r,psi,rad2deg(phi_l),rotorsystem.state,'$\phi$ [-]')
+
+        
+        %for leonardo times
+%         figure(102); clf;
+%         title('Lower Rotor')
+%         subplot(2, 2, 1)
+%         hold on
+%         diskPlot(r,psi,alpha_l,rotorsystem.state, '$\alpha$ [deg]') %add optional arguments
+%         subplot(2,2,2)
+%         diskPlot(r,psi,dCT_l,rotorsystem.state,'Thrust Coefficient [-]')
+%         subplot(2,2,3)
+%         diskPlot(r,psi,dCP_l,rotorsystem.state,'Power Coefficient [-]')
+%         subplot(2,2,4)
+%         diskPlot(r,psi,lambda_l,rotorsystem.state,'Inflow ratio $\frac{v_l+V_P+v_u/a^2}{v_{tip}}$ [-]')
+         
     end    
     %% Validation plots
     if axial_vel==0 && tangent_vel==0
