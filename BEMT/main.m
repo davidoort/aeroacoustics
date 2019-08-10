@@ -11,36 +11,58 @@ addpath(genpath('./'))
 atm = Atmosphere();
 coaxial = Rotor();
 
-% Change parameters
+% Change flight parameters
 
-coaxial.state.axial_vel = 10; %m/s 
-coaxial.state.tangent_vel = 10; %m/s 
-coaxial.state.trim= 1;
-coaxial.state.collective = 20; %collective in deg
+coaxial.state.axial_vel = 0; %m/s 
+coaxial.state.forward_vel = 0; %m/s 
+coaxial.state.side_vel = 0; %m/s
 
-epsilon = 0.0001; %convergence accuracy for Fcf and lambda -> 0.0001
+% Control Inputs
+
+coaxial.state.trim = 1; %=collective_l/collective_u - this is equivalent to the bottom collective
+coaxial.state.collective = 20; %UPPER rotor collective in deg - geometric pitch angle at the root of the UPPER rotor blades!
+coaxial.state.cyclic_s = 10; %sine term for cyclic (gets multiplied by sin(azimuth))
+coaxial.state.cyclic_c = 10; %cosine term for cyclic (gets multiplied by cos(azimuth))
+
+epsilon = 0.0001; %convergence accuracy for Prandtl tip function and inflow ratio
 
 %warning('off')
 
-%% Testing 
+% Testing 
 
 plots= true;
 verbose= true;
 debug = false;
 method='leishman'; %'leishman','airfoil'
 
-%tic
-[Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
-%toc
+[Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
 
+%legend below (SWIER)
+%{
+%Power is a 1x2 matrix -> [P_upper; P_lower] [W]
 
-%%%%% GENERATE DIFFERENCE (between methods) DISK PLOTS SOMEWHERE!!!!!
+%Forces is a 3x2 matrix -> [Fx_upper, Fy_upper, Fz_upper; Fx_lower, Fy_lower, Fz_lower] [N]
+%using the right-handed coordinate system with x pointing forward, z pointing up
+
+%Moments is a 3x2 matrix -> [Mx_upper, My_upper, Mz_upper; Mx_lower, My_lower, Mz_lower] [Nm] 
+%using the same coordinate system as Forces
+
+%CT is the thrust coefficient 1x2 matrix -> [CT_u; CT_l];
+%CP is the torque coefficient 1x2 matrix -> [CP_u;CP_l];
+
+%} 
+
+%%%%% GENERATE DIFFERENCE (between methods) DISK PLOTS SOMEWHERE!!!!! ->
+%%%%% this would be nice in the article (especially if I can explain where the biggest differences come from)
 %% Iteration to trim the coaxial rotor and produce CT-CP validation plots
 
 iter_pitchdeg = 0:1:18;
 method = 'leishman'; %airfoil took about 6 mins to run
+verbose = false;
+plots = false;
+debug = false;
 
-coaxial.state.tangent_vel = 0; %m/s  - comparison plots are for hover
+coaxial.state.forward_vel = 0; %m/s  - comparison plots are for hover
 SMT = false;
 %for method = ["leishman","single"]
 
@@ -61,25 +83,26 @@ for axial_vel = 0
             %if strcmpi(coaxial.type,'single')
             
             %elseif strcmpi(coaxial.type,'coaxial')
-            
+                
             %end
             tic
-            [collective_u, collective_l, net_torque_dimensional, coaxial.state.CT] = trim(coaxial,atm,epsilon,iter_pitchdeg(idx),'pitch_upper',method);
+            [~, ~, ~, ~] = trim(coaxial,atm,epsilon,iter_pitchdeg(idx),'pitch_upper',method);
+            [~, ~, ~, CT, CP, ~] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
             toc
-            if coaxial.state.CT < 0
+            if CT < 0
                 CT_arr(idx) = [];
                 CP_arr(idx) = [];
                 
             else
-                CT_arr(idx) = coaxial.state.CT;
-                CP_arr(idx) = coaxial.state.CP;
+                CT_arr(idx) = sum(CT);
+                CP_arr(idx) = sum(CP);
                 
                 if strcmpi(coaxial.type,"coaxial")
                     % SMT Coaxial
-                    C_P_SMT_arr(idx) = 0.5*coaxial.params.kappaint*coaxial.params.kappa*(coaxial.state.CT)^(3/2)+(coaxial.rotor(2).solidity + coaxial.rotor(1).solidity)*coaxial.rotor(1).aero.Cd0/8; %using Cd0 of bottom rotor but could be for top rotor, this is for validation purposes
+                    C_P_SMT_arr(idx) = 0.5*coaxial.params.kappaint*coaxial.params.kappa*(sum(CT))^(3/2)+(coaxial.rotor(2).solidity + coaxial.rotor(1).solidity)*coaxial.rotor(1).aero.Cd0/8; %using Cd0 of bottom rotor but could be for top rotor, this is for validation purposes
                 else
                     %SMT Single
-                    C_P_SMT_arr(idx) = coaxial.params.kappa*coaxial.state.CT^(3/2)/sqrt(2) + coaxial.rotor(1).solidity*coaxial.rotor(1).aero.Cd0/8;
+                    C_P_SMT_arr(idx) = coaxial.params.kappa*sum(CT)^(3/2)/sqrt(2) + coaxial.rotor(1).solidity*coaxial.rotor(1).aero.Cd0/8;
                     
                 end
             end
@@ -137,11 +160,14 @@ CT_desired = 0.004;
 method='leishman';
 
 coaxial.state.axial_vel = 0; %m/s - hover
-coaxial.state.tangent_vel = 0; %m/s - hover
+coaxial.state.forward_vel = 0; %m/s - hover
+coaxial.state.side_vel = 0; %m/s - hover
 epsilon = 0.001; %convergence accuracy for Fcf and lambda -> 0.0001
 
 [collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_desired,"CT",method);
 
+coaxial.state.collective = collective_u;
+coaxial.state.trim = collective_l/collective_u;
 
 disp(['Converged to ',num2str(net_torque_dimensional),' net torque [Nm] and CT = ',num2str(CT)])
 disp(['Pitch upper rotor = ', num2str(collective_u),' deg'])
@@ -152,27 +178,61 @@ plots = true;
 verbose = false;
 debug = false;
 %Don't change for now!
-[coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+[Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
 %% Axial flight plots - not working yet, I need an efficient way of detecting stall
 
 %Init
-coaxial.state.tangent_vel = 0;
+warning('off','all')
 
+coaxial.state.forward_vel = 0;
+coaxial.state.side_vel = 0;
 
-iter_collective_axial = 10:10:60; %tweak this selection
+iter_collective_axial = 10:10:80; %tweak this selection
+axial_vel_range = 0:5:200;
 
-axial_vel_range = 0:5:120;
-
-CT_arr_axial = zeros(1,length(iter_collective_axial)*length(axial_vel_range));
-CP_arr_axial = zeros(1,length(iter_collective_axial)*length(axial_vel_range));
-axial_vel_arr = zeros(1,length(iter_collective_axial)*length(axial_vel_range));
 
 method = 'leishman';
+plots = false;
+verbose = false;
+debug = false;
 
-i = 1;
+%Load validation data
+
+if strcmpi(coaxial.name,'NACA_single')
+    v_tip = coaxial.rotor(1).R*coaxial.rotor(1).omega; %for de-normalization of axes
+    solidity = coaxial.rotor(1).solidity;
+    
+    data_axial_flight_CP = readmatrix('NACA_single_CP_axial.csv');
+    data_axial_flight_CT = readmatrix('NACA_single_CT_axial.csv');
+    
+    EXP_axial_vel_cp = data_axial_flight_CP(:,1)*v_tip; %m/s
+    EXP_axial_vel_ct = data_axial_flight_CT(:,1)*v_tip; %m/s
+    EXP_CT_axial = data_axial_flight_CT(:,2)*solidity;
+    EXP_CP_axial = data_axial_flight_CP(:,2)*solidity;
+    
+elseif strcmpi(coaxial.name,'NACA_coaxial')
+    data_axial_flight_CP = readmatrix('NACA_coaxial_CP_axial.csv');
+    data_axial_flight_CT = readmatrix('NACA_coaxial_CT_axial.csv');
+    
+    EXP_axial_vel_cp = data_axial_flight_CP(:,1); %m/s
+    EXP_axial_vel_ct = data_axial_flight_CT(:,1); %m/s
+    EXP_CT_axial = data_axial_flight_CT(:,2)*solidity;
+    EXP_CP_axial = data_axial_flight_CP(:,2)*solidity;
+    
+else
+    EXP_axial_vel_cp = [];
+    EXP_axial_vel_ct = []; 
+    EXP_CT_axial = [];
+    EXP_CP_axial = [];
+end
+
+
 for collective_idx = 1:length(iter_collective_axial)
     coaxial.state.collective = iter_collective_axial(collective_idx);
+    i = 1;
+    CT_arr_axial = zeros(1,length(axial_vel_range));
+    CP_arr_axial = zeros(1,length(axial_vel_range));
+    axial_vel_arr = zeros(1,length(axial_vel_range));
     
     for axial_vel_idx = 1:length(axial_vel_range)
         
@@ -183,37 +243,60 @@ for collective_idx = 1:length(iter_collective_axial)
         
         try %can be dangerous because it does not show obvious error messages
             tic
-            [collective_u, collective_l, net_torque_dimensional, coaxial.state.CT] = trim(coaxial,atm,epsilon,iter_collective_axial(collective_idx),'pitch_upper',method);
-                                                                                    %trim(coaxial,atm,epsilon,CT_or_pitch,  trimvar,method)
+            [~, ~, ~, ~] = trim(coaxial,atm,epsilon,iter_collective_axial(collective_idx),'pitch_upper',method);
+            [~, ~, ~, CT, CP, ~] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);                                                           
             toc
         catch
             disp("Negative thrust")
-            coaxial.state.CT = -1; %random negative number
+            CT = -1; %random negative number
         end
-        if coaxial.state.CT < 0
+        if sum(CT) < 0 || (strcmpi(coaxial.name,'NACA_single') && sum(CT>0.07))
             CT_arr_axial(i) = [];
             CP_arr_axial(i) = [];
             axial_vel_arr(i) = [];
             i = i-1;
         else
-            CT_arr_axial(i) = coaxial.state.CT;
-            CP_arr_axial(i) = coaxial.state.CP;
+            CT_arr_axial(i) = sum(CT);
+            CP_arr_axial(i) = sum(CP);
             axial_vel_arr(i) = axial_vel_range(axial_vel_idx);
         end
+        
         i = i+1;
     end
+    
+    figure(1)
+    BEMT_ct = plot(axial_vel_arr,CT_arr_axial,'Color','b');
+    hold on
+    
+    figure(2)
+    BEMT_cp = plot(axial_vel_arr,CP_arr_axial,'Color','b');
+    hold on
+    
 end
 
 figure(1)
-scatter(axial_vel_arr,CT_arr_axial,'o')
+hold on
+experiment = scatter(EXP_axial_vel_ct, EXP_CT_axial, 'o');
+legend([BEMT_ct(1), experiment(1)], 'BEMT', 'Experiment')
+xlabel('Axial velocity $V_P$ [m/s]','Interpreter','Latex')
+ylabel('$C_T$ [-]','Interpreter','Latex')
+
 figure(2)
-scatter(axial_vel_arr,CP_arr_axial,'o')
+hold on
+experiment = scatter(EXP_axial_vel_cp, EXP_CP_axial, 'o');
+legend([BEMT_cp(1), experiment(1)], 'BEMT', 'Experiment')
+xlabel('Axial velocity $V_P$ [m/s]','Interpreter','Latex')
+ylabel('$C_P$ [-]','Interpreter','Latex')
+
+warning('on','all')
+
 %% Forward flight performance validation
 
 %Init
 warning('off','all')
 coaxial.state.axial_vel = 0;
-CT_desired = 0.0048/2;
+coaxial.state.side_vel = 0;
+CT_desired = 0.0048/2; %THIS DEPENDS ON WHETHER IT IS COAXIAL OR SINGLE (COAXIAL = 2*SINGLE)
 v_tip = 142.951; %m/s
 coaxial.rotor(1).omega = v_tip/coaxial.rotor(1).R;
 
@@ -262,7 +345,7 @@ i = 0;
 for advance_ratio = advance_ratio_arr
     i=i+1;
     
-    coaxial.state.tangent_vel = advance_ratio*v_tip;
+    coaxial.state.forward_vel = advance_ratio*v_tip;
     
     [collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_desired,"CT",method);
    
@@ -272,10 +355,9 @@ for advance_ratio = advance_ratio_arr
     %disp(['Pitch lower rotor = ', num2str(collective_l),' deg'])
     
 
-    [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+    [Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
     
-    CP_arr(i) = coaxial.state.CP;   
+    CP_arr(i) = sum(CP);   
     
 end
 
@@ -296,7 +378,7 @@ warning('on','all')
 axial_vel_range = 0:1:60;
 iter_pitchdeg = 1:1:60;
 
-coaxial.state.tangent_vel = 0;
+coaxial.state.forward_vel = 0;
 
 plots= false;
 verbose= false;
@@ -314,14 +396,14 @@ for vel_idx = 1:length(axial_vel_range)
             coaxial.state.collective = iter_pitchdeg(idx);
             try
                 tic
-                [Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+                [Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
                 toc
                 if CT < 0
                     CT_arr(idx) = nan;
                     CP_arr(idx) = nan;
                 else
-                    CT_arr(idx) = CT;
-                    CP_arr(idx) = CP;
+                    CT_arr(idx) = sum(CT);
+                    CP_arr(idx) = sum(CP);
                 end
             catch
                 CT_arr(idx) = nan;
@@ -343,7 +425,7 @@ ylabel('Optimum collective angle [deg]')
 %% CT CP for different axial velocities
 
 axial_vel_range = 0:1:60;
-coaxial.state.tangent_vel = 0;
+coaxial.state.forward_vel = 0;
 coaxial.state.collective = 25; %collective in deg
 method = 'leishman'; %airfoil took about 6 mins to run
 

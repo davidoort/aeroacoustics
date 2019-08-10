@@ -1,4 +1,4 @@
-function [Thrust, Torque, Power, CT, CP, dCT, dCP, lambda, Re, AoA,alpha_negatives, phi, F, weighted_swirl_ratio,FOM_single,velocity_dimensional,pitchdeg,r,dr,psi] = spinRotor(rotor,atm,spin_dir,collective,lambda_P,lambda_T,method,epsilon)
+function [Thrust, Torque, Power, CT, CP, dCT, dCP, lambda, Re, AoA,alpha_negatives, phi, F, weighted_swirl_ratio,FOM_single,velocity_dimensional,pitchdeg,r,dr,psi] = spinRotor(rotor,atm,spin_dir,collective,cyclic,lambda_P,lambda_T,method,epsilon)
 %{
 spinRotor
 Modular function that can spin any rotor wit
@@ -68,7 +68,6 @@ June 2019; Last revision: 15-June-2019
 %}
 %------------- BEGIN CODE --------------
 
-
 if strcmpi(spin_dir,'CCW')
     spin = 1;
 elseif strcmpi(spin_dir,'CW')
@@ -85,23 +84,44 @@ psi_vec = linspace(0,spin*2*pi,size(lambda_P,1));
 dr = r_vec(2)-r_vec(1);
 dpsi = spin*(psi_vec(2)-psi_vec(1));
 
+try
 chord_vec = linspace(rotor.root_chord,rotor.tip_chord,length(r_vec));
 %chord_vec(length(r_vec)+1:end) = []; %resizing of the array to match the length of r_vec. Couldn't find a more elegant way of doing this
+chord = repmat(chord_vec,length(psi_vec),1);
+
+catch
+    chord_vec = rotor.chord*ones(1,length(r_vec));
+    chord = repmat(chord_vec,length(psi_vec),1);
+end 
+
 
 r = repmat(r_vec,length(psi_vec),1);
-chord = repmat(chord_vec,length(psi_vec),1);
+
 psi = repmat(psi_vec',1,length(r_vec));    
 
 geometric_pitch = getPitch(r_vec,rotor.twist_type,rotor.twistdeg,rotor.pitch_root);
 
-pitchdeg = geometric_pitch+ones(size(geometric_pitch))*collective;
+pitchdeg_geo_collective = geometric_pitch+ones(size(geometric_pitch))*collective; %add collective
 
-pitchdeg = repmat(pitchdeg,length(psi_vec),1);
+%add cyclic
+cyclic_sine = cyclic(1);
+cyclic_cosine = cyclic(2);
+psi_convention = abs(psi); %to make things easier
+
+pitchdeg = repmat(pitchdeg_geo_collective,length(psi_vec),1)+cyclic_sine*sin(psi_convention)+cyclic_cosine*cos(psi_convention); 
 
 rotor.pitch = deg2rad(pitchdeg); %rad - this might get more complicated when the function gets cyclic input. Or not
 
+%% Sanity check - should allow ot do try/catch instead of going into infinite loops
+
+if any(any(pitchdeg<0))
+    error('Negative pitch angle detected -> Leishman method fails! Increase collective or decrease cyclic input.')
+end
+
 %% Iteration
 if strcmpi(method,'airfoil')
+    
+
     F_old = ones(size(r));
     lambda_old = 0.0001*ones(size(r));%0.01*ones(size(r));%lambda_P;
     [phi,phi_old] = getInflowAngle(lambda_old,lambda_P,r,psi,lambda_T);
@@ -193,7 +213,7 @@ FOM_single = CT^(3/2)/(sqrt(2)*CP); %treated as a single rotor;
 
 chord_eff = interp1(r(1,:),chord(1,:),0.7);
 vel_eff = ((rotor.omega*rotor.R*0.7).^2+(interp1(r(1,:),lambda(1,:),0.7)).^2).^(1/2);
-Re_eff = getReynolds(vel_eff,chord_eff,atm.kin_visc);
+%Re_eff = getReynolds(vel_eff,chord_eff,atm.kin_visc);
 
 v_tip = rotor.omega*rotor.R;
 
