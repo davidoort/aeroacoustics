@@ -12,7 +12,7 @@ classdef Rotor < dynamicprops
     
     methods
         function obj = Rotor()
-            obj.name = "Harrington2"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing, Bumblebee_canard
+            obj.name = "Harrington1"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing, Bumblebee_canard
             obj.type = "coaxial"; % "single" or "coaxial"
             
             obj.state.trim = 1; %1 means that both rotors have the same geometrical pitch, so same collective setting >1 increases pitch of lower wrt to upper
@@ -22,7 +22,15 @@ classdef Rotor < dynamicprops
             obj.state.side_vel = 0;
             obj.state.airspeed = @() norm([obj.state.axial_vel,obj.state.forward_vel,obj.state.side_vel]); %m/s 
             obj.state.incidence_deg = @() rad2deg(atan(obj.state.forward_vel/obj.state.axial_vel)); %deg - positive downward
-            obj.state.sideslip = @() atan(obj.state.side_vel/obj.state.forward_vel); %rad
+            obj.state.sideslip = @() atan2(obj.state.side_vel,obj.state.forward_vel); %rad - atan2 because otherwise there is a NaN singularity when in hover
+            
+            %Cyclic state (input) - for now assumes that the cyclic is
+            %coupled between the two rotors
+            %these are real coefficients that get multiplied by sine and
+            %cosine terms which get added to the pitch matrix (a function 
+            %of r due to blade design and collective and a function of psi due to cyclic input)
+            obj.state.cyclic_s = 0; 
+            obj.state.cyclic_c = 0; 
             %% Create the rotors
             if obj.name == "Harrington1"
                 
@@ -141,7 +149,7 @@ classdef Rotor < dynamicprops
                 
                 obj.rotor(1).Nb = 3;             % Number of blades - arbitrary
                 obj.rotor(1).R = 1.4859;             %m
-                obj.rotor(1).omega = 249.022/obj.rotor(1).R*2*pi; %the magic number is the tip speed in m/s from Leishman
+                obj.rotor(1).omega = 249.022/obj.rotor(1).R; %the magic number is the tip speed in m/s from Leishman
                 obj.rotor(1).chord = 0.15;             %m - arbitrary
                 obj.rotor(1).solidity = 0.2292;
                 obj.rotor(1).hub_radial_fraction = 0;
@@ -181,7 +189,7 @@ classdef Rotor < dynamicprops
                 
                 obj.rotor(1).Nb = 3;             % Number of blades - arbitrary
                 obj.rotor(1).R = 1.524;             %m
-                obj.rotor(1).omega = 249.022/obj.rotor(1).R*2*pi; %the magic number is the tip speed in m/s from Leishman
+                obj.rotor(1).omega = 249.022/obj.rotor(1).R; %the magic number is the tip speed in m/s from Leishman
                 obj.rotor(1).chord = 0.15;             %m - arbitrary
                 obj.rotor(1).solidity = 0.078;
                 obj.rotor(1).hub_radial_fraction = 0;

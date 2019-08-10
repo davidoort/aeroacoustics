@@ -62,7 +62,7 @@ if strcmpi(trimvar,"pitch_upper")
     collective_u = CT_or_pitch; %deg
     coaxial.state.collective = collective_u; %deg
     [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method); %deg,Nm,-
-    
+ 
 elseif strcmpi(trimvar,"CT")
     
     if CT_or_pitch > 1
@@ -82,10 +82,9 @@ elseif strcmpi(trimvar,"CT")
     
     [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method); %deg,Nm,-
     
-    [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+    %[~, ~, ~, CT, ~, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
     
-    thrust_error = CT_des - coaxial.state.CT;
+    thrust_error = CT_des - CT;
     
     
     while abs(thrust_error) > eps1
@@ -99,12 +98,12 @@ elseif strcmpi(trimvar,"CT")
         end
         
         
-        [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-            coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+        %[coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
+            %coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
         
         [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method); %deg,Nm,-
         
-        thrust_error = CT_des - coaxial.state.CT;
+        thrust_error = CT_des - CT;
         
     end
     
@@ -119,6 +118,9 @@ else
 end
 
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method)
 
 %{
@@ -176,25 +178,24 @@ June 2019; Last revision: 2-June-2019
     
     %% Begin iteration    
     
-    [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+    [~, ~, Moments, CT_BEMT, ~, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
     
-    net_torque_dimensional = coaxial.state.net_torque_coeff*coaxial.state.torque;
+    net_torque_dimensional = net_torque_coeff*sum(abs(Moments(:,3)));
     
     while abs(net_torque_dimensional)>eps
         old_net_torque_dimensional = net_torque_dimensional;
         
-        coaxial.state.trim = coaxial.state.trim + k*coaxial.state.net_torque_coeff;
+        coaxial.state.trim = coaxial.state.trim + k*net_torque_coeff;
         if coaxial.state.trim < 0
            warning(strcat("Trim value = ", num2str(coaxial.state.trim), " resetting trim to 1 and lowering k"))
            k = k*0.9;
         end
         
         %tic
-        [coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-        coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+        [~, ~, Moments, CT_BEMT, ~, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
         %toc
-        net_torque_dimensional = coaxial.state.net_torque_coeff*coaxial.state.torque;
+        net_torque_dimensional = net_torque_coeff*sum(abs(Moments(:,3)));
+        
         
         if old_net_torque_dimensional + net_torque_dimensional < eps
             warning("Bouncing around between +- net torques. Nudging k...")
@@ -206,13 +207,13 @@ June 2019; Last revision: 2-June-2019
             
         end
         if old_net_torque_dimensional - net_torque_dimensional < eps
-            eps = 1.1*eps;
-            warning(["Increasing eps to ", num2str(eps), " Nm"]);
+            eps = 1.01*eps;
+            warning(['Increasing eps to ', num2str(eps), ' Nm']);
         end
     end
     
     collective_l = coaxial.state.trim*coaxial.state.collective;
-    CT = coaxial.state.CT;
+    CT = sum(CT_BEMT);
     
 end   
 

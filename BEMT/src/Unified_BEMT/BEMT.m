@@ -21,12 +21,6 @@ side_vel = rotorsystem.state.side_vel; %m/s
 tangent_vel = norm([forward_vel,side_vel]); %m/s
 sideslip = rotorsystem.state.sideslip(); %rad
 
-%% Sanity check - should allow ot do try/catch instead of going into infinite loops
-
-if strcmpi(method,'leishman') && (rotorsystem.rotor(1).pitch_root>rotorsystem.state.collective && strcmpi(rotorsystem.rotor(1).twist_type,'ideal')) || (rotorsystem.rotor(1).twistdeg>rotorsystem.state.collective && strcmpi(rotorsystem.rotor(1).twist_type,'linear'))
-    error('Rotor upper: Your twist is larger than your collective! Negative pitch angles near the tip will break Leishman')
-end
-
 
 %% Top Rotor
 
@@ -34,10 +28,11 @@ flowfield(1).lambda_P = axial_vel/(rotorsystem.rotor(1).omega*rotorsystem.rotor(
 flowfield(1).lambda_T = tangent_vel/(rotorsystem.rotor(1).omega*rotorsystem.rotor(1).R)*ones(res_psi,res_r); %%normalizing free stream tangential velocity by tip velocity - FOR LATER
 
 collective_u = rotorsystem.state.collective;
+cyclic_u = [rotorsystem.state.cyclic_s, rotorsystem.state.cyclic_c];
 
 spin_dir_u = 'CCW'; %should probably become a parameter in the rotor object
 [Thrust_u, Torque_u, Power_u, CT_u, CP_u, dCT_u, dCP_u, lambda_u, Re_u, alpha_u,alpha_negatives_u, phi_u, ...
-    F_u, weighted_swirl_ratio_u, FOM_u, velocity_dimensional_u,pitchdeg_u,r,dr,psi_u] = spinRotor(rotorsystem.rotor(1),atm,spin_dir_u,collective_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon);
+    F_u, weighted_swirl_ratio_u, FOM_u, velocity_dimensional_u, pitchdeg_u,r,dr,psi_u] = spinRotor(rotorsystem.rotor(1),atm,spin_dir_u,collective_u,cyclic_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon);
 
 net_torque_coeff = 0;
 
@@ -114,14 +109,11 @@ if strcmpi(rotorsystem.type,"coaxial")
     %% Init
     
     collective_l = collective_u*rotorsystem.state.trim;
+    cyclic_l = -[rotorsystem.state.cyclic_s, rotorsystem.state.cyclic_c];
     
     flowfield(2).lambda_P = axial_vel/(rotorsystem.rotor(2).omega*rotorsystem.rotor(2).R)*ones(res_psi,res_r); %normalizing free stream axial velocity by tip velocity
     flowfield(2).lambda_T = tangent_vel/(rotorsystem.rotor(2).omega*rotorsystem.rotor(2).R)*ones(res_psi,res_r); %%normalizing free stream tangential velocity by tip velocity - FOR LATER
-    %% Sanity check - will have to do try/catch when choosing a value of trim
-
-    if strcmpi(method,'leishman') && rotorsystem.rotor(2).pitch_root>collective_l && (rotorsystem.rotor(2).pitch_root>collective_l && strcmpi(rotorsystem.rotor(2).twist_type,'ideal')) || (rotorsystem.rotor(2).twistdeg>collective_l && strcmpi(rotorsystem.rotor(2).twist_type,'linear'))
-        error('Rotor lower: Your twist is larger than your collective! Negative pitch angles near the tip will break Leishman')
-    end
+   
     
     %% Calculate inflow for bottom rotor
     
@@ -237,7 +229,7 @@ if strcmpi(rotorsystem.type,"coaxial")
     
     spin_dir_l = 'CW';
     [Thrust_l, Torque_l, Power_l, CT_l, CP_l, dCT_l, dCP_l, lambda_l, Re_l, alpha_l,alpha_negatives_l, phi_l, ...
-    F_l, weighted_swirl_ratio_l, FOM_l, velocity_dimensional_l,pitchdeg_l,r,dr,psi_l] = spinRotor(rotorsystem.rotor(2),atm,spin_dir_l,collective_l,lambda_P_bottom,flowfield(2).lambda_T,method,epsilon);
+    F_l, weighted_swirl_ratio_l, FOM_l, velocity_dimensional_l,pitchdeg_l,r,dr,psi_l] = spinRotor(rotorsystem.rotor(2),atm,spin_dir_l,collective_l,cyclic_l,lambda_P_bottom,flowfield(2).lambda_T,method,epsilon);
 
     %% Output Vars
 
@@ -405,7 +397,7 @@ if plots
     end    
     %% Validation plots
     if axial_vel==0 && tangent_vel==0
-        if abs(CT-0.004)<0.00001 && net_torque_dimensional<0.1 && strcmpi(rotorsystem.name,"Harrington1")  
+        if abs(sum(CT)-0.004)<0.00001 && net_torque_dimensional<0.1 && strcmpi(rotorsystem.name,"Harrington1")  
             data_inflow_upper = readmatrix('H1_inflow_FVM_fig10a.csv');
             r1 = data_inflow_upper(:,1); lambda1 = data_inflow_upper(:,2);
             
