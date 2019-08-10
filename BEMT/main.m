@@ -14,15 +14,16 @@ coaxial = Rotor();
 % Change parameters
 
 coaxial.state.axial_vel = 10; %m/s 
-coaxial.state.tangent_vel = 10; %m/s 
-coaxial.state.trim= 1;
-coaxial.state.collective = 20; %collective in deg
+coaxial.state.forward_vel = 10; %m/s 
+coaxial.state.side_vel = 10; %m/s
+coaxial.state.trim = 1; %collective_l/collective_u
+coaxial.state.collective = 20; %collective in deg - geometric pitch angle at the root of the UPPER rotor blades!
 
-epsilon = 0.0001; %convergence accuracy for Fcf and lambda -> 0.0001
+epsilon = 0.0001; %convergence accuracy for Prandtl tip function and inflow ratio
 
 %warning('off')
 
-%% Testing 
+% Testing 
 
 plots= true;
 verbose= true;
@@ -30,17 +31,34 @@ debug = false;
 method='leishman'; %'leishman','airfoil'
 
 %tic
-[Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+%[Thrust, Torque, Power, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
 %toc
 
+[Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
 
-%%%%% GENERATE DIFFERENCE (between methods) DISK PLOTS SOMEWHERE!!!!!
+%legend below
+%{
+%Power is a 1x2 matrix -> [P_upper; P_lower] [W]
+
+%Forces is a 3x2 matrix -> [Fx_upper, Fy_upper, Fz_upper; Fx_lower, Fy_lower, Fz_lower] [N]
+%using the right-handed coordinate system with x pointing forward, z pointing up
+
+%Moments is a 3x2 matrix -> [Mx_upper, My_upper, Mz_upper; Mx_lower, My_lower, Mz_lower] [Nm] 
+%using the same coordinate system as Forces
+
+%CT is the thrust coefficient 1x2 matrix -> [CT_u; CT_l];
+%CP is the torque coefficient 1x2 matrix -> [CP_u;CP_l];
+
+%} 
+
+%%%%% GENERATE DIFFERENCE (between methods) DISK PLOTS SOMEWHERE!!!!! ->
+%%%%% this would be nice in the article (especially if I can explain where the biggest differences come from)
 %% Iteration to trim the coaxial rotor and produce CT-CP validation plots
 
 iter_pitchdeg = 0:1:18;
 method = 'leishman'; %airfoil took about 6 mins to run
 
-coaxial.state.tangent_vel = 0; %m/s  - comparison plots are for hover
+coaxial.state.forward_vel = 0; %m/s  - comparison plots are for hover
 SMT = false;
 %for method = ["leishman","single"]
 
@@ -137,7 +155,7 @@ CT_desired = 0.004;
 method='leishman';
 
 coaxial.state.axial_vel = 0; %m/s - hover
-coaxial.state.tangent_vel = 0; %m/s - hover
+coaxial.state.forward_vel = 0; %m/s - hover
 epsilon = 0.001; %convergence accuracy for Fcf and lambda -> 0.0001
 
 [collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_desired,"CT",method);
@@ -157,7 +175,7 @@ debug = false;
 %% Axial flight plots - not working yet, I need an efficient way of detecting stall
 
 %Init
-coaxial.state.tangent_vel = 0;
+coaxial.state.forward_vel = 0;
 
 
 iter_collective_axial = 10:10:60; %tweak this selection
@@ -213,7 +231,8 @@ scatter(axial_vel_arr,CP_arr_axial,'o')
 %Init
 warning('off','all')
 coaxial.state.axial_vel = 0;
-CT_desired = 0.0048/2;
+coaxial.state.side_vel = 0;
+CT_desired = 0.0048/2; %THIS DEPENDS ON WHETHER IT IS COAXIAL OR SINGLE (COAXIAL = 2*SINGLE)
 v_tip = 142.951; %m/s
 coaxial.rotor(1).omega = v_tip/coaxial.rotor(1).R;
 
@@ -262,7 +281,7 @@ i = 0;
 for advance_ratio = advance_ratio_arr
     i=i+1;
     
-    coaxial.state.tangent_vel = advance_ratio*v_tip;
+    coaxial.state.forward_vel = advance_ratio*v_tip;
     
     [collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_desired,"CT",method);
    
@@ -296,7 +315,7 @@ warning('on','all')
 axial_vel_range = 0:1:60;
 iter_pitchdeg = 1:1:60;
 
-coaxial.state.tangent_vel = 0;
+coaxial.state.forward_vel = 0;
 
 plots= false;
 verbose= false;
@@ -343,7 +362,7 @@ ylabel('Optimum collective angle [deg]')
 %% CT CP for different axial velocities
 
 axial_vel_range = 0:1:60;
-coaxial.state.tangent_vel = 0;
+coaxial.state.forward_vel = 0;
 coaxial.state.collective = 25; %collective in deg
 method = 'leishman'; %airfoil took about 6 mins to run
 

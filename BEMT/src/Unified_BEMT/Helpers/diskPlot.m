@@ -44,7 +44,7 @@ else
     levels = linspace(min(min(matrix)),max(max(matrix)),res);
 end
 hold on
-contourf(r.*cos(psi),r.*sin(psi),matrix,levels,'LineStyle','none')
+contourf(r.*cos(psi-state.sideslip()),r.*sin(psi-state.sideslip()),matrix,levels,'LineStyle','none')
 
 if ~isempty(varargin)
     title(strcat(varargin{1}),'Interpreter','latex')
@@ -62,18 +62,23 @@ xunit = r(1,1) * cos(th);
 yunit = r(1,1) * sin(th);
 plot(xunit,yunit)
 
+%% Add annotation boxes
 dim1 = [.2 .5 .3 .3];
 str1 = strcat('Axial vel: ', num2str(state.axial_vel),' m/s');
 
 dim2 = [.2 .55 .3 .3];
-str2 = strcat('Tangent vel: ', num2str(state.tangent_vel),' m/s');
+str2 = strcat('Forward vel: ', num2str(state.forward_vel),' m/s');
 
-dim3 = [.2 .60 .3 .3];
+dim4 = [.2 .60 .3 .3];
+str4 = strcat('Side vel: ', num2str(state.side_vel),' m/s');
+
+dim3 = [.2 .65 .3 .3];
 str3 = strcat('Collective: ', num2str(state.collective),' [deg]');
 
 % annotation('textbox',dim1,'String',str1,'FitBoxToText','on','BackgroundColor','white');
 % annotation('textbox',dim2,'String',str2,'FitBoxToText','on','BackgroundColor','white');
 % annotation('textbox',dim3,'String',str3,'FitBoxToText','on','BackgroundColor','white');
+% annotation('textbox',dim4,'String',str4,'FitBoxToText','on','BackgroundColor','white');
 
 %{
 STUPID METHOD IF YOU ARE GIVEN r
@@ -87,5 +92,7 @@ catch
     warning('Hub size not provided. diskPlot(r,psi,matrix,title,hub_radial_fraction)')
 end
 %}
+
+
 end
 

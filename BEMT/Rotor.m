@@ -18,11 +18,11 @@ classdef Rotor < dynamicprops
             obj.state.trim = 1; %1 means that both rotors have the same geometrical pitch, so same collective setting >1 increases pitch of lower wrt to upper
             obj.state.collective = 8; %deg
             obj.state.axial_vel = 0;
-            obj.state.tangent_vel = 0;
+            obj.state.forward_vel = 0;
             obj.state.side_vel = 0;
-            obj.state.airspeed = @() norm([obj.state.axial_vel,obj.state.tangent_vel]); %m/s 
-            obj.state.incidence_deg = @() rad2deg(atan(obj.state.tangent_vel/obj.state.axial_vel)); %deg - positive downward
-            
+            obj.state.airspeed = @() norm([obj.state.axial_vel,obj.state.forward_vel,obj.state.side_vel]); %m/s 
+            obj.state.incidence_deg = @() rad2deg(atan(obj.state.forward_vel/obj.state.axial_vel)); %deg - positive downward
+            obj.state.sideslip = @() atan(obj.state.side_vel/obj.state.forward_vel); %rad
             %% Create the rotors
             if obj.name == "Harrington1"
                 
