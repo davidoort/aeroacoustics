@@ -45,7 +45,7 @@ classdef Rotor < dynamicprops
                 obj.params.kappaint = 1.28;
                 obj.params.kappa = 1.15;
                 obj.params.rd = 0.82; %[non-dimensionalised by R] annulus - "assumption consistent with the results obtained by Leishman using the free wake method"
-                
+                obj.params.interrotor_spacing = 0.15;%percentage of rotor radius
                 
                 
                 %% Top rotor
