@@ -201,9 +201,9 @@ if strcmpi(rotorsystem.type,"coaxial")
     %} 
     
     % Interpolation in cartesian coordinates (to avoid extrapolation)
-    warning('off','all')
+    
     lambda_P_bottom_ind_nans = griddata(r_skewed.*cos(psi_skewed),r_skewed.*sin(psi_skewed),lambda_skewed,r.*cos(psi_u),r.*sin(psi_u),'cubic'); 
-    warning('on','all')
+    
     %lambda_P_bottom_ind_nans = griddata(r_skewed,psi_skewed,lambda_skewed,r,psi_u,'cubic'); 
     lambda_P_bottom_ind = lambda_P_bottom_ind_nans;
     lambda_P_bottom_ind(isnan(lambda_P_bottom_ind_nans)) = 0; 

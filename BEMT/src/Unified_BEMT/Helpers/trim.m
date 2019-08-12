@@ -1,4 +1,4 @@
-function [collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_or_pitch,trimvar,method)
+function [collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_or_pitch,trimvar,method,timelimit)
 %{
 TRIM THE COAXIAL SYSTEM TO A DESIRED CT or UPPER COLLECTIVE SETTING
 
@@ -55,13 +55,16 @@ June 2019; Last revision: 2-June-2019
 %}
 
 %------------- BEGIN CODE --------------
+
+tic %begin trim time-counting, no matter the routine (Torque or CT&Torque)
+
 debug = false;
 
 if strcmpi(trimvar,"pitch_upper")
     
     collective_u = CT_or_pitch; %deg
     coaxial.state.collective = collective_u; %deg
-    [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method); %deg,Nm,-
+    [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit); %deg,Nm,-
  
 elseif strcmpi(trimvar,"CT")
     
@@ -80,14 +83,14 @@ elseif strcmpi(trimvar,"CT")
 
     %% Begin iteration
     
-    [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method); %deg,Nm,-
+    [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit); %deg,Nm,-
     
     %[~, ~, ~, CT, ~, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
     
     thrust_error = CT_des - CT;
     
     
-    while abs(thrust_error) > eps1
+    while toc<timelimit && abs(thrust_error) > eps1
         
         coaxial.state.collective = coaxial.state.collective + k1*thrust_error;
         
@@ -99,13 +102,13 @@ elseif strcmpi(trimvar,"CT")
         
         
         %[coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-            %coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+        %coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
         
-        [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method); %deg,Nm,-
+        [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit); %deg,Nm,-
         
         thrust_error = CT_des - CT;
-        
     end
+    
     
     
     
@@ -121,7 +124,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method)
+function [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit)
 
 %{
 TRIM THE LOWER ROTOR TO ACHIEVE TORQUE BALANCE
@@ -182,13 +185,16 @@ June 2019; Last revision: 2-June-2019
     
     net_torque_dimensional = net_torque_coeff*sum(abs(Moments(:,3)));
     
-    while abs(net_torque_dimensional)>eps
+    
+    
+    while toc<timelimit && abs(net_torque_dimensional)>eps
         old_net_torque_dimensional = net_torque_dimensional;
         
         coaxial.state.trim = coaxial.state.trim + k*net_torque_coeff;
         if coaxial.state.trim < 0
-           warning(strcat("Trim value = ", num2str(coaxial.state.trim), " resetting trim to 1 and lowering k"))
-           k = k*0.9;
+            warning(strcat("Trim value = ", num2str(coaxial.state.trim), " resetting trim to 1 and lowering k"))
+            coaxial.state.trim = 1;
+            k = k*0.9;
         end
         
         %tic
@@ -199,10 +205,10 @@ June 2019; Last revision: 2-June-2019
         
         if old_net_torque_dimensional + net_torque_dimensional < eps
             warning("Bouncing around between +- net torques. Nudging k...")
-            if k>1
-                k = 0.99*k;
+            if k>0.1
+                k = 0.9*k;
             else
-                k = 1.01*k; %it was getting stuck in infinite loops 
+                k = 1.1*k; %it was getting stuck in infinite loops
             end
             
         end
@@ -211,6 +217,8 @@ June 2019; Last revision: 2-June-2019
             warning(['Increasing eps to ', num2str(eps), ' Nm']);
         end
     end
+        
+    
     
     collective_l = coaxial.state.trim*coaxial.state.collective;
     CT = sum(CT_BEMT);

@@ -1,6 +1,6 @@
 function [Re] = getReynolds(vel,chord,kin_visc)
 %{
-GETCHORD is a helper function that returns the chord at a spanwise station of the blade 
+getReynolds is a helper function that returns the chord at a spanwise station of the blade 
 
 Inputs:
     

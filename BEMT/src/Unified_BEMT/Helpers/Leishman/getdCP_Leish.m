@@ -1,4 +1,4 @@
-function [dCP] = getdCP_Leish(rotor,dCT,phi,r,dr,psi,dpsi,lambda,lambda_T)
+function [dCP] = getdCP_Leish(rotor,dCT,phi,r,dr,psi,dpsi,lambda,lambda_P,lambda_T)
 %{
 GETdCP_Leish calculates the thrust coefficient of one
 (or multiple) rotor disk elements using my own derivation from Leishman
@@ -53,8 +53,10 @@ June 2019; Last revision: 13-June-2019
 
 %------------- BEGIN CODE --------------
 
+lambda_i = lambda-lambda_P;
 
-dCP_i = lambda.*dCT; %if I am correct about the assumption that it should be lambda and not lambda_i
+dCP_i = lambda.*dCT; %if I am correct about the assumption that it should be lambda and not lambda_i!!!! - testing both
+%dCP_i = 0;
 
 alpha = rotor.pitch-phi; %rad
 alpha_0 = rotor(1).aero.alpha_0; %rad
