@@ -114,7 +114,7 @@ rotor.pitch = deg2rad(pitchdeg); %rad - this might get more complicated when the
 
 %% Sanity check - should allow ot do try/catch instead of going into infinite loops
 
-if any(any(pitchdeg<0))
+if any(any(pitchdeg<0)) && strcmpi(method,'leishman')
     plot(pitchdeg(1,:))
     error('Negative pitch angle detected -> Leishman method fails! Increase collective or decrease cyclic input.')
 end

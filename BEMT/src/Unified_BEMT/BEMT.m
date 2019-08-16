@@ -1,9 +1,25 @@
 function [Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(rotorsystem,atm,epsilon,plots,verbose,method,debug)
+%{
 
+Power is a 1x2 matrix -> [P_upper; P_lower] [W]
+
+Forces is a 3x2 matrix -> [Fx_upper, Fy_upper, Fz_upper; Fx_lower, Fy_lower, Fz_lower] [N]
+using the right-handed coordinate system with x pointing forward, z pointing up
+
+Moments is a 3x2 matrix -> [Mx_upper, My_upper, Mz_upper; Mx_lower, My_lower, Mz_lower] [Nm] 
+using the same coordinate system as Forces
+
+CT is the thrust coefficient 1x2 matrix -> [CT_u; CT_l];
+CP is the torque coefficient 1x2 matrix -> [CP_u;CP_l];
+
+net_torque_coeff = (CP_u-CP_l)/(CP_u+CP_l) [-] 
+
+%}
 
 %init is done inside the spinRotor function, but you have to specify which
 %rotor (geometry) has to be spun and in which direction it has to be spun, with what
 %collective (and cyclic later), lambda_P, lambda_T, method (leishman or airfoil)
+
 
 %% Init 
 if debug
@@ -27,7 +43,7 @@ sideslip = rotorsystem.state.sideslip(); %rad
 flowfield(1).lambda_P = axial_vel/(rotorsystem.rotor(1).omega*rotorsystem.rotor(1).R)*ones(res_psi,res_r); %normalizing free stream axial velocity by tip velocity
 flowfield(1).lambda_T = tangent_vel/(rotorsystem.rotor(1).omega*rotorsystem.rotor(1).R)*ones(res_psi,res_r); %%normalizing free stream tangential velocity by tip velocity - FOR LATER
 
-collective_u = rotorsystem.state.collective;
+collective_u = rotorsystem.state.collective_u;
 cyclic_u = [rotorsystem.state.cyclic_s, rotorsystem.state.cyclic_c];
 
 spin_dir_u = 'CCW'; %should probably become a parameter in the rotor object
@@ -108,7 +124,7 @@ CP_l = 0;
 if strcmpi(rotorsystem.type,"coaxial")
     %% Init
     
-    collective_l = collective_u*rotorsystem.state.trim;
+    collective_l = rotorsystem.state.collective_l;
     cyclic_l = -[rotorsystem.state.cyclic_s, rotorsystem.state.cyclic_c];
     
     flowfield(2).lambda_P = axial_vel/(rotorsystem.rotor(2).omega*rotorsystem.rotor(2).R)*ones(res_psi,res_r); %normalizing free stream axial velocity by tip velocity
@@ -296,6 +312,7 @@ CT = [CT_u; CT_l];
 
 %CP
 CP = [CP_u;CP_l];
+
 
 
 

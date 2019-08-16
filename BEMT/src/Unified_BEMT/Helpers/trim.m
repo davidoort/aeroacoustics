@@ -2,10 +2,33 @@ function [collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial
 %{
 TRIM THE COAXIAL SYSTEM TO A DESIRED CT or UPPER COLLECTIVE SETTING
 
-The inputs of this function change depending on whether you want to trim
-the rotor at a specified value of CT or at a specified upper rotor pitch
-angle. This could easily be extended to take lower rotor pitch angle as
-well but it is not necessary for the rest of the pipeline at the moment.
+There are two trim routines in this function: 
+
+- "yaw" simply trims the coaxial around a certain collective angle of both
+rotors. Probably the collective of both rotors will be around the average
+of the collective_u and collective_l passed initially.
+
+- "thrust" this trims the coaxial rotors to a specific thrust output 
+(at torque balance)
+
+This function is used extensively to create validation plots and I have run
+into many issues caused by the instability of this fixed point method with
+a tweaked proportionality parameter. This caused issues when trimming in
+different flight conditions (like high axial velocities) or when using
+different methods (leishman vs airfoil).
+
+The rewrite of the code in August was done with the following major
+differences:
+
+- Instead of a constant proportionality parameter k I use a
+condition-,method-specific gradient calculated in getGradient.
+
+- Add CT, CP (in case you ever need to trim to a specific CP) and
+net_torque_coeff to coaxial.state so that getGradient can access those
+quantities (+collective_u and collective_l) and calculate what happens if
+you input collective_u+dcol, collective_l+dcol or (if the gradient we are 
+looking for is with respect to a pitch differential)
+collective_u+dcol,collective_l-dcol
 
 Inputs:
     coaxial - (struct object) with operational (state) and geometric
@@ -34,9 +57,11 @@ Outputs:
 
 Other m-files required: 
 
-    BEMT_axial
+    BEMT
 
     trim_torque
+
+    getGradient
 
 MAT-files required: none
 
@@ -51,7 +76,7 @@ Author: David Oort Alonso, B.Sc, Aerospace Engineering
 TU Delft, Faculty of Aerospace Engineering
 email address: d.oortalonso@student.tudelft.nl  
 Website: https://github.com/davidoort/aeroacoustics
-June 2019; Last revision: 2-June-2019
+June 2019; Last revision: 15-August-2019
 %}
 
 %------------- BEGIN CODE --------------
@@ -59,72 +84,109 @@ June 2019; Last revision: 2-June-2019
 tic %begin trim time-counting, no matter the routine (Torque or CT&Torque)
 
 debug = false;
+plots = false;
+verbose = false;
 
-if strcmpi(trimvar,"pitch_upper")
+if strcmpi(trimvar,"yaw")
+    %do a trim procedure for airfoil method as well - use the delta method
+    %of the previous iteration (delta_pitch/delta_thrust instead of k).
+    %This theoretically also solves the problem of decreasing pitch to
+    %decrease torque (which for negative angles of attack will just spiral
+    %down).
     
-    collective_u = CT_or_pitch; %deg
-    coaxial.state.collective = collective_u; %deg
-    [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit); %deg,Nm,-
- 
-elseif strcmpi(trimvar,"CT")
+    coaxial.state.collective_u = CT_or_pitch; %deg
+    coaxial.state.collective_l = CT_or_pitch; %deg
+    
+    %coaxial.state.collective = collective_u; %deg
+    [net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit); %deg,Nm,-%           (coaxial,atm,epsilon,method,timelimit)
+
+
+
+elseif strcmpi(trimvar,"thrust") 
     
     if CT_or_pitch > 1
         error([num2str(CT_or_pitch), ' is an unrealistic value for CT'])
     end
 
-    %% Tweak for fast & stable convergence 
-
-    k1 = 70;
+    %k1 = 70;
     eps1 = 0.00001;
-    plots = false;
-    verbose = false;
         
     CT_des = CT_or_pitch;
 
     %% Begin iteration
     
-    [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit); %deg,Nm,-
+    [net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit); %deg,Nm,-
     
-    %[~, ~, ~, CT, ~, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
-    
-    thrust_error = CT_des - CT;
-    
-    
+
+    thrust_error = CT_des-sum(coaxial.state.CT);
+        
     while toc<timelimit && abs(thrust_error) > eps1
         
-        coaxial.state.collective = coaxial.state.collective + k1*thrust_error;
+        grad_thrust = getGradient('thrust',coaxial,atm,epsilon,method,debug);
         
-        if coaxial.state.collective<0
-            disp('Collective set to 0 instead of negative')
-            coaxial.state.collective = 0;
+        correction = thrust_error/grad_thrust;
+        
+        coaxial.state.collective_u = abs(coaxial.state.collective_u + correction);
+        coaxial.state.collective_l = abs(coaxial.state.collective_l + correction);
+        
+        
+        
+         if strcmpi(method, 'leishman')
+            %this might not completely solve the problem with twisted blades
+            %and Leishman
+            %if coaxial.state.collective_u < 0 || coaxial.state.collective_u < 0
+            if coaxial.state.collective_u < 0
+                collective_adjustment = 0.5-coaxial.state.collective_l;
+                coaxial.state.collective_u = 0.5;
+                
+                coaxial.state.collective_l = coaxial.state.collective_l+collective_adjustment;
+                
+                
+            end
+            if coaxial.state.collective_l < 0
+                collective_adjustment = 0.5-coaxial.state.collective_l;
+                coaxial.state.collective_l = 0.5;
+                
+                coaxial.state.collective_u = coaxial.state.collective_u+collective_adjustment;
+            end
             
+            error_var = true;
+            while error_var
+                try
+                    %tic
+                    [~, ~, Moments, CT_BEMT, CP_BEMT, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+                    %toc
+                    error_var = false;
+                catch e
+                    disp(e.message)
+                    coaxial.state.collective_u = coaxial.state.collective_u+0.1;
+                    coaxial.state.collective_l = coaxial.state.collective_u+0.1;
+                end
+            end
         end
-        
-        
-        %[coaxial.state.thrust, coaxial.state.torque, coaxial.state.power, ...
-        %coaxial.state.CT, coaxial.state.CP, coaxial.state.net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
-        
-        [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit); %deg,Nm,-
-        
-        thrust_error = CT_des - CT;
+      
+        [net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit); %deg,Nm,-
+
+        thrust_error = CT_des - sum(coaxial.state.CT);
+
     end
     
     
     
-    
-    collective_u = coaxial.state.collective;
-    
 else
-    error('Please specify either "CT" or "pitch_upper" as trim conditions')
+    error('Please specify either "yaw" or "thrust" as trim conditions')
 
 
 end
+
+collective_u = coaxial.state.collective_u;
+collective_l = coaxial.state.collective_l;
 
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [collective_l,net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit)
+function [net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit)
 
 %{
 TRIM THE LOWER ROTOR TO ACHIEVE TORQUE BALANCE
@@ -173,7 +235,7 @@ June 2019; Last revision: 2-June-2019
     
     %% Tweak for fast & stable convergence    
 
-    k = 1; %proportionality constant k that seems ideal - what also worked was doing k*coaxial.state.net_torque_coeff even if I don't change epsilon
+    %k = 1; %proportionality constant k that seems ideal - what also worked was doing k*coaxial.state.net_torque_coeff even if I don't change epsilon
     eps = 0.1;
     plots = false;
     debug = false;
@@ -181,47 +243,81 @@ June 2019; Last revision: 2-June-2019
     
     %% Begin iteration    
     
-    [~, ~, Moments, CT_BEMT, ~, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+    [~, ~, Moments, CT_BEMT, CP_BEMT, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+    
+    coaxial.state.CT = CT_BEMT;
+    coaxial.state.CP = CP_BEMT;  
+    coaxial.state.net_torque_coeff = net_torque_coeff;
     
     net_torque_dimensional = net_torque_coeff*sum(abs(Moments(:,3)));
     
     
-    
     while toc<timelimit && abs(net_torque_dimensional)>eps
-        old_net_torque_dimensional = net_torque_dimensional;
         
-        coaxial.state.trim = coaxial.state.trim + k*net_torque_coeff;
-        if coaxial.state.trim < 0
-            warning(strcat("Trim value = ", num2str(coaxial.state.trim), " resetting trim to 1 and lowering k"))
-            coaxial.state.trim = 1;
-            k = k*0.9;
-        end
+        grad_torque = getGradient('net_torque',coaxial,atm,epsilon,method,debug);
         
-        %tic
-        [~, ~, Moments, CT_BEMT, ~, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
-        %toc
-        net_torque_dimensional = net_torque_coeff*sum(abs(Moments(:,3)));
+        correction = coaxial.state.net_torque_coeff/grad_torque;
         
+        coaxial.state.collective_u = coaxial.state.collective_u - correction;
+        coaxial.state.collective_l = coaxial.state.collective_l + correction;
         
-        if old_net_torque_dimensional + net_torque_dimensional < eps
-            warning("Bouncing around between +- net torques. Nudging k...")
-            if k>0.1
-                k = 0.9*k;
-            else
-                k = 1.1*k; %it was getting stuck in infinite loops
+        if strcmpi(method, 'leishman')
+            %this might not completely solve the problem with twisted blades
+            %and Leishman
+            %if coaxial.state.collective_u < 0 || coaxial.state.collective_u < 0
+            if coaxial.state.collective_u < 0
+                collective_adjustment = 0.5-coaxial.state.collective_l;
+                coaxial.state.collective_u = 0.5;
+                
+                coaxial.state.collective_l = coaxial.state.collective_l+collective_adjustment;
+                
+                
+            end
+            if coaxial.state.collective_l < 0
+                collective_adjustment = 0.5-coaxial.state.collective_l;
+                coaxial.state.collective_l = 0.5;
+                
+                coaxial.state.collective_u = coaxial.state.collective_u+collective_adjustment;
             end
             
+            error_var = true;
+            while error_var
+                try
+                    %tic
+                    [~, ~, Moments, CT_BEMT, CP_BEMT, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+                    %toc
+                    error_var = false;
+                catch e
+                    disp(e.message)
+                    coaxial.state.collective_u = coaxial.state.collective_u+0.1;
+                    coaxial.state.collective_l = coaxial.state.collective_u+0.1;
+                end
+            end
         end
-        if old_net_torque_dimensional - net_torque_dimensional < eps
-            eps = 1.01*eps;
-            warning(['Increasing eps to ', num2str(eps), ' Nm']);
-        end
-    end
+        coaxial.state.CT = CT_BEMT;
+        coaxial.state.CP = CP_BEMT; 
+        coaxial.state.net_torque_coeff = net_torque_coeff;
+
+       net_torque_dimensional = net_torque_coeff*sum(abs(Moments(:,3)));
         
-    
-    
-    collective_l = coaxial.state.trim*coaxial.state.collective;
-    CT = sum(CT_BEMT);
+        
+%         if old_net_torque_dimensional + net_torque_dimensional < eps
+%             warning("Bouncing around between +- net torques. Nudging k...")
+%             if k>0.1
+%                 k = 0.9*k;
+%             else
+%                 k = 1.1*k; %it was getting stuck in infinite loops
+%             end
+%             
+%         end
+%         if old_net_torque_dimensional - net_torque_dimensional < eps
+%             eps = 1.01*eps;
+%             warning(['Increasing eps to ', num2str(eps), ' Nm']);
+%         end
+
+    end
+
+    CT = coaxial.state.CT;
     
 end   
 
