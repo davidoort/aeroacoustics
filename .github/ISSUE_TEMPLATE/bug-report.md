@@ -1,7 +1,7 @@
 ---
 name: ":bug: Bug report"
 about: Create a report to help me fix this issue
-title: ''
+title: ":bug: Bug report"
 labels: ''
 assignees: ''
 
