@@ -13,6 +13,10 @@ plots = false;
 verbose = false;
 delta = 0.001;
 
+if strcmpi(method,'vitleish')
+    method = 'leishman'; %this avoids getting confusing gradients beyond stall that mess up trim convergence
+end
+
 
 if strcmpi(grad_type,'net_torque')
     

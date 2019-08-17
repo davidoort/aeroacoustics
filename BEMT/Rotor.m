@@ -66,8 +66,7 @@ classdef Rotor < dynamicprops
                 obj.rotor(1).twistdeg = 0; %[deg] for a fixed collective, this is the same as changing the rate of twist
                 
                 % Aerodynamics
-                %obj.rotor(1).airfoil.name = "NACA0012"; %airfoil instead
-                %of aero...
+             
                 obj.rotor(1).airfoil.name = "NACA0012";
                 obj.rotor(1).aero.cl_alpha = 5.73;         %1/rad - Lift slope, NACA 0012 from Harrington report
                 %obj.rotor(1).aero.cl_alpha = 2*pi; doesn't make much of a
@@ -143,6 +142,9 @@ classdef Rotor < dynamicprops
                 number at each advance ratio...
                 The blade-thickness ratio varied from 0.06 at the spinner to 0,02 at the tip,
                 and the chord was constant for the length of the exposed blade."
+                
+                The blade width ratio (b/D) is a constant 0.12. So the
+                chord is a constant 
 
                 No information about pitch distribution except in a different paper, where
                 it mentiones that "The pitch distribution was the same for the three
@@ -174,7 +176,8 @@ classdef Rotor < dynamicprops
                 obj.rotor(1).R = 1.4859;             %m
                 obj.rotor(1).omega = 249.022/obj.rotor(1).R; %the magic number is the tip speed in m/s from Leishman
                 obj.rotor(1).solidity = 0.2292;
-                obj.rotor(1).chord = pi*obj.rotor(1).solidity*obj.rotor(1).R/obj.rotor(1).Nb; %m - calculated, since we know it is constant and = sigma*pi*R/B
+                obj.rotor(1).root_chord = pi*obj.rotor(1).solidity*obj.rotor(1).R/obj.rotor(1).Nb; %m - calculated, since we know it is constant and = sigma*pi*R/B
+                obj.rotor(1).tip_chord = pi*obj.rotor(1).solidity*obj.rotor(1).R/obj.rotor(1).Nb; %m - calculated, since we know it is constant and = sigma*pi*R/B
                 obj.rotor(1).hub_radial_fraction = 0.1; %guess
                 
                 % geometric pitch - IF untwisted blade simply write
@@ -185,6 +188,7 @@ classdef Rotor < dynamicprops
                 obj.rotor(1).twistdeg = 0; %[deg] for a fixed collective, this is the same as changing the rate of twist
                 
                 % Aerodynamics
+                obj.rotor(1).airfoil.name = "NACA16006";
                 obj.rotor(1).aero.cl_alpha = 6.7;         %1/rad - Lift slope, NACA 16-series... GUESS at the moment
                 obj.rotor(1).aero.alpha_0 = 0; %rad - symmetrical
                 obj.rotor(1).aero.Cd0 =  0.003; %0.003
@@ -214,7 +218,11 @@ classdef Rotor < dynamicprops
                 obj.rotor(1).R = 1.524;             %m
                 obj.rotor(1).omega = 87.47/obj.rotor(1).R; %the magic number is the tip speed in m/s from Leishman
                 obj.rotor(1).solidity = 0.078; %try with this solidity and double this one
-                obj.rotor(1).chord = pi*obj.rotor(1).solidity*obj.rotor(1).R/obj.rotor(1).Nb; %m - average chord (not constant this time); chord = sigma*pi*R/B
+                %The chord distribution is kind of weird as it has no taper
+                %but gets wider in the middle. b/D = 0.04 at tip and root
+                obj.rotor(1).root_chord = pi*obj.rotor(1).solidity*obj.rotor(1).R/obj.rotor(1).Nb; %m - average chord (not constant this time); chord = sigma*pi*R/B
+                obj.rotor(1).tip_chord = pi*obj.rotor(1).solidity*obj.rotor(1).R/obj.rotor(1).Nb; %m - average chord (not constant this time); chord = sigma*pi*R/B
+
                 obj.rotor(1).hub_radial_fraction = 0.2; %from figure 1 in Bierman
                 
                 % geometric pitch - IF untwisted blade simply write
@@ -225,6 +233,7 @@ classdef Rotor < dynamicprops
                 obj.rotor(1).twistdeg = 0; %[deg] for a fixed collective, this is the same as changing the rate of twist
                 
                 % Aerodynamics - HS (Hamilton Standard) 3155-6 and HS 3156-6 blades
+                obj.rotor(1).airfoil.name = "ClarkY";
                 obj.rotor(1).aero.cl_alpha = 6.1;         %1/rad - Lift slope, Clark-Y airfoil!
                 obj.rotor(1).aero.alpha_0 = deg2rad(-3.75); %rad - from airfoil data
                 obj.rotor(1).aero.Cd0 =  0.007;
@@ -313,8 +322,6 @@ classdef Rotor < dynamicprops
                 obj.rotor(1).twistdeg = 0; %[deg] for a fixed collective, this is the same as changing the rate of twist
                 
                 % Aerodynamics
-                %obj.rotor(1).airfoil.name = "NACA0012"; %airfoil instead
-                %of aero...
                 obj.rotor(1).airfoil.name = "NACA0012";
                 obj.rotor(1).aero.cl_alpha = 5.73;         %1/rad - Lift slope, NACA 0012 from Harrington report
                 %obj.rotor(1).aero.cl_alpha = 2*pi; doesn't make much of a
@@ -357,8 +364,7 @@ classdef Rotor < dynamicprops
                 obj.rotor(1).twistdeg = 0; %[deg] for a fixed collective, this is the same as changing the rate of twist
                 
                 % Aerodynamics
-                %obj.rotor(1).airfoil.name = "NACA0012"; %airfoil instead
-                %of aero...
+              
                 obj.rotor(1).airfoil.name = "NACA0012";
                 obj.rotor(1).aero.cl_alpha = 5.73;         %1/rad - Lift slope, NACA 0012 from Harrington report
                 %obj.rotor(1).aero.cl_alpha = 2*pi; doesn't make much of a

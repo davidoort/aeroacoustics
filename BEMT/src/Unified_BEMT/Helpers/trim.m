@@ -131,7 +131,7 @@ elseif strcmpi(trimvar,"thrust")
         
         
         
-         if strcmpi(method, 'leishman')
+         if strcmpi(method, 'leishman') || strcmpi(method, 'vitleish')
             %this might not completely solve the problem with twisted blades
             %and Leishman
             %if coaxial.state.collective_u < 0 || coaxial.state.collective_u < 0
@@ -261,7 +261,7 @@ June 2019; Last revision: 2-June-2019
         coaxial.state.collective_u = coaxial.state.collective_u - correction;
         coaxial.state.collective_l = coaxial.state.collective_l + correction;
         
-        if strcmpi(method, 'leishman')
+        if strcmpi(method, 'leishman') || strcmpi(method, 'vitleish')
             %this might not completely solve the problem with twisted blades
             %and Leishman
             %if coaxial.state.collective_u < 0 || coaxial.state.collective_u < 0

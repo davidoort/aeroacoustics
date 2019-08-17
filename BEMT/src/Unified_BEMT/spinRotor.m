@@ -85,9 +85,9 @@ dr = r_vec(2)-r_vec(1);
 dpsi = spin*(psi_vec(2)-psi_vec(1));
 
 try
-chord_vec = linspace(rotor.root_chord,rotor.tip_chord,length(r_vec));
-%chord_vec(length(r_vec)+1:end) = []; %resizing of the array to match the length of r_vec. Couldn't find a more elegant way of doing this
-chord = repmat(chord_vec,length(psi_vec),1);
+    chord_vec = linspace(rotor.root_chord,rotor.tip_chord,length(r_vec));
+    %chord_vec(length(r_vec)+1:end) = []; %resizing of the array to match the length of r_vec. Couldn't find a more elegant way of doing this
+    chord = repmat(chord_vec,length(psi_vec),1);
 
 catch
     chord_vec = rotor.chord*ones(1,length(r_vec));
@@ -158,11 +158,9 @@ if strcmpi(method,'airfoil')
     dCP = getdCP(rotor,atm,phi_old,r,dr,psi,dpsi,chord,lambda_old,lambda_P,lambda_T);
 
 elseif strcmpi(method,'leishman')
-    
-    
-    
+    cl_alpha = rotor.aero.cl_alpha;
     F_old = ones(size(r));
-    lambda_old = getLambda_Leish(rotor,lambda_P,lambda_T,F_old,r,psi);
+    lambda_old = getLambda_Leish(rotor,lambda_P,lambda_T,F_old,r,psi,cl_alpha);
     [phi_negative,phi_old] = getInflowAngle(lambda_old,lambda_P,r,psi,lambda_T);
     
     err_old = 1;
@@ -172,7 +170,7 @@ elseif strcmpi(method,'leishman')
         
         %lambda = getLambda_Leish(lambda_P, dCTu,F_old, r, dr,dpsi);
         
-        lambda = getLambda_Leish(rotor,lambda_P,lambda_T,F,r,psi);
+        lambda = getLambda_Leish(rotor,lambda_P,lambda_T,F,r,psi,cl_alpha);
         
         [phi_negative,phi] = getInflowAngle(lambda,lambda_P,r,psi,lambda_T);
         
@@ -192,7 +190,48 @@ elseif strcmpi(method,'leishman')
     
     dCT = getdCT_Leish(rotor,F,lambda,lambda_P,lambda_T,phi,r,dr,psi,dpsi);
     
-    dCP = getdCP_Leish(rotor,dCT,phi,r,dr,psi,dpsi,lambda,lambda_P,lambda_T);
+    Cd = getCd(method,rotor,atm,phi,chord,lambda,lambda_T,r,psi);
+    
+    dCP = getdCP_Leish(rotor,dCT,r,dr,psi,dpsi,lambda,lambda_P,lambda_T,Cd);
+    
+elseif strcmpi(method, 'vitleish')
+    
+    F_old = ones(size(r));
+    cl_alpha = getCl_alpha(rotor,r); %get fake cl_alpha matrix
+    lambda_old = getLambda_Leish(rotor,lambda_P,lambda_T,F_old,r,psi,cl_alpha);
+    [phi_negative,phi_old] = getInflowAngle(lambda_old,lambda_P,r,psi,lambda_T);
+    
+    err_old = 1;
+    while err_old>epsilon
+        
+        F = getPrandtlTipLoss(rotor,phi_old,r);
+
+        cl_alpha = getCl_alpha(rotor,r); %get fake cl_alpha matrix
+        
+        lambda = getLambda_Leish(rotor,lambda_P,lambda_T,F,r,psi,cl_alpha);
+        
+        [phi_negative,phi] = getInflowAngle(lambda,lambda_P,r,psi,lambda_T);
+        
+        err = norm([F-F_old,lambda-lambda_old,phi-phi_old]);
+        
+        if abs(err-err_old)<=1e-4 %added this on 3rd of August
+            warning('Error constant, stopping iteration')
+            break
+        end
+        
+        err_old = err;
+        
+        lambda_old = lambda;
+        phi_old = phi;
+        F_old = F;
+    end
+    
+    dCT = getdCT_Leish(rotor,F,lambda,lambda_P,lambda_T,phi,r,dr,psi,dpsi);
+    
+    Cd = getCd(method,rotor,atm,phi,chord,lambda,lambda_T,r,psi);
+    
+    dCP = getdCP_Leish(rotor,dCT,r,dr,psi,dpsi,lambda,lambda_P,lambda_T,Cd);
+
 
     
 end

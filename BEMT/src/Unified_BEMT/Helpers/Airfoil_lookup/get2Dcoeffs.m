@@ -54,7 +54,7 @@ Author: David Oort Alonso, B.Sc, Aerospace Engineering
 TU Delft, Faculty of Aerospace Engineering
 email address: d.oortalonso@student.tudelft.nl  
 Website: https://github.com/davidoort/aeroacoustics
-June 2019; Last revision: 11-June-2019
+June 2019; Last revision: 17-August-2019
 %}
 
 %------------- BEGIN CODE --------------
