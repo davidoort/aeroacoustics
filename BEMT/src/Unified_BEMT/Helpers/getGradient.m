@@ -9,12 +9,16 @@ once
 
 %}
 
+
+delta = min(min(abs(coaxial.state.collective_u),abs(coaxial.state.collective_l)),10);
+
 plots = false;
 verbose = false;
 
-if strcmpi(method,'vitleish')
-    method = 'leishman'; %this avoids getting confusing gradients beyond stall that mess up trim convergence
-end
+%Doesn't really work
+% if strcmpi(method,'vitleish')
+%     method = 'leishman'; %this avoids getting confusing gradients beyond stall that mess up trim convergence
+% end
 
 
 if strcmpi(grad_type,'net_torque')

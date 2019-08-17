@@ -87,7 +87,10 @@ debug = false;
 plots = false;
 verbose = false;
 
-delta = 1; %[deg] what collective angle change is used to calculate the gradient - the smaller, the more local the derivative 
+%Delta keep in mind that this is currently a lower bound on the exploration
+%collective angle. I think delta should be a function of the current
+%collective angle.
+delta = 0.1; %[deg] what collective angle change is used to calculate the gradient - the smaller, the more local the derivative 
 
 if strcmpi(trimvar,"yaw")
     %do a trim procedure for airfoil method as well - use the delta method
