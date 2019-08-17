@@ -8,7 +8,7 @@ if strcmpi(airfoil,'NACA0012')
     data = readmatrix('xf-n0012-il-1000000'); 
     alpha = data(:,1);
     cl_line = deg2rad(2*pi)*alpha;
-    cd_quadratic = 0.007+ deg2rad(deg2rad(1))*alpha.^2; %(maybe find best fit instead up to Cdmax)
+    cd_quadratic = 0.011+ deg2rad(deg2rad(1))*alpha.^2; %(maybe find best fit instead up to Cdmax)
     cd_fourth = 0.007+ deg2rad(deg2rad(0.08))*alpha.^2+(0.0175)^4*7.5*alpha.^4; %(maybe find best fit instead up to Cdmax)
 
 elseif strcmpi(airfoil,'NACA16006')   

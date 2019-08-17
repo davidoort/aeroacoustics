@@ -55,11 +55,13 @@ if ~strcmpi(Re,'1000000') || ~strcmpi(airfoil,'NACA0012')
     warning('Currently there is only data for NACA0012, Re=1e6. Results are based on that')
 end
 
-if max(alpha)>18.5
-    warning(strcat('You have passed an alpha of ', num2str(max(alpha)), ' > 18.5 deg. Using high angle of attack corrections...'))
-elseif min(alpha)<-18.5
-    warning(strcat('You have passed an alpha of ', num2str(min(alpha)), ' < -18.5 deg. Using high angle of attack corrections...'))
-end
+%ideally, this only shows up with verbose or debug
+% if max(alpha)>18.5
+%     warning(strcat('You have passed an alpha of ', num2str(max(alpha)), ' > 18.5 deg. Using high angle of attack corrections...'))
+% elseif min(alpha)<-18.5
+%     warning(strcat('You have passed an alpha of ', num2str(min(alpha)), ' < -18.5 deg. Using high angle of attack corrections...'))
+% end
+
 
 data = readmatrix('xf-n0012-il-1000000'); % Alpha,Cl,Cd,Cdp,Cm,Top_Xtr,Bot_Xtr
 

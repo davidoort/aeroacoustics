@@ -12,11 +12,10 @@ classdef Rotor < dynamicprops
     
     methods
         function obj = Rotor()
-            obj.name = "NACA_coax"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing, Bumblebee_canard
+            obj.name = "Harrington1"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing, Bumblebee_canard
             obj.type = "coaxial"; % "single" or "coaxial"
             
             obj.state.trim = 1; %1 means that both rotors have the same geometrical pitch, so same collective setting >1 increases pitch of lower wrt to upper
-            obj.state.collective = 8; %deg
             obj.state.axial_vel = 0;
             obj.state.forward_vel = 0;
             obj.state.side_vel = 0;
@@ -61,7 +60,7 @@ classdef Rotor < dynamicprops
                 
                 % geometric pitch - IF untwisted blade simply write
                 % 'linear' with 0 twist
-                obj.state.collective = 10; % [deg] collective 
+               
                 obj.rotor(1).pitch_root = 10; % [deg] - for an ideal twist it will change the relative angles between root and tip
                 obj.rotor(1).twist_type = 'linear'; % 'linear', 'ideal'
                 obj.rotor(1).twistdeg = 0; %[deg] for a fixed collective, this is the same as changing the rate of twist
@@ -74,7 +73,7 @@ classdef Rotor < dynamicprops
                 %obj.rotor(1).aero.cl_alpha = 2*pi; doesn't make much of a
                 %difference to verification/validation plots
                 obj.rotor(1).aero.alpha_0 = 0; %rad
-                obj.rotor(1).aero.Cd0 =  0.011;
+                obj.rotor(1).aero.Cd0 =  0.007; %0.011
                 obj.rotor(1).aero.D1 = 0; %1/rad
                 obj.rotor(1).aero.D2 = 1; %1/rad^2
                 
@@ -112,7 +111,7 @@ classdef Rotor < dynamicprops
                 
                 % geometric pitch - IF untwisted blade simply write
                 % 'linear' with 0 wtist
-                obj.state.collective = 10; % [deg] collective 
+              
                 obj.rotor(1).pitch_root = 20; % [deg] - for an ideal twist it will change the relative angles between root and tip
                 obj.rotor(1).twist_type = 'linear'; % 'linear', 'ideal'
                 obj.rotor(1).twistdeg = 0; %[deg] for a fixed collective, this is the same as changing the rate of twist
@@ -180,7 +179,7 @@ classdef Rotor < dynamicprops
                 
                 % geometric pitch - IF untwisted blade simply write
                 % 'linear' with 0 twist
-                obj.state.collective = 10; % [deg] collective 
+                
                 obj.rotor(1).pitch_root = 50; % [deg] - for an ideal twist it will change the relative angles between root and tip
                 obj.rotor(1).twist_type = 'linear'; % 'linear', 'ideal'
                 obj.rotor(1).twistdeg = 0; %[deg] for a fixed collective, this is the same as changing the rate of twist
@@ -220,7 +219,7 @@ classdef Rotor < dynamicprops
                 
                 % geometric pitch - IF untwisted blade simply write
                 % 'linear' with 0 wtist
-                obj.state.collective = 10; % [deg] collective 
+  
                 obj.rotor(1).pitch_root = 20; % [deg] - for an ideal twist it will change the relative angles between root and tip
                 obj.rotor(1).twist_type = 'linear'; % 'linear', 'ideal'
                 obj.rotor(1).twistdeg = 0; %[deg] for a fixed collective, this is the same as changing the rate of twist
@@ -265,7 +264,7 @@ classdef Rotor < dynamicprops
                 
                 % geometric pitch - IF untwisted blade simply write
                 % 'linear' with 0 wtist
-                obj.state.collective = 10; % [deg] collective 
+             
                 obj.rotor(1).pitch_root = 20; % [deg] - for an ideal twist it will change the relative angles between root and tip
                 obj.rotor(1).twist_type = 'linear'; % 'linear', 'ideal'
                 obj.rotor(1).twistdeg = 0; %[deg] for a fixed collective, this is the same as changing the rate of twist
@@ -308,7 +307,7 @@ classdef Rotor < dynamicprops
                 
                  % geometric pitch - IF untwisted blade simply write
                 % 'linear' with 0 wtist
-                obj.state.collective = 20; % [deg] collective 
+     
                 obj.rotor(1).pitch_root = 14; % [deg] - for an ideal twist it will change the relative angles between root and tip
                 obj.rotor(1).twist_type = 'ideal'; % 'linear', 'ideal'
                 obj.rotor(1).twistdeg = 0; %[deg] for a fixed collective, this is the same as changing the rate of twist
@@ -352,7 +351,7 @@ classdef Rotor < dynamicprops
                 
                 % geometric pitch - IF untwisted blade simply write
                 % 'linear' with 0 wtist
-                obj.state.collective = 20; % [deg] collective
+             
                 obj.rotor(1).pitch_root = 16; % [deg] - for an ideal twist it will change the relative angles between root and tip
                 obj.rotor(1).twist_type = 'ideal'; % 'linear', 'ideal'
                 obj.rotor(1).twistdeg = 0; %[deg] for a fixed collective, this is the same as changing the rate of twist
