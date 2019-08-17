@@ -73,7 +73,7 @@ dim4 = [.2 .60 .3 .3];
 str4 = strcat('Side vel: ', num2str(state.side_vel),' m/s');
 
 dim3 = [.2 .65 .3 .3];
-str3 = strcat('Collective: ', num2str(state.collective),' [deg]');
+str3 = strcat('Collective: ', num2str(state.collective_u),' [deg]');
 
 % annotation('textbox',dim1,'String',str1,'FitBoxToText','on','BackgroundColor','white');
 % annotation('textbox',dim2,'String',str2,'FitBoxToText','on','BackgroundColor','white');
