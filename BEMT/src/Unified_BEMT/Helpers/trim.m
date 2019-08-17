@@ -113,7 +113,7 @@ elseif strcmpi(trimvar,"thrust")
         error([num2str(CT_or_pitch), ' is an unrealistic value for CT'])
     end
 
-    %k1 = 70;
+    k1 = 10;
     eps1 = 0.00001;
         
     CT_des = CT_or_pitch;
@@ -124,12 +124,17 @@ elseif strcmpi(trimvar,"thrust")
     
 
     thrust_error = CT_des-sum(coaxial.state.CT);
-        
+     
+    
     while toc<timelimit && abs(thrust_error) > eps1
-        
-        grad_thrust = getGradient('thrust',coaxial,atm,epsilon,method,debug,delta);
-        
-        correction = thrust_error/grad_thrust;
+        if strcmpi(method,'vitleish')
+            correction = k1*thrust_error;
+            delta = 0;
+        else
+            grad_thrust = getGradient('thrust',coaxial,atm,epsilon,method,debug,delta);
+            
+            correction = thrust_error/grad_thrust;
+        end
         
         coaxial.state.collective_u = abs(coaxial.state.collective_u + correction);
         coaxial.state.collective_l = abs(coaxial.state.collective_l + correction);
@@ -155,6 +160,8 @@ elseif strcmpi(trimvar,"thrust")
                 coaxial.state.collective_u = coaxial.state.collective_u+collective_adjustment;
             end
             
+            %Sanity check that BEMT can be run, otherwise a message
+            %pops up and collective is increased-not very elegant atm (it doesn't really do anything)
             error_var = true;
             while error_var
                 try
@@ -168,17 +175,16 @@ elseif strcmpi(trimvar,"thrust")
                     coaxial.state.collective_l = coaxial.state.collective_u+0.1;
                 end
             end
+            
         end
       
         [net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit,delta); %deg,Nm,-
 
         thrust_error = CT_des - sum(coaxial.state.CT);
-
     end
     
-    
-    
 else
+    
     error('Please specify either "yaw" or "thrust" as trim conditions')
 
 
@@ -240,7 +246,7 @@ June 2019; Last revision: 2-June-2019
     
     %% Tweak for fast & stable convergence    
 
-    %k = 1; %proportionality constant k that seems ideal - what also worked was doing k*coaxial.state.net_torque_coeff even if I don't change epsilon
+    k = 10; %proportionality constant k that seems ideal
     eps = 0.1;
     plots = false;
     debug = false;
@@ -259,9 +265,14 @@ June 2019; Last revision: 2-June-2019
     
     while toc<timelimit && abs(net_torque_dimensional)>eps
         
-        grad_torque = getGradient('net_torque',coaxial,atm,epsilon,method,debug,delta);
-        
-        correction = coaxial.state.net_torque_coeff/grad_torque;
+        if strcmpi(method,'vitleish')
+            correction = k*coaxial.state.net_torque_coeff;
+            delta = 0;
+        else
+            grad_torque = getGradient('net_torque',coaxial,atm,epsilon,method,debug,delta);
+            
+            correction = coaxial.state.net_torque_coeff/grad_torque;
+        end
         
         coaxial.state.collective_u = coaxial.state.collective_u - correction;
         coaxial.state.collective_l = coaxial.state.collective_l + correction;
@@ -298,13 +309,14 @@ June 2019; Last revision: 2-June-2019
                     coaxial.state.collective_l = coaxial.state.collective_u+0.1;
                 end
             end
+            
         end
         
         coaxial.state.CT = CT_BEMT;
         coaxial.state.CP = CP_BEMT; 
         coaxial.state.net_torque_coeff = net_torque_coeff;
 
-       net_torque_dimensional = net_torque_coeff*sum(abs(Moments(:,3)));
+        net_torque_dimensional = net_torque_coeff*sum(abs(Moments(:,3)));
         
         
 %         if old_net_torque_dimensional + net_torque_dimensional < eps

@@ -29,10 +29,10 @@ timelimit = inf;
 
 % CHOOSE ROUTINE - so that I can run the script and pause on errors...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-testing             = 0;
+testing             = 1;
 axial_flight_val    = 0;
 forward_flight_val  = 0;
-CT_CP_val           = 1;
+CT_CP_val           = 0;
 spanwise_FVM_val    = 0;
 DSE_stuff           = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -49,9 +49,12 @@ verbose= true;
 debug = false;
 method='vitleish'; %'leishman','airfoil','vitleish'
 
-tic
-[Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
-toc
+% tic
+% [Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+% toc
+
+[collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,0.004,'thrust',method,timelimit);
+
 %legend below
 %{
 %Power is a 1x2 matrix -> [P_upper; P_lower] [W]
