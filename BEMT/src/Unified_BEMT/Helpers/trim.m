@@ -87,6 +87,8 @@ debug = false;
 plots = false;
 verbose = false;
 
+delta = 1; %[deg] what collective angle change is used to calculate the gradient - the smaller, the more local the derivative 
+
 if strcmpi(trimvar,"yaw")
     %do a trim procedure for airfoil method as well - use the delta method
     %of the previous iteration (delta_pitch/delta_thrust instead of k).
@@ -98,7 +100,7 @@ if strcmpi(trimvar,"yaw")
     coaxial.state.collective_l = CT_or_pitch; %deg
     
     %coaxial.state.collective = collective_u; %deg
-    [net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit); %deg,Nm,-%           (coaxial,atm,epsilon,method,timelimit)
+    [net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit,delta); %deg,Nm,-%           (coaxial,atm,epsilon,method,timelimit)
 
 
 
@@ -115,14 +117,14 @@ elseif strcmpi(trimvar,"thrust")
 
     %% Begin iteration
     
-    [net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit); %deg,Nm,-
+    [net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit,delta); %deg,Nm,-
     
 
     thrust_error = CT_des-sum(coaxial.state.CT);
         
     while toc<timelimit && abs(thrust_error) > eps1
         
-        grad_thrust = getGradient('thrust',coaxial,atm,epsilon,method,debug);
+        grad_thrust = getGradient('thrust',coaxial,atm,epsilon,method,debug,delta);
         
         correction = thrust_error/grad_thrust;
         
@@ -135,17 +137,17 @@ elseif strcmpi(trimvar,"thrust")
             %this might not completely solve the problem with twisted blades
             %and Leishman
             %if coaxial.state.collective_u < 0 || coaxial.state.collective_u < 0
-            if coaxial.state.collective_u < 0
-                collective_adjustment = 0.5-coaxial.state.collective_l;
-                coaxial.state.collective_u = 0.5;
+            if coaxial.state.collective_u < delta
+                collective_adjustment = delta-coaxial.state.collective_l;
+                coaxial.state.collective_u = delta;
                 
                 coaxial.state.collective_l = coaxial.state.collective_l+collective_adjustment;
                 
                 
             end
-            if coaxial.state.collective_l < 0
-                collective_adjustment = 0.5-coaxial.state.collective_l;
-                coaxial.state.collective_l = 0.5;
+            if coaxial.state.collective_l < delta
+                collective_adjustment = delta-coaxial.state.collective_l;
+                coaxial.state.collective_l = delta;
                 
                 coaxial.state.collective_u = coaxial.state.collective_u+collective_adjustment;
             end
@@ -165,7 +167,7 @@ elseif strcmpi(trimvar,"thrust")
             end
         end
       
-        [net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit); %deg,Nm,-
+        [net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit,delta); %deg,Nm,-
 
         thrust_error = CT_des - sum(coaxial.state.CT);
 
@@ -186,7 +188,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit)
+function [net_torque_dimensional,CT] = trim_torque(coaxial,atm,epsilon,method,timelimit,delta)
 
 %{
 TRIM THE LOWER ROTOR TO ACHIEVE TORQUE BALANCE
@@ -254,7 +256,7 @@ June 2019; Last revision: 2-June-2019
     
     while toc<timelimit && abs(net_torque_dimensional)>eps
         
-        grad_torque = getGradient('net_torque',coaxial,atm,epsilon,method,debug);
+        grad_torque = getGradient('net_torque',coaxial,atm,epsilon,method,debug,delta);
         
         correction = coaxial.state.net_torque_coeff/grad_torque;
         
@@ -265,17 +267,17 @@ June 2019; Last revision: 2-June-2019
             %this might not completely solve the problem with twisted blades
             %and Leishman
             %if coaxial.state.collective_u < 0 || coaxial.state.collective_u < 0
-            if coaxial.state.collective_u < 0
-                collective_adjustment = 0.5-coaxial.state.collective_l;
-                coaxial.state.collective_u = 0.5;
+            if coaxial.state.collective_u < delta
+                collective_adjustment = delta-coaxial.state.collective_l;
+                coaxial.state.collective_u = delta;
                 
                 coaxial.state.collective_l = coaxial.state.collective_l+collective_adjustment;
                 
                 
             end
-            if coaxial.state.collective_l < 0
-                collective_adjustment = 0.5-coaxial.state.collective_l;
-                coaxial.state.collective_l = 0.5;
+            if coaxial.state.collective_l < delta
+                collective_adjustment = delta-coaxial.state.collective_l;
+                coaxial.state.collective_l = delta;
                 
                 coaxial.state.collective_u = coaxial.state.collective_u+collective_adjustment;
             end
@@ -294,6 +296,7 @@ June 2019; Last revision: 2-June-2019
                 end
             end
         end
+        
         coaxial.state.CT = CT_BEMT;
         coaxial.state.CP = CP_BEMT; 
         coaxial.state.net_torque_coeff = net_torque_coeff;

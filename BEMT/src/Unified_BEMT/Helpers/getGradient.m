@@ -1,4 +1,4 @@
-function grad = getGradient(grad_type,coaxial,atm,epsilon,method,debug)
+function grad = getGradient(grad_type,coaxial,atm,epsilon,method,debug,delta)
 %{
 Preliminary function that gives the numerical derivative of thrust/torque 
 wrt collective about the current collective angle
@@ -11,7 +11,6 @@ once
 
 plots = false;
 verbose = false;
-delta = 0.001;
 
 if strcmpi(method,'vitleish')
     method = 'leishman'; %this avoids getting confusing gradients beyond stall that mess up trim convergence
