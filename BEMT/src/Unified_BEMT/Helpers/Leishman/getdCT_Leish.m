@@ -57,8 +57,9 @@ alpha = rotor.pitch-phi;
 
 alpha_0 = rotor(1).aero.alpha_0;
 
-dCT1 = rotor.solidity*rotor.aero.cl_alpha*(alpha-alpha_0).*(lambda_T.^2.*sin(psi).^2+2*lambda_T.*r.*sin(psi)+r.^2)*dr*dpsi/(4*pi); % equation 16
-dCT = 2*F.*lambda.*(lambda-lambda_P).*r*dr*dpsi/pi; %equation 23
+dCT = rotor.solidity*rotor.aero.cl_alpha*(alpha-alpha_0).*(lambda_T.^2.*sin(psi).^2+2*lambda_T.*r.*sin(psi)+r.^2)*dr*dpsi/(4*pi); % equation 16
+%dCT1 = 2*F.*lambda.*(lambda-lambda_P).*r*dr*dpsi/pi; %equation 23 - WHICH
+%IS SUPER WRONG...
 
 end
 

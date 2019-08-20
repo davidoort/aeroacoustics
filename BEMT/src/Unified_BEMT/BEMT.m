@@ -1,5 +1,20 @@
 function [Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(rotorsystem,atm,epsilon,plots,verbose,method,debug)
+%{
 
+Power is a 1x2 matrix -> [P_upper; P_lower] [W]
+
+Forces is a 3x2 matrix -> [Fx_upper, Fy_upper, Fz_upper; Fx_lower, Fy_lower, Fz_lower] [N]
+using the right-handed coordinate system with x pointing forward, z pointing up
+
+Moments is a 3x2 matrix -> [Mx_upper, My_upper, Mz_upper; Mx_lower, My_lower, Mz_lower] [Nm] 
+using the same coordinate system as Forces
+
+CT is the thrust coefficient 1x2 matrix -> [CT_u; CT_l];
+CP is the torque coefficient 1x2 matrix -> [CP_u;CP_l];
+
+net_torque_coeff = (CP_u-CP_l)/(CP_u+CP_l) [-] 
+
+%}
 
 %init is done inside the spinRotor function, but you have to specify which
 %rotor (geometry) has to be spun and in which direction it has to be spun, with what
@@ -27,12 +42,12 @@ sideslip = rotorsystem.state.sideslip(); %rad
 flowfield(1).lambda_P = axial_vel/(rotorsystem.rotor(1).omega*rotorsystem.rotor(1).R)*ones(res_psi,res_r); %normalizing free stream axial velocity by tip velocity
 flowfield(1).lambda_T = tangent_vel/(rotorsystem.rotor(1).omega*rotorsystem.rotor(1).R)*ones(res_psi,res_r); %%normalizing free stream tangential velocity by tip velocity - FOR LATER
 
-collective_u = rotorsystem.state.collective;
+collective_u = rotorsystem.state.collective_u;
 cyclic_u = [rotorsystem.state.cyclic_s, rotorsystem.state.cyclic_c];
 
 spin_dir_u = 'CCW'; %should probably become a parameter in the rotor object
 [Thrust_u, Torque_u, Power_u, CT_u, CP_u, dCT_u, dCP_u, lambda_u, Re_u, alpha_u,alpha_negatives_u, phi_u, ...
-    F_u, weighted_swirl_ratio_u, FOM_u, velocity_dimensional_u, pitchdeg_u,r,dr,psi_u] = spinRotor(rotorsystem.rotor(1),atm,spin_dir_u,collective_u,cyclic_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon);
+    F_u, weighted_swirl_ratio_u, FOM_u, velocity_dimensional_u, pitchdeg_u,r,dr,psi_u,chord_u] = spinRotor(rotorsystem.rotor(1),atm,spin_dir_u,collective_u,cyclic_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon);
 
 net_torque_coeff = 0;
 
@@ -108,7 +123,7 @@ CP_l = 0;
 if strcmpi(rotorsystem.type,"coaxial")
     %% Init
     
-    collective_l = collective_u*rotorsystem.state.trim;
+    collective_l = rotorsystem.state.collective_l;
     cyclic_l = -[rotorsystem.state.cyclic_s, rotorsystem.state.cyclic_c];
     
     flowfield(2).lambda_P = axial_vel/(rotorsystem.rotor(2).omega*rotorsystem.rotor(2).R)*ones(res_psi,res_r); %normalizing free stream axial velocity by tip velocity
@@ -201,9 +216,9 @@ if strcmpi(rotorsystem.type,"coaxial")
     %} 
     
     % Interpolation in cartesian coordinates (to avoid extrapolation)
-    warning('off','all')
+    
     lambda_P_bottom_ind_nans = griddata(r_skewed.*cos(psi_skewed),r_skewed.*sin(psi_skewed),lambda_skewed,r.*cos(psi_u),r.*sin(psi_u),'cubic'); 
-    warning('on','all')
+    
     %lambda_P_bottom_ind_nans = griddata(r_skewed,psi_skewed,lambda_skewed,r,psi_u,'cubic'); 
     lambda_P_bottom_ind = lambda_P_bottom_ind_nans;
     lambda_P_bottom_ind(isnan(lambda_P_bottom_ind_nans)) = 0; 
@@ -229,7 +244,7 @@ if strcmpi(rotorsystem.type,"coaxial")
     
     spin_dir_l = 'CW';
     [Thrust_l, Torque_l, Power_l, CT_l, CP_l, dCT_l, dCP_l, lambda_l, Re_l, alpha_l,alpha_negatives_l, phi_l, ...
-    F_l, weighted_swirl_ratio_l, FOM_l, velocity_dimensional_l,pitchdeg_l,r,dr,psi_l] = spinRotor(rotorsystem.rotor(2),atm,spin_dir_l,collective_l,cyclic_l,lambda_P_bottom,flowfield(2).lambda_T,method,epsilon);
+    F_l, weighted_swirl_ratio_l, FOM_l, velocity_dimensional_l,pitchdeg_l,r,dr,psi_l,chord_l] = spinRotor(rotorsystem.rotor(2),atm,spin_dir_l,collective_l,cyclic_l,lambda_P_bottom,flowfield(2).lambda_T,method,epsilon);
 
     %% Output Vars
 
@@ -274,7 +289,7 @@ if strcmpi(rotorsystem.type,"coaxial")
     net_torque_coeff = (CP_u-CP_l)/(CP_u+CP_l);
     net_torque_dimensional = Torque_u-Torque_l;
     
-    
+
     
 end
 

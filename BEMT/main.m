@@ -19,10 +19,10 @@ coaxial.state.side_vel = 0; %m/s
 
 % Control Inputs
 
-coaxial.state.trim = 1; %=collective_l/collective_u - this is equivalent to the bottom collective
-coaxial.state.collective = 20; %UPPER rotor collective in deg - geometric pitch angle at the root of the UPPER rotor blades!
-coaxial.state.cyclic_s = 10; %sine term for cyclic (gets multiplied by sin(azimuth))
-coaxial.state.cyclic_c = 10; %cosine term for cyclic (gets multiplied by cos(azimuth))
+coaxial.state.collective_u = 20; %UPPER rotor collective in deg - geometric pitch angle at the root of the UPPER rotor blades!
+coaxial.state.collective_l = 20; %UPPER rotor collective in deg - geometric pitch angle at the root of the UPPER rotor blades!
+coaxial.state.cyclic_s = 0; %sine term for cyclic (gets multiplied by sin(azimuth))
+coaxial.state.cyclic_c = 0; %cosine term for cyclic (gets multiplied by cos(azimuth))
 
 epsilon = 0.0001; %convergence accuracy for Prandtl tip function and inflow ratio
 

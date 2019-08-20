@@ -1,4 +1,4 @@
-function [Thrust, Torque, Power, CT, CP, dCT, dCP, lambda, Re, AoA,alpha_negatives, phi, F, weighted_swirl_ratio,FOM_single,velocity_dimensional,pitchdeg,r,dr,psi] = spinRotor(rotor,atm,spin_dir,collective,cyclic,lambda_P,lambda_T,method,epsilon)
+function [Thrust, Torque, Power, CT, CP, dCT, dCP, lambda, Re, AoA,alpha_negatives, phi, F, weighted_swirl_ratio,FOM_single,velocity_dimensional,pitchdeg,r,dr,psi,chord] = spinRotor(rotor,atm,spin_dir,collective,cyclic,lambda_P,lambda_T,method,epsilon)
 %{
 spinRotor
 Modular function that can spin any rotor wit
@@ -114,7 +114,8 @@ rotor.pitch = deg2rad(pitchdeg); %rad - this might get more complicated when the
 
 %% Sanity check - should allow ot do try/catch instead of going into infinite loops
 
-if any(any(pitchdeg<0))
+if any(any(pitchdeg<0)) && strcmpi(method,'leishman')
+    plot(pitchdeg(1,:))
     error('Negative pitch angle detected -> Leishman method fails! Increase collective or decrease cyclic input.')
 end
 
@@ -191,7 +192,7 @@ elseif strcmpi(method,'leishman')
     
     dCT = getdCT_Leish(rotor,F,lambda,lambda_P,lambda_T,phi,r,dr,psi,dpsi);
     
-    dCP = getdCP_Leish(rotor,dCT,phi,r,dr,psi,dpsi,lambda,lambda_T);
+    dCP = getdCP_Leish(rotor,dCT,phi,r,dr,psi,dpsi,lambda,lambda_P,lambda_T);
 
     
 end
@@ -217,7 +218,7 @@ vel_eff = ((rotor.omega*rotor.R*0.7).^2+(interp1(r(1,:),lambda(1,:),0.7)).^2).^(
 
 v_tip = rotor.omega*rotor.R;
 
-velocity_dimensional = sqrt((v_tip*lambda_T.*sin(psi)+v_tip*r).^2+lambda.^2);
+velocity_dimensional = sqrt((v_tip*lambda_T.*sin(psi)+v_tip*r).^2+(v_tip*lambda).^2);
 
 Re =  getReynolds(velocity_dimensional,chord,atm.kin_visc); % to be used in the future in get2Dcoeffs
 
