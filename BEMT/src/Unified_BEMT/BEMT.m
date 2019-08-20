@@ -1,4 +1,4 @@
-function [Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(rotorsystem,atm,epsilon,plots,verbose,method,debug)
+function [Power, Forces, Moments, CT, CP, net_torque_coeff,dB] = BEMT(rotorsystem,atm,epsilon,plots,verbose,method,debug)
 %{
 
 Power is a 1x2 matrix -> [P_upper; P_lower] [W]
@@ -35,6 +35,7 @@ forward_vel = rotorsystem.state.forward_vel; %m/s
 side_vel = rotorsystem.state.side_vel; %m/s
 
 tangent_vel = norm([forward_vel,side_vel]); %m/s
+rotorsystem.state.tangent_vel = tangent_vel;
 sideslip = rotorsystem.state.sideslip(); %rad
 
 
@@ -307,7 +308,7 @@ if strcmpi(rotorsystem.type,"coaxial")
     
     %hanson_acoustics is simply put the code version of equation 1 in
     %Hanson's paper
-    [dB] = hanson_acoustics(coaxial,atm,r,dr,CLk,CDk);
+    [dB] = hanson_acoustics(rotorsystem,atm,r,dr,CLk,CDk);
 
     
 end

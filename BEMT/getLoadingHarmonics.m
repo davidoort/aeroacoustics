@@ -26,6 +26,9 @@ proportionality = 4*pi^2*omega^2*R^3./(Nb*velocity_dimensional.^2.*chord*dr*dpsi
 
 %inverse rotation matrix (in notebook) -> [cos(phi) sin(phi); -sin(phi) cos(phi)]
 
+%YOU COULD ADD A TURBULENCE FACTOR BY ADDING A RAND MATRIX TO dCT AND dCP
+%MATRICES
+
 dCL = proportionality.*(dCT.*cos(phi)+dCP./r.*sin(phi));
 dCD = proportionality.*(dCT.*-sin(phi)+dCP./r.*cos(phi));
 
@@ -78,16 +81,42 @@ if plots
 %     ylabel('$C_D$ [-]','Interpreter','latex')
 %     xlabel('$t$ [s]','Interpreter','latex')
 %     
+    
+    %discrete radial stations
+    loc = [0.15 0.5 0.9];
+    
+    str = {};
+    for r_station = loc
+        str = [str , strcat('r = ' , num2str(r_station))];
+    end
+
+    
+    indx_loc = round(loc*length(r(1,:)));
+
     %plots with interpolated time
     figure(1)
-    plot(time_interp,CL(:,:))
-    ylabel('$C_L$ [-]','Interpreter','latex')
+    plot(time_interp(:,indx_loc),CL(:,indx_loc))
+    ylabel('$C_l$ [-]','Interpreter','latex')
     xlabel('$t$ [s]','Interpreter','latex')
+    %legend(['r = ', num2str(loc(1))],['r = ', num2str(loc(2))],['r = ', num2str(loc(3))])
+    legend(str{:})
     figure(2)
-    plot(time_interp,CD(:,:))
-    ylabel('$C_D$ [-]','Interpreter','latex')
+    plot(time_interp(:,indx_loc),CD(:,indx_loc))
+    ylabel('$C_d$ [-]','Interpreter','latex')
     xlabel('$t$ [s]','Interpreter','latex')
+    legend(str{:})
+    %plots of harmonics in frequency domain
     
+    figure(3)
+    plot(0:length(CLk(:,1))-1,CLk(:,indx_loc))
+    ylabel('$C_{lk}$ [-]','Interpreter','latex')
+    xlabel('Harmonic number','Interpreter','latex')
+    legend(str{:})
+    figure(4)
+    plot(0:length(CLk(:,1))-1,CDk(:,indx_loc))
+    ylabel('$C_{dk}$ [-]','Interpreter','latex')
+    xlabel('Harmonic number','Interpreter','latex')
+    legend(str{:})
 end
 
 end

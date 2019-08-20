@@ -13,7 +13,7 @@ coaxial = Rotor();
 
 % Change flight parameters
 
-coaxial.state.axial_vel = 0; %m/s 
+coaxial.state.axial_vel = 10; %m/s 
 coaxial.state.forward_vel = 10; %m/s 
 coaxial.state.side_vel = 0; %m/s
 
@@ -35,13 +35,15 @@ timelimit = inf;
 %[collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_desired,"CT",method);
 
 plots= false;
-verbose= false;
-debug = true;
+verbose= true;
+debug = false;
 method='leishman'; %'leishman','airfoil'
 
-tic
-[Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
-toc
+%tic
+[Power, Forces, Moments, CT, CP, net_torque_coeff,dB] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+%toc
+
+
 %legend below
 %{
 %Power is a 1x2 matrix -> [P_upper; P_lower] [W]

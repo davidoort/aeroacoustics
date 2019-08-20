@@ -12,7 +12,7 @@ classdef Rotor < dynamicprops
     
     methods
         function obj = Rotor()
-            obj.name = "Harrington1"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing, Bumblebee_canard
+            obj.name = "Hermes"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing, Bumblebee_canard
             obj.type = "coaxial"; % "single" or "coaxial"
             
             obj.state.trim = 1; %1 means that both rotors have the same geometrical pitch, so same collective setting >1 increases pitch of lower wrt to upper
@@ -250,7 +250,8 @@ classdef Rotor < dynamicprops
                 obj.params.kappaint = 1.28;
                 obj.params.kappa = 1.15;
                 obj.params.rd = 0.82; %[non-dimensionalised by R] annulus - "assumption consistent with the results obtained by Leishman using the free wake method"
-            
+                obj.params.interrotor_spacing = 0.4; 
+
             
                 
                 %% Top rotor
@@ -259,6 +260,8 @@ classdef Rotor < dynamicprops
                 obj.rotor(1).R = 1.28;             %m - radius of blade
                 obj.rotor(1).omega = 1200*2*pi/60;
                 obj.rotor(1).chord = 0.14;             %m - chord
+                obj.rotor(1).root_chord = 0.14;             %m - chord
+                obj.rotor(1).tip_chord = 0.14;             %m - chord
                 obj.rotor(1).solidity = obj.rotor(1).Nb*obj.rotor(1).chord/(pi*obj.rotor(1).R);   % blade solidity - untapered
                 obj.rotor(1).hub_radial_fraction = 0.15;
                 
