@@ -19,6 +19,7 @@ coaxial.state.side_vel = 0; %m/s
 
 % Control Inputs
 
+coaxial.rotor(1).omega = 200;
 coaxial.state.collective_u = 20; %UPPER rotor collective in deg - geometric pitch angle at the root of the UPPER rotor blades!
 coaxial.state.collective_l = 20; %UPPER rotor collective in deg - geometric pitch angle at the root of the UPPER rotor blades!
 coaxial.state.cyclic_s = 0; %sine term for cyclic (gets multiplied by sin(azimuth))
