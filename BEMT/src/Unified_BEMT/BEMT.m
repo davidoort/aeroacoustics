@@ -48,7 +48,7 @@ cyclic_u = [rotorsystem.state.cyclic_s, rotorsystem.state.cyclic_c];
 
 spin_dir_u = 'CCW'; %should probably become a parameter in the rotor object
 [Thrust_u, Torque_u, Power_u, CT_u, CP_u, dCT_u, dCP_u, lambda_u, Re_u, alpha_u,alpha_negatives_u, phi_u, ...
-    F_u, weighted_swirl_ratio_u, FOM_u, velocity_dimensional_u, pitchdeg_u,r,dr,psi_u] = spinRotor(rotorsystem.rotor(1),atm,spin_dir_u,collective_u,cyclic_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon);
+    F_u, weighted_swirl_ratio_u, FOM_u, velocity_dimensional_u, pitchdeg_u,r,dr,psi_u,chord_u] = spinRotor(rotorsystem.rotor(1),atm,spin_dir_u,collective_u,cyclic_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon);
 
 net_torque_coeff = 0;
 
@@ -245,7 +245,7 @@ if strcmpi(rotorsystem.type,"coaxial")
     
     spin_dir_l = 'CW';
     [Thrust_l, Torque_l, Power_l, CT_l, CP_l, dCT_l, dCP_l, lambda_l, Re_l, alpha_l,alpha_negatives_l, phi_l, ...
-    F_l, weighted_swirl_ratio_l, FOM_l, velocity_dimensional_l,pitchdeg_l,r,dr,psi_l] = spinRotor(rotorsystem.rotor(2),atm,spin_dir_l,collective_l,cyclic_l,lambda_P_bottom,flowfield(2).lambda_T,method,epsilon);
+    F_l, weighted_swirl_ratio_l, FOM_l, velocity_dimensional_l,pitchdeg_l,r,dr,psi_l,chord_l] = spinRotor(rotorsystem.rotor(2),atm,spin_dir_l,collective_l,cyclic_l,lambda_P_bottom,flowfield(2).lambda_T,method,epsilon);
 
     %% Output Vars
 
@@ -290,11 +290,31 @@ if strcmpi(rotorsystem.type,"coaxial")
     net_torque_coeff = (CP_u-CP_l)/(CP_u+CP_l);
     net_torque_dimensional = Torque_u-Torque_l;
     
+    %% Noise - strictly for coaxial rotors
     
+    %since I am doing the implementation for a coaxial rotor system
+    
+    %this will return the loading harmonics up to a high number k which can
+    %then be truncated in hanson_aeroacoustics
+    
+    [CLk_u,CDk_u] = getLoadingHarmonics(rotorsystem.rotor,dCT_u,dCP_u,phi_u,velocity_dimensional_u,chord_u,r,psi_u);
+    [CLk_l,CDk_l] = getLoadingHarmonics(rotorsystem.rotor,dCT_l,dCP_l,phi_l,velocity_dimensional_l,chord_l,r,psi_l);
+    
+    CLk.upper = CLk_u;
+    CLk.lower = CLk_l;
+    CDk.upper = CDk_u;
+    CDk.lower = CDk_l;
+    
+    %hanson_acoustics is simply put the code version of equation 1 in
+    %Hanson's paper
+    [dB] = hanson_acoustics(coaxial,atm,r,dr,CLk,CDk);
+
     
 end
 
      
+
+
 
 %% Outputs
 

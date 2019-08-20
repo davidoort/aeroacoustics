@@ -26,7 +26,7 @@ coaxial.state.cyclic_c = 0; %cosine term for cyclic (gets multiplied by cos(azim
 
 epsilon = 0.0001; %convergence accuracy for Prandtl tip function and inflow ratio
 timelimit = inf;
-
+    
 %warning('off')
 %% Testing 
 %method='leishman'; %'leishman','airfoil'
@@ -36,8 +36,8 @@ timelimit = inf;
 
 plots= false;
 verbose= false;
-debug = false;
-method='airfoil'; %'leishman','airfoil'
+debug = true;
+method='leishman'; %'leishman','airfoil'
 
 tic
 [Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
