@@ -19,7 +19,6 @@ coaxial.state.side_vel = 0; %m/s
 
 % Control Inputs
 
-coaxial.rotor(1).omega = 200;
 coaxial.state.collective_u = 20; %UPPER rotor collective in deg - geometric pitch angle at the root of the UPPER rotor blades!
 coaxial.state.collective_l = 20; %UPPER rotor collective in deg - geometric pitch angle at the root of the UPPER rotor blades!
 coaxial.state.cyclic_s = 0; %sine term for cyclic (gets multiplied by sin(azimuth))
@@ -62,7 +61,6 @@ method='leishman'; %'leishman','airfoil'
 
 %%%%% GENERATE DIFFERENCE (between methods) DISK PLOTS SOMEWHERE!!!!! ->
 %%%%% this would be nice in the article (especially if I can explain where the biggest differences come from)
-elseif axial_flight_val
 %% Axial flight plots
 
 close all
@@ -237,7 +235,7 @@ xlabel('Axial velocity $V_P$ [m/s]','Interpreter','Latex')
 ylabel('$C_P$ [-]','Interpreter','Latex')
 
 warning('on','all')
-elseif forward_flight_val
+
 %% Forward flight performance validation
 
 %Init
@@ -326,7 +324,7 @@ ylabel('$C_P$','interpreter','latex')
 legend('Experiment Coaxial','Experiment Single','BEMT') % instead do set(gca,legend...) in the if statement above
 
 warning('on','all')
-elseif CT_CP_val
+
 %% Iteration to trim the coaxial rotor and produce CT-CP validation plots
 
 warning('off','all')
@@ -434,7 +432,7 @@ for rotor_type = rotors
 end
 
 warning('on','all')
-elseif spanwise_FVM_val
+
 %% Verification plots with FVM for inflow, CT and CP distributions. Trim the coaxial rotor at a specified thrust coefficient
 
 CT_desired = 0.004;
@@ -462,7 +460,7 @@ verbose = false;
 debug = false;
 %Don't change for now!
 [Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
-elseif DSE_stuff
+
 %% Optimal collective plot single rotor at different axial speeds
 %idea: instead of making this plot, just find the maximu CT/CP point and
 %what collective it corresponds to. Then plot optimum collective vs axial
@@ -557,4 +555,3 @@ xlabel('$C_P$','Interpreter','latex')
 ylabel('$C_T$','Interpreter','latex')
 
 title(string(coaxial.name))
-end

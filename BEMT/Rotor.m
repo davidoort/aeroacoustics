@@ -270,14 +270,14 @@ classdef Rotor < dynamicprops
              
                 obj.rotor(1).pitch_root = 20; % [deg] - for an ideal twist it will change the relative angles between root and tip
                 obj.rotor(1).twist_type = 'linear'; % 'linear', 'ideal'
-                obj.rotor(1).twistdeg = 0; %[deg] for a fixed collective, this is the same as changing the rate of twist
+                obj.rotor(1).twistdeg = 6; %[deg] for a fixed collective, this is the same as changing the rate of twist
                 
                 % Aerodynamics 
-                obj.rotor(1).aero.cl_alpha = 5.212;         %1/rad - Lift slope, NACA 23015
-                obj.rotor(1).aero.alpha_0 = 0; %rad - guess!
-                obj.rotor(1).aero.Cd0 =  0.011;
+                obj.rotor(1).aero.cl_alpha = 6.1;         %1/rad - Lift slope, NACA 23015
+                obj.rotor(1).aero.alpha_0 = deg2rad(-1.25); %rad - guess!
+                obj.rotor(1).aero.Cd0 =  0.008;
                 obj.rotor(1).aero.D1 = 0.0;
-                obj.rotor(1).aero.D2 = 0.0;
+                obj.rotor(1).aero.D2 = 0.8;
                
                 
                 %% Bottom rotor

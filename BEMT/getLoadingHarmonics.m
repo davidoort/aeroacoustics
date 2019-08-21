@@ -58,7 +58,7 @@ CLk = CL_fft;
 CDk = CD_fft;
 
 %% Plots
-plots = false;
+plots = true;
 
 if plots
     %Testing plots - if debug mode on
@@ -83,16 +83,20 @@ if plots
 %     
     
     %discrete radial stations
-    loc = [0.15 0.5 0.9];
+    loc = [r(1,1) 0.5 0.9];
     
+    
+    indx_loc = zeros(1,length(loc));
     str = {};
+    i = 1;
     for r_station = loc
+        indx = find(r(1,:)==r_station);
+        indx_loc(i) = indx;
         str = [str , strcat('r = ' , num2str(r_station))];
+        i = i + 1;
     end
 
     
-    indx_loc = round(loc*length(r(1,:)));
-
     %plots with interpolated time
     figure(1)
     plot(time_interp(:,indx_loc),CL(:,indx_loc))

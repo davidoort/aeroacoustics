@@ -59,6 +59,8 @@ elseif strcmpi(airfoil,'NACA16006')
     data = readmatrix('xf-naca16006-il-1000000'); % Alpha,Cl,Cd,Cdp,Cm,Top_Xtr,Bot_Xtr
 elseif strcmpi(airfoil,'ClarkY')
     data = readmatrix('xf-clarky-il-1000000-n5'); % Alpha,Cl,Cd,Cdp,Cm,Top_Xtr,Bot_Xtr
+elseif strcmpi(airfoil,'NACA23015')
+    data = readmatrix('xf-naca23015-il-1000000'); % Alpha,Cl,Cd,Cdp,Cm,Top_Xtr,Bot_Xtr
 else
     error('Currently there is only data for NACA0012, NACA16006 and ClarkY (Re=1e6). Please download the airfoil data of whatever airfoil you are using')
 end
