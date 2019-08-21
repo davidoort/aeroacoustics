@@ -14,8 +14,8 @@ coaxial = Rotor();
 % Change flight parameters
 
 coaxial.state.axial_vel = 0; %m/s 
-coaxial.state.forward_vel = 0; %m/s 
-coaxial.state.side_vel = 0; %m/s
+coaxial.state.forward_vel = 10; %m/s 
+coaxial.state.side_vel = 10; %m/s
 
 % Control Inputs
 
@@ -29,10 +29,10 @@ epsilon = 0.0001; %convergence accuracy for Prandtl tip function and inflow rati
 %warning('off')
 %% Testing 
 
-plots= false;
-verbose= false;
-debug = true;
-method='leishman'; %'leishman','airfoil'
+plots= true;
+verbose= true;
+debug = false;
+method='leishman'; %'leishman'
 
 
 [Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
