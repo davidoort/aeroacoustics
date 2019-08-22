@@ -1,4 +1,4 @@
-function [Power, Forces, Moments, CT, CP, net_torque_coeff,dB] = BEMT(rotorsystem,atm,epsilon,plots,verbose,method,debug)
+function [Power, Forces, Moments, CT, CP, net_torque_coeff,sound] = BEMT(rotorsystem,atm,epsilon,plots,verbose,method,debug,acoustics)
 %{
 
 Power is a 1x2 matrix -> [P_upper; P_lower] [W]
@@ -25,9 +25,11 @@ net_torque_coeff = (CP_u-CP_l)/(CP_u+CP_l) [-]
 if debug
     res_r = 10;
     res_psi = 20;
+    k_harmonics = 20;
 else
     res_r = 100;
     res_psi = 130; %careful of putting them equal
+    k_harmonics = 100;
 end
 
 axial_vel = rotorsystem.state.axial_vel; %m/s
@@ -293,23 +295,31 @@ if strcmpi(rotorsystem.type,"coaxial")
     
     %% Noise - strictly for coaxial rotors
     
-    %since I am doing the implementation for a coaxial rotor system
-    
-    %this will return the loading harmonics up to a high number k which can
-    %then be truncated in hanson_aeroacoustics
-    
-    [CLk_u,CDk_u] = getLoadingHarmonics(rotorsystem.rotor,dCT_u,dCP_u,phi_u,velocity_dimensional_u,chord_u,r,psi_u);
-    [CLk_l,CDk_l] = getLoadingHarmonics(rotorsystem.rotor,dCT_l,dCP_l,phi_l,velocity_dimensional_l,chord_l,r,psi_l);
-    
-    CLk.upper = CLk_u;
-    CLk.lower = CLk_l;
-    CDk.upper = CDk_u;
-    CDk.lower = CDk_l;
-    
-    %hanson_acoustics is simply put the code version of equation 1 in
-    %Hanson's paper
-    [dB] = hanson_acoustics(rotorsystem,atm,r,dr,CLk,CDk);
 
+    if acoustics
+        %since I am doing the implementation for a coaxial rotor system
+        
+        %this will return the loading harmonics up to a high number k which can
+        %then be truncated in hanson_aeroacoustics
+        
+        [CLk_u,CDk_u] = getLoadingHarmonics(rotorsystem.rotor,dCT_u,dCP_u,phi_u,velocity_dimensional_u,chord_u,r,psi_u,plots,debug);
+        [CLk_l,CDk_l] = getLoadingHarmonics(rotorsystem.rotor,dCT_l,dCP_l,phi_l,velocity_dimensional_l,chord_l,r,psi_l,plots,debug);
+        
+        CLk.upper = CLk_u;
+        CLk.lower = CLk_l;
+        CDk.upper = CDk_u;
+        CDk.lower = CDk_l;
+        
+        %hanson_acoustics is simply put the code version of equation 1 in
+        %Hanson's paper
+        observer = Observer();
+        [sound] = hanson_acoustics(rotorsystem,observer,atm,r,dr,CLk,CDk,plots,k_harmonics);
+        if plots
+            
+            acousticPlot(rotorsystem,atm,r,dr,CLk,CDk,plots,k_harmonics)
+            
+        end
+    end
     
 end
 

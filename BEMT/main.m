@@ -13,12 +13,12 @@ coaxial = Rotor();
 
 % Change flight parameters
 
-coaxial.state.axial_vel = 10; %m/s 
-coaxial.state.forward_vel = 10; %m/s 
+coaxial.state.axial_vel = 0; %m/s 
+coaxial.state.forward_vel = 0; %m/s 
 coaxial.state.side_vel = 0; %m/s
 
 % Control Inputs
-
+%coaxial.rotor(1).omega = 125;
 coaxial.state.collective_u = 20; %UPPER rotor collective in deg - geometric pitch angle at the root of the UPPER rotor blades!
 coaxial.state.collective_l = 20; %UPPER rotor collective in deg - geometric pitch angle at the root of the UPPER rotor blades!
 coaxial.state.cyclic_s = 0; %sine term for cyclic (gets multiplied by sin(azimuth))
@@ -34,13 +34,14 @@ timelimit = inf;
 
 %[collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_desired,"CT",method);
 
-plots= false;
+plots= true;
 verbose= true;
-debug = false;
+debug = true;
 method='leishman'; %'leishman','airfoil'
+acoustics = true;
 
 %tic
-[Power, Forces, Moments, CT, CP, net_torque_coeff,dB] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+[Power, Forces, Moments, CT, CP, net_torque_coeff,sound] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug,acoustics);
 %toc
 
 

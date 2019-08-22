@@ -1,7 +1,13 @@
-function [CLk,CDk] = getLoadingHarmonics(rotor,dCT,dCP,phi,velocity_dimensional,chord,r,psi)
+function [CLk,CDk] = getLoadingHarmonics(rotor,dCT,dCP,phi,velocity_dimensional,chord,r,psi,plots,debug)
 %{
 This is a function for one rotor (doesn't need to be coaxial)
 %}
+
+if debug 
+    t_res = 30;
+else
+    t_res = 300;
+end
 
 omega = rotor.omega;
 R = rotor.R;
@@ -16,7 +22,7 @@ rotation_time = 2*pi/omega;
 %something (when creating the time history).
 time_discrete = abs(psi)/omega;
 
-time_interp = repmat(linspace(0,rotation_time,300)',1,length(r(1,:)));
+time_interp = repmat(linspace(0,rotation_time,t_res)',1,length(r(1,:)));
 
 %% Transformation from dCT,dCQ/r to dCL,dCD
 
@@ -58,7 +64,6 @@ CLk = CL_fft;
 CDk = CD_fft;
 
 %% Plots
-plots = true;
 
 if plots
     %Testing plots - if debug mode on
@@ -90,7 +95,7 @@ if plots
     str = {};
     i = 1;
     for r_station = loc
-        indx = find(r(1,:)==r_station);
+        indx = find(abs(r(1,:)-r_station)<dr/2);
         indx_loc(i) = indx;
         str = [str , strcat('r = ' , num2str(r_station))];
         i = i + 1;

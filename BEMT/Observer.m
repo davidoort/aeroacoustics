@@ -9,6 +9,7 @@ classdef Observer < dynamicprops
         r
         x
         theta
+        phi
     end
     
     methods
@@ -18,7 +19,7 @@ classdef Observer < dynamicprops
             obj.theta   = 30; % [deg] - %defined as the angle between the rotation axis of the rotor and the line connecting the lower rotor hub with the observer as pictorially depicted in Fig.3
             obj.x       = 10; % [m] - see the definition in Hanson's paper "Noise of Counter-Rotation Propellers"
             obj.r       = @() norm([obj.x,obj.r1]); % [m] - see the definition in Hanson's paper "Noise of Counter-Rotation Propellers"
-            
+            obj.phi     =  0;   %[rad]
             %from theta and axial and tangent velocity it will be possible
             %to calculate M_x and M_T
         end

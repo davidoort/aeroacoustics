@@ -1,4 +1,4 @@
-function [dB] = hanson_acoustics(coaxial,atm,r_mat,dz0,CLk_struct,CDk_struct)
+function [sound] = hanson_acoustics(coaxial,observer,atm,r_mat,dz0,CLk_struct,CDk_struct,plots,harmonics)
 %{
 
 Based on "Noise of Counter-Rotation Propellers" by Hanson
@@ -20,9 +20,23 @@ CLk.upper = CLk_u; ...
 
 %}
 
+
+%% User Inputs
+
+
+time = linspace(0,40*0.0480,40*20); %s
+
+approach = 'velocity'; % 'angle' or 'velocity' - they gave a 3dB difference for an example test case. Enough verification!
+
+
+theta = observer.theta; %[deg] defined as the angle between the rotation axis of the rotor and the line connecting the lower rotor hub with the observer as pictorially depicted in Fig.3
+r1 = observer.r1; %[m]
+r = observer.r(); %[m]
+phi = observer.phi; %[rad]
+%% Init
+
 p_ref = 2.*10^-5; %Pa
 
-approach = 'angle'; % 'angle' or 'velocity'
 
 % Constants abbreviation - same nomenclature as the paper
 rho0 = atm.rho;
@@ -31,19 +45,12 @@ c0 = atm.c0;
 B(1) = coaxial.rotor(1).Nb;
 B(2) = coaxial.rotor(2).Nb;
 omega(1) = coaxial.rotor(1).omega;
-omega(2)= coaxial.rotor(1).omega;
+omega(2)= coaxial.rotor(2).omega;
 omega12 = omega(1)/omega(2);
 D(1) = 2.*coaxial.rotor(1).R; 
 D(2) = 2.*coaxial.rotor(2).R; 
 B_D(1) = mean([coaxial.rotor(1).root_chord,coaxial.rotor(1).tip_chord])/D(1);
 B_D(2) = mean([coaxial.rotor(2).root_chord,coaxial.rotor(2).tip_chord])/D(2);
-
-observer = Observer();
-theta = observer.theta; %defined as the angle between the rotation axis of the rotor and the line connecting the lower rotor hub with the observer as pictorially depicted in Fig.3
-r1 = observer.r1;
-r = observer.r();
-
-time = linspace(0,1,10); %s
 
 
 %setup constant matrices
@@ -54,8 +61,8 @@ for i = 1:length(r_vec) %can't find a more elegant and quick way of doing this
     r_stretched(1,1,i) = r_vec(i);  
 end
 
-m_range = 0:10; %sound harmonic range - START at 0
-k_range = 0:10; %loading harmonic range - START at 0. want to cut off frequencies (unless I apply this Gaussian filter, which for me is the cubic interpolation...)
+m_range = 0:harmonics-2; %sound harmonic range - START at 0. The -2 is a bit random so that I don't get square matrices
+k_range = 0:harmonics-1; %loading harmonic range - START at 0. want to cut off frequencies (unless I apply this Gaussian filter, which for me is the cubic interpolation...)
 
 %dim = [length(k_range),length(m_range),length(r_vec)];
 
@@ -68,6 +75,12 @@ z0 = repmat(r_stretched,length(k_range),length(m_range),1);
 if any(size(k) ~= size(m)) &&  any(size(m) ~= size(z0))
    error('Sizes of matrices m,k,z0 do not match') 
 end
+
+
+%Create a huge matrix
+
+p_k_m_t = zeros(length(k_range),length(m_range),length(time),2); %2 is for the number of rotors
+
 
 for rotor_idx = [1,2] %1 is upper, 2 is lower rotor
     %% Calculate Clk and Cdk
@@ -86,20 +99,16 @@ for rotor_idx = [1,2] %1 is upper, 2 is lower rotor
     Cdk = Cdk(1:k_range(end)+1,:);
     
     for j = 1:length(r_vec)
-       
         CLk(:,:,j) = repmat(Clk(:,j),1,length(m_range));
         CDk(:,:,j) = repmat(Cdk(:,j),1,length(m_range));
     end
-    
-    
-    
-    p_t(:,rotor_idx) = zeros(1,length(time));
+
 
     %Create a time-history for each rotor
     for t_idx = 1:length(time)
         t = time(t_idx);
-        if B(1) == B(2) && omega(1) == omega(2)
-            %% Special case - acoustic interference? Nonetheless, for verification purposes
+        if B(1) == B(2) && omega(1) == omega(2) % - for a small variation in omega the other equation gave a difference of 2dB
+            %% Special case - acoustic interference? In any case, for verification purposes
             
             %S = coaxial.params.interrotor_spacing.*D(rotor_idx)/2;
             
@@ -130,7 +139,7 @@ for rotor_idx = [1,2] %1 is upper, 2 is lower rotor
             
             %% Equation 6 exponential (for verification)
             
-            arg_exp = (m-2.*k).*b.*(-pi/2)+m.*b.*(Omega.*r/c0-Omega.*t); %matrix (k_range x m_range)
+            arg_exp = (m(:,:,1)-2.*k(:,:,1)).*b.*(phi-pi/2)+m(:,:,1).*b.*(Omega.*r/c0-Omega.*t); %matrix (k_range x m_range)
             EXP_real = -sin(arg_exp); %matrix
             EXP_imag = cos(arg_exp); %matrix
             
@@ -163,7 +172,7 @@ for rotor_idx = [1,2] %1 is upper, 2 is lower rotor
             end
             
             %% Equation 1 exponential (for verification wrt eq.6)
-            arg_exp = (m.*B(2)-k.*B(1)).*(-pi/2)+(m.*B(2).*omega(2)+k.*B(1).*omega(1)).*(r/c0-t); %matrix (k_range x m_range)
+            arg_exp = (m(:,:,1).*B(2)-k(:,:,1).*B(1)).*(phi-pi/2)+(m(:,:,1).*B(2).*omega(2)+k(:,:,1).*B(1).*omega(1)).*(r/c0-t); %matrix (k_range x m_range)
             EXP_real = -sin(arg_exp); %matrix
             EXP_imag = cos(arg_exp); %matrix
             
@@ -183,22 +192,51 @@ for rotor_idx = [1,2] %1 is upper, 2 is lower rotor
         
         A = -rho0.*c0^2.*B(2).*sind(theta2)/(8.*pi.*r1/D(rotor_idx).*(1-Mx.*cosd(theta1))); %not sure if it should be theta1 one or theta2 in sin()
         
+        p_k_m_1 = A.*EXP_real(:,:,1).*INT;
+        p_k_m = A.*sqrt(EXP_real(:,:,1).^2+EXP_imag(:,:,1).^2).*INT; % is this what Daniele is referring to? "Yes the imaginary part can be treated as the conventional i*omega*t formulation. In your case write the complex number and then project them in time as you would do with trigonometry"
         
-        p = A.*sum(sum(EXP_real(:,:,1).*INT));
-        p = A.*sum(sum(sqrt(EXP_real(:,:,1).^2+EXP_imag(:,:,1).^2).*INT));
         
-        p_t(t_idx,rotor_idx) = p;
+        %p = A.*sum(sum(EXP_real(:,:,1).*INT));
+        %p = A.*sum(sum(sqrt(EXP_real(:,:,1).^2+EXP_imag(:,:,1).^2).*INT)); 
+        
+        p_k_m_t(:,:,t_idx,rotor_idx) = p_k_m_1;
+        
     end
-    
-    
-    
-    
+
 end
 
-p_t_total = sum(p_t,2);
+p_t_upper = sum(p_k_m_t(:,:,:,1),[1,2]); %dimension three is time so we don't want to add in that direction
+p_t_lower = sum(p_k_m_t(:,:,:,2),[1,2]); %dimension three is time so we don't want to add in that direction
+p_t_total = sum(p_k_m_t,[1,2,4]); %dimension three is time so we don't want to add in that direction
 
-p_rms = rms(p_t_total);
+p_rms_upper = rms(p_t_upper);
+p_rms_lower = rms(p_t_lower);
+p_rms_total = rms(p_t_total);
 
-dB = 10.*log10(p_rms/p_ref);
+
+sound.dB_upper = 20.*log10(p_rms_upper/p_ref);
+sound.dB_lower = 20.*log10(p_rms_lower/p_ref);
+%sound.dB_total = 20.*log10((p_rms_upper^2+p_rms_lower^2)/p_ref^2); %GIVES AN OVERESTIMATE I think this is what was done in vehicle design tool with thickness and loading noise assuming no acoustic cancellation
+sound.dB_total = 20.*log10(p_rms_total/p_ref);
+
+if plots
+    %I really have no idea what this is showing me
+%     time_mat = repmat(time',1,length(m_range));
+%     p_m_t = sum(p_k_m_t,[1,4]);
+%     p_m_t = reshape(p_m_t,length(time),length(m_range));
+%     figure(10)
+%     plot(time_mat(:,1:4),10.*log10(p_m_t(:,1:4)/p_ref))
+
+    figure(11)
+    hold on
+    pressure_history = reshape(sum(p_k_m_t,[1,2,4]),size(time)); %variables already existed
+    pressure_history_rms = rms(pressure_history); %variable already existed
+    plot(time,pressure_history_rms*ones(size(time)))
+    plot(time,pressure_history)
+    xlabel('$t$ [s]','Interpreter','latex')
+    ylabel('$p$ [Pa]','Interpreter','latex')
+    legend('p_{RMS}','p(t)')
+    
+end
 
 end
