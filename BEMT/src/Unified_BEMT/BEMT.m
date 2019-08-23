@@ -20,16 +20,16 @@ net_torque_coeff = (CP_u-CP_l)/(CP_u+CP_l) [-]
 %rotor (geometry) has to be spun and in which direction it has to be spun, with what
 %collective (and cyclic later), lambda_P, lambda_T, method (leishman or airfoil)
 
-
+tic
 %% Init 
 if debug
     res_r = 10;
     res_psi = 20;
-    k_harmonics = 20;
+
 else
     res_r = 100;
-    res_psi = 130; %careful of putting them equal
-    k_harmonics = 100;
+    res_psi = 130; %careful for putting them equal
+
 end
 
 axial_vel = rotorsystem.state.axial_vel; %m/s
@@ -50,6 +50,7 @@ collective_u = rotorsystem.state.collective_u;
 cyclic_u = [rotorsystem.state.cyclic_s, rotorsystem.state.cyclic_c];
 
 spin_dir_u = 'CCW'; %should probably become a parameter in the rotor object
+rotorsystem.rotor(1).spin_dir = spin_dir_u;
 [Thrust_u, Torque_u, Power_u, CT_u, CP_u, dCT_u, dCP_u, lambda_u, Re_u, alpha_u,alpha_negatives_u, phi_u, ...
     F_u, weighted_swirl_ratio_u, FOM_u, velocity_dimensional_u, pitchdeg_u,r,dr,psi_u,chord_u] = spinRotor(rotorsystem.rotor(1),atm,spin_dir_u,collective_u,cyclic_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon);
 
@@ -247,6 +248,7 @@ if strcmpi(rotorsystem.type,"coaxial")
     %% Bottom Rotor
     
     spin_dir_l = 'CW';
+    rotorsystem.rotor(2).spin_dir = spin_dir_l;
     [Thrust_l, Torque_l, Power_l, CT_l, CP_l, dCT_l, dCP_l, lambda_l, Re_l, alpha_l,alpha_negatives_l, phi_l, ...
     F_l, weighted_swirl_ratio_l, FOM_l, velocity_dimensional_l,pitchdeg_l,r,dr,psi_l,chord_l] = spinRotor(rotorsystem.rotor(2),atm,spin_dir_l,collective_l,cyclic_l,lambda_P_bottom,flowfield(2).lambda_T,method,epsilon);
 
@@ -293,9 +295,13 @@ if strcmpi(rotorsystem.type,"coaxial")
     net_torque_coeff = (CP_u-CP_l)/(CP_u+CP_l);
     net_torque_dimensional = Torque_u-Torque_l;
     
-    %% Noise - strictly for coaxial rotors
+    if verbose
+        disp(['Aerodynamics solved in ', num2str(toc),' seconds'])
+    end
     
-
+    %% Noise - strictly for coaxial rotors
+    tic
+    sound = "Not computed!";
     if acoustics
         %since I am doing the implementation for a coaxial rotor system
         
@@ -313,14 +319,16 @@ if strcmpi(rotorsystem.type,"coaxial")
         %hanson_acoustics is simply put the code version of equation 1 in
         %Hanson's paper
         observer = Observer();
-        [sound] = hanson_acoustics(rotorsystem,observer,atm,r,dr,CLk,CDk,plots,k_harmonics);
+        [sound] = hanson_acoustics(rotorsystem,observer,atm,CLk,CDk,plots);
         if plots
             
-            acousticPlot(rotorsystem,atm,r,dr,CLk,CDk,plots,k_harmonics)
+            %acousticPlot(rotorsystem,atm,r,dr,CLk,CDk,plots,k_harmonics)
             
         end
     end
-    
+    if verbose
+        disp(['Acoustics solved in ', num2str(toc),' seconds'])
+    end
 end
 
      

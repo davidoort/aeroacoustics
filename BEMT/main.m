@@ -26,8 +26,9 @@ coaxial.state.cyclic_c = 0; %cosine term for cyclic (gets multiplied by cos(azim
 
 epsilon = 0.0001; %convergence accuracy for Prandtl tip function and inflow ratio
 timelimit = inf;
-    
+acoustics = false;
 %warning('off')
+
 %% Testing 
 %method='leishman'; %'leishman','airfoil','vitleish'
 %CT_desired = 0.00037; -> solved the CT bug!
@@ -35,8 +36,8 @@ timelimit = inf;
 %[collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_desired,"CT",method);
 
 plots= true;
-verbose= true;
-debug = true;
+verbose= false;
+debug = false;
 method='leishman'; %'leishman','airfoil'
 acoustics = true;
 
@@ -60,8 +61,15 @@ acoustics = true;
 
 %} 
 
+
+%% Difference plots
+
 %%%%% GENERATE DIFFERENCE (between methods) DISK PLOTS SOMEWHERE!!!!! ->
 %%%%% this would be nice in the article (especially if I can explain where the biggest differences come from)
+
+
+
+
 %% Axial flight plots
 
 close all

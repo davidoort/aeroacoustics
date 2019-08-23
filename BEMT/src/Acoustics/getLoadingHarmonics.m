@@ -51,8 +51,8 @@ CD = interp1(time_discrete(:,1),dCD,time_interp(:,1),'PCHIP'); %high res
 %the average. Or.. is the mean already included? It seems to give the same
 %result. I don't know if taking abs is correct then
 
-CL_fft = abs(fft(CL))/length(CL(:,1));
-CD_fft = abs(fft(CD))/length(CL(:,1));
+CL_fft = (fft(CL))/length(CL(:,1)); %ABS OR NOT? when I don't use it I at least get a sensible shape for the plot of p(t) for the upper rotor. The reason why goes beyond me.
+CD_fft = (fft(CD))/length(CL(:,1));
 
 CL0 = mean(CL);
 CLk = [CL0; CL_fft]; %the rest of harmonics
@@ -109,6 +109,7 @@ if plots
     xlabel('$t$ [s]','Interpreter','latex')
     %legend(['r = ', num2str(loc(1))],['r = ', num2str(loc(2))],['r = ', num2str(loc(3))])
     legend(str{:})
+    
     figure(2)
     plot(time_interp(:,indx_loc),CD(:,indx_loc))
     ylabel('$C_d$ [-]','Interpreter','latex')
@@ -121,6 +122,7 @@ if plots
     ylabel('$C_{lk}$ [-]','Interpreter','latex')
     xlabel('Harmonic number','Interpreter','latex')
     legend(str{:})
+    
     figure(4)
     plot(0:length(CLk(:,1))-1,CDk(:,indx_loc))
     ylabel('$C_{dk}$ [-]','Interpreter','latex')
