@@ -19,8 +19,8 @@ coaxial.state.side_vel = 0; %m/s
 
 % Control Inputs
 %coaxial.rotor(1).omega = 125;
-coaxial.state.collective_u = 20; %UPPER rotor collective in deg - geometric pitch angle at the root of the UPPER rotor blades!
-coaxial.state.collective_l = 20; %UPPER rotor collective in deg - geometric pitch angle at the root of the UPPER rotor blades!
+coaxial.state.collective_u = 60; %UPPER rotor collective in deg - geometric pitch angle at the root of the UPPER rotor blades!
+coaxial.state.collective_l = 60; %UPPER rotor collective in deg - geometric pitch angle at the root of the UPPER rotor blades!
 coaxial.state.cyclic_s = 0; %sine term for cyclic (gets multiplied by sin(azimuth))
 coaxial.state.cyclic_c = 0; %cosine term for cyclic (gets multiplied by cos(azimuth))
 
@@ -30,13 +30,13 @@ acoustics = false;
 %warning('off')
 
 %% Testing 
-%method='leishman'; %'leishman','airfoil','vitleish'
+%method='leishman'; %'leishman','airfoil','leishman'
 %CT_desired = 0.00037; -> solved the CT bug!
 
 %[collective_u, collective_l, net_torque_dimensional, CT] = trim(coaxial,atm,epsilon,CT_desired,"CT",method);
 
 plots= true;
-verbose= false;
+verbose= true;
 debug = false;
 method='leishman'; %'leishman','airfoil'
 acoustics = true;
@@ -61,14 +61,19 @@ acoustics = true;
 
 %} 
 
-
-%% Difference plots
+%% Difference plots - very dissapointing, it seems that Viterna is not doing shit
 
 %%%%% GENERATE DIFFERENCE (between methods) DISK PLOTS SOMEWHERE!!!!! ->
-%%%%% this would be nice in the article (especially if I can explain where the biggest differences come from)
+%%%%% this would be nice in the article (especially if I can explain where
+%%%%% the biggest differences come from) -  I can't at the moment
 
+plots= true;
+verbose= true;
+debug = false;
+method='leishman'; %fixed for this beun script
+acoustics = false;
 
-
+[Power, Forces, Moments, CT, CP, net_torque_coeff,sound] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug,acoustics);
 
 %% Axial flight plots
 
@@ -190,7 +195,7 @@ for collective_idx = 1:length(iter_collective_axial)
         try %can be dangerous because it does not show obvious error messages
             
             [~, ~, ~, ~] = trim(coaxial,atm,epsilon,iter_collective_axial(collective_idx),'yaw',method,timelimit);
-            [~, ~, ~, CT, CP, ~] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+            [~, ~, ~, CT, CP, ~] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug,acoustics);
                 
         catch
             disp("Negative thrust")
@@ -264,7 +269,8 @@ coaxial.rotor(1).omega = v_tip/coaxial.rotor(1).R;
 plots = false;
 verbose = false;
 debug = false;
-method = 'airfoil';
+method = 'leishman';
+acoustics = false;
 %timelimit = 10;
 %Load data if current rotor is Harrington1
 
@@ -317,9 +323,19 @@ for advance_ratio = advance_ratio_arr
     %disp(['Pitch lower rotor = ', num2str(collective_l),' deg'])
     
 
-    [Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+    [Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug,acoustics);
     
-    CP_arr(i) = sum(CP);   
+    
+    % For this small coaxial helicopter, an equivalent flat-plate parasite-drag area of 10 square feet was used. 
+    A = 0.92903; %10sq->m^2
+    Cd = 2; %or 2? yaaay, another parameter to tweak...
+    %parasite_power = F*V = 1/2 * rho * V^3 * A *Cd
+    
+    parasite_power = 0.5*atm.rho*coaxial.state.forward_vel^3*A*Cd;
+    
+    %parasite_power = 0;
+    
+    CP_arr(i) = sum(CP) + parasite_power/(atm.rho*pi*coaxial.rotor(1).R^5*coaxial.rotor(1).omega^3);   
     
 end
 
@@ -339,7 +355,7 @@ warning('on','all')
 warning('off','all')
 
 iter_pitchdeg = 0:1:18;
-method = 'vitleish'; %airfoil took about 6 mins to run
+method = 'leishman'; %airfoil took about 6 mins to run
 verbose = false;
 plots = false;
 debug = true;
@@ -347,7 +363,7 @@ debug = true;
 coaxial.state.forward_vel = 0; %m/s  - comparison plots are for hover
 coaxial.state.axial_vel = 0; %m/s - comparison plots are for hover
 coaxial.state.side_vel = 0; %m/s - comparison plots are for hover
-SMT = false;
+SMT = true;
 
 rotors = ["single","coaxial"];
 
@@ -468,7 +484,7 @@ plots = true;
 verbose = false;
 debug = false;
 %Don't change for now!
-[Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+[Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug,acoustics);
 
 %% Optimal collective plot single rotor at different axial speeds
 %idea: instead of making this plot, just find the maximu CT/CP point and
@@ -495,7 +511,7 @@ for vel_idx = 1:length(axial_vel_range)
             coaxial.state.collective = iter_pitchdeg(idx);
             try
                 tic
-                [Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+                [Power, Forces, Moments, CT, CP, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug,acoustics);
                 toc
                 if CT < 0
                     CT_arr(idx) = nan;
