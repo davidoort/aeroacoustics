@@ -20,6 +20,8 @@ net_torque_coeff = (CP_u-CP_l)/(CP_u+CP_l) [-]
 %rotor (geometry) has to be spun and in which direction it has to be spun, with what
 %collective (and cyclic later), lambda_P, lambda_T, method (leishman or airfoil)
 
+difference_method = true;
+
 tic
 %% Init 
 if debug
@@ -53,6 +55,14 @@ spin_dir_u = 'CCW'; %should probably become a parameter in the rotor object
 rotorsystem.rotor(1).spin_dir = spin_dir_u;
 [Thrust_u, Torque_u, Power_u, CT_u, CP_u, dCT_u, dCP_u, lambda_u, Re_u, alpha_u,alpha_negatives_u, phi_u, ...
     F_u, weighted_swirl_ratio_u, FOM_u, velocity_dimensional_u, pitchdeg_u,r,dr,psi_u,chord_u] = spinRotor(rotorsystem.rotor(1),atm,spin_dir_u,collective_u,cyclic_u,flowfield(1).lambda_P,flowfield(1).lambda_T,method,epsilon);
+
+if difference_method && plots
+    
+    [Thrust_u_diff, Torque_u_diff, Power_u_diff, CT_u_diff, CP_u_diff, dCT_u_diff, dCP_u_diff, lambda_u_diff, Re_u_diff, alpha_u_diff,alpha_negatives_u_diff, phi_u_diff, ...
+    F_u_diff, weighted_swirl_ratio_u_diff, FOM_u_diff, velocity_dimensional_u_diff, pitchdeg_u_diff,r,dr,psi_u_diff,chord_u_diff] = spinRotor(rotorsystem.rotor(1),atm,spin_dir_u,collective_u,cyclic_u,flowfield(1).lambda_P,flowfield(1).lambda_T,'airfoil',epsilon);
+
+end
+
 
 net_torque_coeff = 0;
 
@@ -251,6 +261,12 @@ if strcmpi(rotorsystem.type,"coaxial")
     rotorsystem.rotor(2).spin_dir = spin_dir_l;
     [Thrust_l, Torque_l, Power_l, CT_l, CP_l, dCT_l, dCP_l, lambda_l, Re_l, alpha_l,alpha_negatives_l, phi_l, ...
     F_l, weighted_swirl_ratio_l, FOM_l, velocity_dimensional_l,pitchdeg_l,r,dr,psi_l,chord_l] = spinRotor(rotorsystem.rotor(2),atm,spin_dir_l,collective_l,cyclic_l,lambda_P_bottom,flowfield(2).lambda_T,method,epsilon);
+
+    if difference_method && plots
+            [Thrust_l_diff, Torque_l_diff, Power_l_diff, CT_l_diff, CP_l_diff, dCT_l_diff, dCP_l_diff, lambda_l_diff, Re_l_diff, alpha_l_diff,alpha_negatives_l_diff, phi_l_diff, ...
+            F_l_diff, weighted_swirl_ratio_l_diff, FOM_l_diff, velocity_dimensional_l_diff,pitchdeg_l_diff,r,dr,psi_l_diff,chord_l_diff] = spinRotor(rotorsystem.rotor(2),atm,spin_dir_l,collective_l,cyclic_l,lambda_P_bottom,flowfield(2).lambda_T,'airfoil',epsilon);
+
+    end
 
     %% Output Vars
 
@@ -605,6 +621,54 @@ if plots
             legend('FVM','BEMT')
         end
     end
+    
+    %% Difference plots
+    
+    if difference_method
+        
+        %Verbose
+        disp('                                                  ')
+        disp('--------------------------------------------------')
+        disp('             Airfoil - Leishman                   ')
+        disp('--------------------------------------------------')
+        disp(['Max/Min AoA difference upper [deg] ',num2str(max(max(alpha_negatives_u))-max(max(alpha_negatives_u_diff))),' / ',num2str(min(min(alpha_negatives_u))-min(min(alpha_negatives_u_diff)))])
+        disp(['Thrust difference upper [N]',' ',num2str(Thrust_u-Thrust_u_diff)])
+        disp(['Power difference upper [W]',' ',num2str(Power_u-Power_u_diff)])
+        %disp(['Torque difference upper [Nm]',' ',num2str(Torque_u+Torque_l)])
+        
+        %Plots
+        figure(20); clf;
+        title('Upper Rotor')
+        subplot(1, 2, 1)
+        hold on
+        diskPlot(r,psi,dCT_u-dCT_u_diff,rotorsystem.state,'$dC_{Tu}$ [-]')
+        subplot(1,2,2)
+        diskPlot(r,psi,dCP_u-dCP_u_diff,rotorsystem.state,'$dC_{Pu}$ [-]')
+       
+
+        if strcmpi(rotorsystem.type,'coaxial')
+            
+            %Verbose
+            disp(['Max/Min AoA difference lower [deg] ',num2str(max(max(alpha_negatives_l))-max(max(alpha_negatives_l_diff))),' / ',num2str(min(min(alpha_negatives_l))-min(min(alpha_negatives_l_diff)))])
+            disp(['Thrust difference lower [N]',' ',num2str(Thrust_l-Thrust_l_diff)])
+            disp(['Power difference lower [W]',' ',num2str(Power_l-Power_l_diff)])
+            %disp(['Torque difference lower [Nm]',' ',num2str(Torque_l-Torque_l)])
+            
+            %Plots
+            figure(21); clf;
+            title('Lower Rotor')
+            subplot(1, 2, 1)
+            hold on
+            diskPlot(r,psi,dCT_l-dCT_l_diff,rotorsystem.state,'$dC_{Tl}$ [-]')
+            subplot(1,2,2)
+            diskPlot(r,psi,dCP_l-dCP_l_diff,rotorsystem.state,'$dC_{Pl}$ [-]')
+  
+        end
+        
+        
+        
+    end
+    
 end
 
     

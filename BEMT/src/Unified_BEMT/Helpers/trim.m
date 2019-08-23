@@ -86,6 +86,7 @@ tic %begin trim time-counting, no matter the routine (Torque or CT&Torque)
 debug = false;
 plots = false;
 verbose = false;
+acoustics = false;
 
 if strcmpi(trimvar,"yaw")
     %do a trim procedure for airfoil method as well - use the delta method
@@ -154,7 +155,7 @@ elseif strcmpi(trimvar,"thrust")
             while error_var
                 try
                     %tic
-                    [~, ~, Moments, CT_BEMT, CP_BEMT, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+                    [~, ~, Moments, CT_BEMT, CP_BEMT, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug,acoustics);
                     %toc
                     error_var = false;
                 catch e
@@ -240,10 +241,11 @@ June 2019; Last revision: 2-June-2019
     plots = false;
     debug = false;
     verbose = false;
+    acoustics = false;
     
     %% Begin iteration    
     
-    [~, ~, Moments, CT_BEMT, CP_BEMT, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+    [~, ~, Moments, CT_BEMT, CP_BEMT, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug,acoustics);
     
     coaxial.state.CT = CT_BEMT;
     coaxial.state.CP = CP_BEMT;  
@@ -284,7 +286,7 @@ June 2019; Last revision: 2-June-2019
             while error_var
                 try
                     %tic
-                    [~, ~, Moments, CT_BEMT, CP_BEMT, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+                    [~, ~, Moments, CT_BEMT, CP_BEMT, net_torque_coeff] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug,acoustics);
                     %toc
                     error_var = false;
                 catch e

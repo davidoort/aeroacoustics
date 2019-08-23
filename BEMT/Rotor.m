@@ -69,11 +69,11 @@ classdef Rotor < dynamicprops
                 %obj.rotor(1).airfoil.name = "NACA0012"; %airfoil instead
                 %of aero...
                 obj.rotor(1).airfoil.name = "NACA0012";
-                obj.rotor(1).aero.cl_alpha =1;         %1/rad - Lift slope, NACA 0012 from Harrington report
+                obj.rotor(1).aero.cl_alpha =5.73;         %1/rad - Lift slope, NACA 0012 from Harrington report
                 %obj.rotor(1).aero.cl_alpha = 2*pi; doesn't make much of a
                 %difference to verification/validation plots
                 obj.rotor(1).aero.alpha_0 = 0; %rad
-                obj.rotor(1).aero.Cd0 =  0.007; %0.011
+                obj.rotor(1).aero.Cd0 =  0.011; %0.011
                 obj.rotor(1).aero.D1 = 0; %1/rad
                 obj.rotor(1).aero.D2 = 1; %1/rad^2
                 

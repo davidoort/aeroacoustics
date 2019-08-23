@@ -10,6 +10,7 @@ once
 %}
 
 plots = false;
+acoustics = false;
 verbose = false;
 delta = 0.001;
 
@@ -23,7 +24,7 @@ if strcmpi(grad_type,'net_torque')
     coaxial.state.collective_u = collective_u+delta; 
     coaxial.state.collective_l = collective_l-delta;
     
-    [~, ~, ~, ~, ~, net_torque_new] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+    [~, ~, ~, ~, ~, net_torque_new] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug,acoustics);
 
     
     %gradient is the change in net torque coefficient caused by an increase
@@ -45,7 +46,7 @@ elseif strcmpi(grad_type,'thrust')
     coaxial.state.collective_u = collective_u+delta; 
     coaxial.state.collective_l = collective_l+delta;
     
-    [~, ~, ~, CT_new, ~, ~] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug);
+    [~, ~, ~, CT_new, ~, ~] = BEMT(coaxial,atm,epsilon,plots,verbose,method,debug,acoustics);
     
     
     %gradient is the change in total thrust coefficient (CT_BEMT) caused by an increase in collective
