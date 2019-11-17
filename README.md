@@ -2,7 +2,7 @@
 Honours research project on an analytical aeroacoustic model for coaxial rotors in Urban Air Vehicles.
 
 
-<a href="https://github.com/davidoort/aeroacoustics/tree/master/docs/Honours_Article_Aeroacoustics_Github.pdf"><img src="https://github.com/davidoort/aeroacoustics/tree/master/docs/Frontpage.pdf" alt="Illustration" width="500px"/></a>
+<a href="https://github.com/davidoort/aeroacoustics/tree/master/docs/Honours_Article_Aeroacoustics_Github.pdf"><img src="https://github.com/davidoort/aeroacoustics/tree/master/img/Frontpage.png" alt="Illustration" width="500px"/></a>
 
 **Legend**
 
