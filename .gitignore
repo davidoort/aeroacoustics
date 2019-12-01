@@ -30,3 +30,8 @@ codegen/
 
 # Generated helpsearch folders
 helpsearch*/
+
+#VS Code
+.vscode
+
+.DS_Store
