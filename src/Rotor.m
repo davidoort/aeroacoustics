@@ -11,9 +11,10 @@ classdef Rotor < dynamicprops
     end
     
     methods
+        % TODO: take a name parameter and check if it is valid before constructing the object
         function obj = Rotor()
             %SELECT ROTOR
-            obj.name = "NACA_coax"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes, Bumblebee_wing, Bumblebee_canard
+            obj.name = "NACA_coax"; % can be Harrington1, Harrington2, NACA_single, NACA_coax, Hermes or your own custom rotor
             obj.type = "single"; % "single" or "coaxial"
             
             obj.state.trim = 1; %1 means that both rotors have the same geometrical pitch, so same collective setting >1 increases pitch of lower wrt to upper

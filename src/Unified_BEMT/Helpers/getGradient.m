@@ -7,6 +7,12 @@ Currently this function evaluates BEMT twice (for simplicity) but it can be
 optimized to take the current CT, CP and net_torque and just evaluate BEMT
 once
 
+Author: David Oort Alonso, B.Sc, Aerospace Engineering
+TU Delft, Faculty of Aerospace Engineering
+email address: d.oortalonso@student.tudelft.nl  
+Website: https://github.com/davidoort/aeroacoustics
+June 2019; Last revision: 10-June-2019
+
 %}
 
 plots = false;
