@@ -27,12 +27,10 @@ The folder `src` contains all the MATLAB source code. Within this folder there's
 2. Enter the input parameters you desire in the `Rotor.m`, `Atmosphere.m` and `Observer.m` files. You can alternatively do this in `main.m`.
 3. Open `main.m` and run whatever section you desire (sections are separated by %%). For instance, you can run the *%% Init* section to load all input parameters into the workspace. The table below shows a few more examples of the expected results when running a couple of sections. Feel free to try for yourself!
 
- and you can run *%% Axial flight plots* to create these plots
-
-| %% Testing (with `plots = true`) | 
-| ![](img/disks.png) |
-| %% Axial flight plots |
-| ![](img/axial_flight.png) |
+<center>%% Testing (with `plots = true`)</center> 
+![](img/disks.png) 
+<center>%% Axial flight plots</center> 
+ ![](img/axial_flight.png) 
 
 
 
